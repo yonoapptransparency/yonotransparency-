@@ -121,27 +121,27 @@ export default function AppDetails() {
 
           <Link 
             to={`/download/${app.slug}`} 
-            className="w-full sm:w-auto bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-10 rounded-full flex items-center justify-center gap-3 transition-all shadow-xl shadow-red-600/30 active:scale-95 group"
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-500 text-white font-black py-4 px-10 rounded-full flex items-center justify-center gap-3 transition-all shadow-xl shadow-red-600/30 active:scale-95 group"
           >
-            <span className="text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Download Now</span> <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
+            <span className="text-white drop-shadow-sm">Download Now</span> <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform text-white drop-shadow-sm" />
           </Link>
         </div>
       </div>
       
       {app.faqs && app.faqs.length > 0 && (
         <div className="mb-12 max-w-4xl mx-auto">
-          <h2 className="text-2xl font-black mb-6 flex items-center gap-2 text-slate-900 dark:text-white uppercase tracking-tighter">
+          <h2 className="text-2xl font-black mb-6 flex items-center gap-2 text-black dark:text-white uppercase tracking-tighter">
             <Info className="w-6 h-6 text-red-600 drop-shadow-sm" /> Frequently Asked Questions
           </h2>
           <div className="space-y-3">
             {app.faqs.map((faq, idx) => (
               <details key={idx} className="group bg-white dark:bg-white/5 border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden pointer-events-auto">
-                <summary className="font-black p-4 cursor-pointer select-none flex items-center justify-between text-slate-900 dark:text-white group-open:text-red-600 dark:group-open:text-red-400 min-h-[48px] uppercase tracking-tight">
+                <summary className="font-black p-4 cursor-pointer select-none flex items-center justify-between text-black dark:text-white group-open:text-red-600 dark:group-open:text-red-400 min-h-[48px] uppercase tracking-tight">
                   {faq.question}
-                  <span className="text-2xl leading-none transition-transform group-open:rotate-45 ml-4 text-slate-900 dark:text-slate-300 opacity-50 group-open:opacity-100 group-open:text-red-600 border border-slate-300 dark:border-slate-700 rounded-full w-8 h-8 flex items-center justify-center">+</span>
+                  <span className="text-2xl leading-none transition-transform group-open:rotate-45 ml-4 text-black dark:text-slate-300 opacity-50 group-open:opacity-100 group-open:text-red-600 border border-slate-300 dark:border-slate-700 rounded-full w-8 h-8 flex items-center justify-center">+</span>
                 </summary>
                 <div 
-                  className="px-4 pb-4 pt-2 text-slate-700 dark:text-slate-300 prose prose-sm prose-slate dark:prose-invert max-w-none text-left font-bold"
+                  className="px-4 pb-4 pt-2 text-black dark:text-slate-300 prose prose-sm prose-slate dark:prose-invert max-w-none text-left font-bold"
                   dangerouslySetInnerHTML={{ __html: faq.answer }}
                 />
               </details>

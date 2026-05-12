@@ -100,18 +100,18 @@ export default function DownloadPage() {
       {/* SEO Optimized FAQs */}
       {app.faqs && app.faqs.length > 0 && (
         <div className="max-w-4xl mx-auto mb-12">
-          <h2 className="text-xl font-black mb-6 flex items-center gap-2 text-black uppercase tracking-tight">
+          <h2 className="text-xl font-black mb-6 flex items-center gap-2 text-black dark:text-white uppercase tracking-tight">
             <Info className="w-5 h-5 text-red-600" /> Frequently Asked Questions
           </h2>
           <div className="space-y-3">
             {app.faqs.map((faq, idx) => (
               <details key={idx} className="group bg-white dark:bg-white/5 border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden pointer-events-auto">
-                <summary className="font-black p-4 cursor-pointer select-none flex items-center justify-between text-slate-900 dark:text-white group-open:text-red-600 dark:group-open:text-red-400 min-h-[48px] uppercase tracking-tight">
+                <summary className="font-black p-4 cursor-pointer select-none flex items-center justify-between text-black dark:text-white group-open:text-red-600 dark:group-open:text-red-400 min-h-[48px] uppercase tracking-tight">
                   {faq.question}
-                  <span className="text-2xl leading-none transition-transform group-open:rotate-45 ml-4 text-slate-900 dark:text-slate-300 opacity-50 group-open:opacity-100 group-open:text-red-600 border border-slate-300 dark:border-slate-700 rounded-full w-8 h-8 flex items-center justify-center">+</span>
+                  <span className="text-2xl leading-none transition-transform group-open:rotate-45 ml-4 text-black dark:text-slate-300 opacity-50 group-open:opacity-100 group-open:text-red-600 border border-slate-300 dark:border-slate-700 rounded-full w-8 h-8 flex items-center justify-center">+</span>
                 </summary>
                 <div 
-                  className="px-4 pb-4 pt-2 text-slate-700 dark:text-slate-300 prose prose-sm prose-slate dark:prose-invert max-w-none text-left font-bold"
+                  className="px-4 pb-4 pt-2 text-black dark:text-slate-300 prose prose-sm prose-slate dark:prose-invert max-w-none text-left font-bold"
                   dangerouslySetInnerHTML={{ __html: faq.answer }}
                 />
               </details>

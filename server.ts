@@ -14,21 +14,39 @@ async function startServer() {
   app.use(express.json());
 
   // API Route: Secure Link
-  app.get("/api/secure-download", (req, res) => {
-    const { id } = req.query;
+  app.get("/api/v1/secure-fetch", (req, res) => {
+    const { id, timestamp } = req.query;
+    
+    // User-Agent validation (reject curl, wget, basic scrapers)
+    const userAgent = req.headers['user-agent'] || '';
+    if (!userAgent || /curl|wget|bot|spider|crawler/i.test(userAgent)) {
+      res.status(403).json({ error: 'Access Denied: Bot detected' });
+      return;
+    }
+
     if (!id || typeof id !== 'string') {
       res.status(400).json({ error: 'Access Denied: Missing App ID' });
       return;
     }
 
-    // Since we don't have a real database setup, we need a way to mock fetching it
-    // In actual production, this would do a server-side DB query to get encrypted_download_url
-    // Read the mockapps from localStorage or just use a fallback mock here
-    // For the preview, we'll redirect them to a mock download endpoint
+    if (!timestamp || typeof timestamp !== 'string') {
+      res.status(400).json({ error: 'Access Denied: Invalid parameters' });
+      return;
+    }
+
+    // Require at least 3 seconds (3000ms) difference
+    const clickTime = parseInt(timestamp, 10);
+    const now = Date.now();
+    if (isNaN(clickTime) || now - clickTime < 3000) {
+      res.status(403).json({ error: 'Security Exception: Request too fast. Human verification failed.' });
+      return;
+    }
+
+    // Since we don't have Supabase, we mock fetching the real URL
     const mockSecureUrl = `https://example.com/download-secure?fileId=${id}&token=${crypto.randomBytes(16).toString('hex')}`;
     
-    // Server-side redirect (302) masks the real URL from the browser history
-    res.set('Cache-Control', 'no-store, max-age=0');
+    // Server-side redirect (302) to mask real URL
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     res.redirect(302, mockSecureUrl);
   });
 
