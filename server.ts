@@ -29,19 +29,6 @@ async function startServer() {
       return;
     }
 
-    if (!timestamp || typeof timestamp !== 'string') {
-      res.status(400).json({ error: 'Access Denied: Invalid parameters' });
-      return;
-    }
-
-    // Require at least 3 seconds (3000ms) difference
-    const clickTime = parseInt(timestamp, 10);
-    const now = Date.now();
-    if (isNaN(clickTime) || now - clickTime < 3000) {
-      res.status(403).json({ error: 'Security Exception: Request too fast. Human verification failed.' });
-      return;
-    }
-
     // Since we don't have Supabase, we mock fetching the real URL optionally passing it via query
     let targetUrl = `https://example.com/download-secure?fileId=${id}&token=${crypto.randomBytes(16).toString('hex')}`;
     if (req.query.url && typeof req.query.url === 'string') {

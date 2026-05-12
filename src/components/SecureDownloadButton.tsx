@@ -8,41 +8,52 @@ interface SecureDownloadButtonProps {
 }
 
 export default function SecureDownloadButton({ appId, status, downloadUrl }: SecureDownloadButtonProps) {
-  const [loadTime, setLoadTime] = useState<number>(0);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    // Record when the component (page) loaded
-    setLoadTime(Date.now());
-  }, []);
+    let timer: ReturnType<typeof setTimeout>;
+    
+    if (isVerifying && countdown > 0) {
+      timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+    } else if (isVerifying && countdown === 0) {
+      if (downloadUrl && downloadUrl !== 'U2FsdGVkX19xxxxxx' && downloadUrl.trim() !== '') {
+        // Open the URL in a new tab to avoid AI Studio iframe restrictions
+        // Add https prefix if missing
+        const finalUrl = downloadUrl.startsWith('http') ? downloadUrl : `https://${downloadUrl}`;
+        window.open(finalUrl, '_blank');
+        setIsVerifying(false);
+      } else {
+        // Fallback to API mock route if no valid URL is present
+        const encodedUrl = downloadUrl 
+          ? btoa(encodeURIComponent(downloadUrl).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16))))
+          : '';
+        const urlParam = encodedUrl ? `&url=${encodeURIComponent(encodedUrl)}` : '';
+        
+        // Open in new tab since it will redirect to an external mockup page
+        window.open(`/api/v1/secure-fetch?id=${appId}${urlParam}`, '_blank');
+        setIsVerifying(false);
+      }
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isVerifying, countdown, appId, downloadUrl]);
 
   const handleDownload = () => {
+    if (isVerifying) return;
+    
     // 1. Trigger Mobile Haptics
     if (window.navigator && window.navigator.vibrate) {
       window.navigator.vibrate(50);
     }
     
-    // 2. Gate 1: Human Verification
-    const timeOnPage = Date.now() - loadTime;
-    
-    // Convert to mock target URL if available
-    // Unicode-safe base64 encoding
-    const encodedUrl = downloadUrl 
-      ? btoa(encodeURIComponent(downloadUrl).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16))))
-      : '';
-    const urlParam = encodedUrl ? `&url=${encodeURIComponent(encodedUrl)}` : '';
-    
-    if (timeOnPage < 3000) {
-      // Simulate waiting or reject if clicked instantly
-      setIsVerifying(true);
-      setTimeout(() => {
-        window.location.replace(`/api/v1/secure-fetch?id=${appId}&timestamp=${loadTime}${urlParam}`);
-      }, 3000 - timeOnPage);
-    } else {
-      // Allow download immediately if they already waited
-      setIsVerifying(true);
-      window.location.replace(`/api/v1/secure-fetch?id=${appId}&timestamp=${loadTime}${urlParam}`);
-    }
+    // Start countdown
+    setIsVerifying(true);
+    setCountdown(3);
   };
 
   return (
@@ -55,8 +66,10 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
           'bg-red-600 hover:bg-red-500 text-white animate-pulse shadow-red-600/40 border-b-4 border-red-800'}
         ${isVerifying ? 'opacity-70 cursor-not-allowed' : ''}`}
     >
-      {isVerifying ? (
-        <><Loader2 className="w-6 h-6 animate-spin text-white drop-shadow-sm" /> <span className="text-white drop-shadow-sm">Verifying...</span></>
+      {isVerifying && countdown > 0 ? (
+        <><Loader2 className="w-6 h-6 animate-spin text-white drop-shadow-sm" /> <span className="text-white drop-shadow-sm">Verifying in {countdown}...</span></>
+      ) : isVerifying ? (
+        <><Loader2 className="w-6 h-6 animate-spin text-white drop-shadow-sm" /> <span className="text-white drop-shadow-sm">Redirecting...</span></>
       ) : status === 'Verified' ? (
         <><ShieldCheck className="w-6 h-6 text-white drop-shadow-sm" /> <span className="text-white drop-shadow-sm">Secure Download</span></>
       ) : status === 'Caution' ? (
