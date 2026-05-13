@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, LogOut, Save, Upload, Type, Link as LinkIcon, ToggleLeft, Layers, Newspaper as BookIcon, Plus, Trash2, Video as VideoIcon } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { auth } from '../lib/firebase';
+import { signOut, onAuthStateChanged } from 'firebase/auth';
 
 function FaqEditor({ initialFaqs }: { initialFaqs: {question: string, answer: string}[] }) {
   const [faqs, setFaqs] = React.useState(initialFaqs || []);
@@ -52,6 +54,16 @@ export default function AdminDashboard() {
   const [videosList, setVideosList] = useState(mockVideos);
   const [categoriesList, setCategoriesList] = useState<string[]>(mockSettings.categories || []);
   const [newCatInput, setNewCatInput] = useState('');
+  const [user, setUser] = useState<any>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setCheckingAuth(false);
+    });
+    return unsubscribe;
+  }, []);
 
   React.useEffect(() => setAppsList(mockApps), [mockApps]);
   React.useEffect(() => setNewsList(mockNews), [mockNews]);
@@ -69,16 +81,19 @@ export default function AdminDashboard() {
   const handleSaveCategories = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
-    const updatedSettings = {
-      ...mockSettings,
-      categories: categoriesList,
-    };
-    
-    await saveMockSettings(updatedSettings);
-    
-    setSaving(false);
-    triggerHaptic();
-    alert('Categories saved successfully! Homepage will automatically use the first category as the "Home" view.');
+    try {
+      const updatedSettings = {
+        ...mockSettings,
+        categories: categoriesList,
+      };
+      await saveMockSettings(updatedSettings);
+      triggerHaptic();
+      alert('Categories saved successfully!');
+    } catch (err: any) {
+      alert('Error saving categories: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addCategory = () => {
@@ -92,111 +107,125 @@ export default function AdminDashboard() {
     setCategoriesList(categoriesList.filter(c => c !== catToRemove));
   };
 
-  const handleSaveSettings = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveSettings = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
-    const formData = new FormData(e.currentTarget);
-    const updatedSettings = {
-      ...mockSettings,
-      site_title: formData.get('site_title') !== null ? (formData.get('site_title') as string) : mockSettings.site_title,
-      meta_description: formData.get('meta_description') !== null ? (formData.get('meta_description') as string) : mockSettings.meta_description,
-      logo_url: formData.get('logo_url') !== null ? (formData.get('logo_url') as string) : mockSettings.logo_url,
-      favicon_url: formData.get('favicon_url') !== null ? (formData.get('favicon_url') as string) : mockSettings.favicon_url,
-      seo_keywords: formData.get('seo_keywords') !== null ? (formData.get('seo_keywords') as string) : mockSettings.seo_keywords,
-      about_content: formData.get('about_content') !== null ? (formData.get('about_content') as string) : mockSettings.about_content,
-      contact_content: formData.get('contact_content') !== null ? (formData.get('contact_content') as string) : mockSettings.contact_content,
-      privacy_content: formData.get('privacy_content') !== null ? (formData.get('privacy_content') as string) : mockSettings.privacy_content,
-      terms_content: formData.get('terms_content') !== null ? (formData.get('terms_content') as string) : mockSettings.terms_content,
-      ticker_text: formData.get('ticker_text') !== null ? (formData.get('ticker_text') as string) : mockSettings.ticker_text,
-      disclaimer_text: formData.get('disclaimer_text') !== null ? (formData.get('disclaimer_text') as string) : mockSettings.disclaimer_text,
-      ethics_discrimination_text: formData.get('ethics_discrimination_text') !== null ? (formData.get('ethics_discrimination_text') as string) : mockSettings.ethics_discrimination_text,
-      support_email: formData.get('support_email') !== null ? (formData.get('support_email') as string) : mockSettings.support_email,
-      helpline_whatsapp: formData.get('helpline_whatsapp') !== null ? (formData.get('helpline_whatsapp') as string) : mockSettings.helpline_whatsapp,
-      helpline_telegram: formData.get('helpline_telegram') !== null ? (formData.get('helpline_telegram') as string) : mockSettings.helpline_telegram,
-      important_notice: formData.get('important_notice') !== null ? (formData.get('important_notice') as string) : '',
-      categories: formData.get('categories') ? (formData.get('categories') as string).split(',').map(c => c.trim()).filter(Boolean) : mockSettings.categories,
-      banners: banners
-    };
-    
-    saveMockSettings(updatedSettings);
-    triggerHaptic();
-
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const updatedSettings = {
+        ...mockSettings,
+        site_title: formData.get('site_title') !== null ? (formData.get('site_title') as string) : mockSettings.site_title,
+        meta_description: formData.get('meta_description') !== null ? (formData.get('meta_description') as string) : mockSettings.meta_description,
+        logo_url: formData.get('logo_url') !== null ? (formData.get('logo_url') as string) : mockSettings.logo_url,
+        favicon_url: formData.get('favicon_url') !== null ? (formData.get('favicon_url') as string) : mockSettings.favicon_url,
+        seo_keywords: formData.get('seo_keywords') !== null ? (formData.get('seo_keywords') as string) : mockSettings.seo_keywords,
+        about_content: formData.get('about_content') !== null ? (formData.get('about_content') as string) : mockSettings.about_content,
+        contact_content: formData.get('contact_content') !== null ? (formData.get('contact_content') as string) : mockSettings.contact_content,
+        privacy_content: formData.get('privacy_content') !== null ? (formData.get('privacy_content') as string) : mockSettings.privacy_content,
+        terms_content: formData.get('terms_content') !== null ? (formData.get('terms_content') as string) : mockSettings.terms_content,
+        ticker_text: formData.get('ticker_text') !== null ? (formData.get('ticker_text') as string) : mockSettings.ticker_text,
+        disclaimer_text: formData.get('disclaimer_text') !== null ? (formData.get('disclaimer_text') as string) : mockSettings.disclaimer_text,
+        ethics_discrimination_text: formData.get('ethics_discrimination_text') !== null ? (formData.get('ethics_discrimination_text') as string) : mockSettings.ethics_discrimination_text,
+        support_email: formData.get('support_email') !== null ? (formData.get('support_email') as string) : mockSettings.support_email,
+        helpline_whatsapp: formData.get('helpline_whatsapp') !== null ? (formData.get('helpline_whatsapp') as string) : mockSettings.helpline_whatsapp,
+        helpline_telegram: formData.get('helpline_telegram') !== null ? (formData.get('helpline_telegram') as string) : mockSettings.helpline_telegram,
+        important_notice: formData.get('important_notice') !== null ? (formData.get('important_notice') as string) : '',
+        categories: formData.get('categories') ? (formData.get('categories') as string).split(',').map(c => c.trim()).filter(Boolean) : mockSettings.categories,
+        banners: banners
+      };
+      
+      await saveMockSettings(updatedSettings);
+      triggerHaptic();
       alert('Settings saved successfully. Reload to see changes everywhere.');
-    }, 1000);
+    } catch (err: any) {
+      console.error(err);
+      alert('Error saving settings: ' + (err.message || 'Unknown error'));
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSaveApp = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveApp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('name') as string || 'New App';
-    const appData = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      seo_title: formData.get('seo_title') as string || name,
-      seo_description: formData.get('seo_description') as string || '',
-      seo_keywords: formData.get('seo_keywords') as string || '',
-      og_image_url: formData.get('og_image_url') as string || '',
-      canonical_url: formData.get('canonical_url') as string || '',
-      icon_url: formData.get('icon_url') as string || '',
-      category: formData.getAll('category_list').length > 0 ? formData.getAll('category_list').join(', ') : mockSettings.categories?.[0] || 'General',
-      version: '1.0',
-      file_size: 'Unknown',
-      developer: 'Admin',
-      screenshots: [],
-      encrypted_download_url: formData.get('download_url') as string,
-      description_html: formData.get('description_html') as string || '<p>A new application.</p>',
-      custom_admin_box_heading: formData.get('custom_admin_box_heading') as string,
-      custom_admin_box_html: formData.get('custom_admin_box_html') as string,
-      red_box_msg: formData.get('red_box_msg') as string,
-      yellow_box_msg: formData.get('yellow_box_msg') as string,
-      idea_box_msg: formData.get('idea_box_msg') as string,
-      safety_status: (formData.get('safety_status') as 'Verified' | 'Caution' | 'Unsafe') || 'Verified',
-      serial_number: parseInt(formData.get('serial_number') as string) || appsList.length + 1,
-      is_featured: false,
-      is_new: formData.get('is_new') === 'on',
-      release_notes: formData.get('release_notes') as string,
-      rating: 5.0,
-      created_at: new Date().toISOString(),
-      faqs: JSON.parse((formData.get('faqs_json') as string) || '[]')
-    };
-    
-    let updatedApps;
-    if (editingAppId) {
-      updatedApps = appsList.map(a => a.id === editingAppId ? { ...a, ...appData, id: a.id, created_at: a.created_at, screenshots: a.screenshots } : a);
-    } else {
-      updatedApps = [...appsList, appData];
-    }
-    setAppsList(updatedApps);
-    saveMockApps(updatedApps);
-    triggerHaptic();
-
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const name = formData.get('name') as string || 'New App';
+      const appData = {
+        id: Math.random().toString(36).substr(2, 9),
+        name,
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        seo_title: formData.get('seo_title') as string || name,
+        seo_description: formData.get('seo_description') as string || '',
+        seo_keywords: formData.get('seo_keywords') as string || '',
+        og_image_url: formData.get('og_image_url') as string || '',
+        canonical_url: formData.get('canonical_url') as string || '',
+        icon_url: formData.get('icon_url') as string || '',
+        category: formData.getAll('category_list').length > 0 ? formData.getAll('category_list').join(', ') : mockSettings.categories?.[0] || 'General',
+        version: '1.0',
+        file_size: 'Unknown',
+        developer: 'Admin',
+        screenshots: [],
+        encrypted_download_url: formData.get('download_url') as string,
+        description_html: formData.get('description_html') as string || '<p>A new application.</p>',
+        custom_admin_box_heading: formData.get('custom_admin_box_heading') as string,
+        custom_admin_box_html: formData.get('custom_admin_box_html') as string,
+        red_box_msg: formData.get('red_box_msg') as string,
+        yellow_box_msg: formData.get('yellow_box_msg') as string,
+        idea_box_msg: formData.get('idea_box_msg') as string,
+        safety_status: (formData.get('safety_status') as 'Verified' | 'Caution' | 'Unsafe') || 'Verified',
+        serial_number: parseInt(formData.get('serial_number') as string) || appsList.length + 1,
+        is_featured: false,
+        is_new: formData.get('is_new') === 'on',
+        release_notes: formData.get('release_notes') as string,
+        rating: 5.0,
+        created_at: new Date().toISOString(),
+        faqs: JSON.parse((formData.get('faqs_json') as string) || '[]')
+      };
+      
+      let updatedApps;
+      if (editingAppId) {
+        updatedApps = appsList.map(a => a.id === editingAppId ? { ...a, ...appData, id: a.id, created_at: a.created_at, screenshots: a.screenshots } : a);
+      } else {
+        updatedApps = [...appsList, appData];
+      }
+      
+      await saveMockApps(updatedApps);
+      setAppsList(updatedApps);
+      triggerHaptic();
       setEditingAppId(null);
       alert(editingAppId ? 'App updated successfully.' : 'App added successfully. Browse to Home Page to see.');
-    }, 1000);
+    } catch (err: any) {
+      console.error(err);
+      alert('Error saving app: ' + (err.message || 'Unknown error'));
+    } finally {
+      setSaving(false);
+    }
   };
   
-  const handleDeleteApp = (id: string) => {
+  const handleDeleteApp = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this app?")) {
-      const updatedApps = appsList.filter(a => a.id !== id);
-      setAppsList(updatedApps);
-      saveMockApps(updatedApps);
+      try {
+        const updatedApps = appsList.filter(a => a.id !== id);
+        await saveMockApps(updatedApps);
+        setAppsList(updatedApps);
+      } catch (err: any) {
+        alert('Error deleting app: ' + err.message);
+      }
     }
   };
 
-  const handleSaveBooks = () => {
+  const handleSaveBooks = async () => {
     setSaving(true);
-    triggerHaptic();
-    saveMockNews(newsList);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      await saveMockNews(newsList);
+      triggerHaptic();
       alert('Books saved successfully. Go to Book Section to see.');
-    }, 1000);
+    } catch (err: any) {
+      alert('Error saving news: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleNewsChange = (id: string, field: string, value: string) => {
@@ -245,14 +274,17 @@ export default function AdminDashboard() {
     setNewsList(newsList.filter(n => n.id !== id));
   };
 
-  const handleSaveBlogs = () => {
+  const handleSaveBlogs = async () => {
     setSaving(true);
-    triggerHaptic();
-    saveMockBlogs(blogs);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      await saveMockBlogs(blogs);
+      triggerHaptic();
       alert('Blogs saved successfully.');
-    }, 1000);
+    } catch (err: any) {
+      alert('Error saving blogs: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleBlogChange = (id: string, field: string, value: string) => {
@@ -298,26 +330,56 @@ export default function AdminDashboard() {
     setVideosList(videosList.filter(v => v.id !== id));
   };
 
-  const handleSaveVideos = () => {
+  const handleSaveVideos = async () => {
     setSaving(true);
-    triggerHaptic();
-    saveMockVideos(videosList);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      await saveMockVideos(videosList);
+      triggerHaptic();
       alert('Videos saved successfully.');
-    }, 1000);
+    } catch (err: any) {
+      alert('Error saving videos: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const handleLogout = async () => {
+    triggerHaptic();
+    await signOut(auth);
+  };
+
+  if (checkingAuth) {
+    return <div className="min-h-screen flex items-center justify-center">Verifying credentials...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/admin/login" />;
+  }
+
+  if (user.email !== 'defentechscholar@gmail.com') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center">
+        <h1 className="text-2xl font-bold text-rose-500 mb-4">Access Denied</h1>
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-8">
+          You are logged in as <span className="font-bold text-slate-900 dark:text-white">{user.email}</span>, but this account is not authorized to access the Admin Central.
+        </p>
+        <button onClick={handleLogout} className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-lg font-bold">
+          Sign Out & Try Another Account
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">
       <div className="mb-8 flex justify-between items-center bg-pink-100 dark:bg-pink-500/10 border border-pink-200 dark:border-pink-500/20 p-6 rounded-2xl">
         <div>
           <h1 className="text-2xl font-bold text-pink-400">YonoStore Admin Central</h1>
-          <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Authorized Access Only • God Mode Active</p>
+          <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Logged in as {user.email} • God Mode Active</p>
         </div>
-        <Link to="/" onClick={triggerHaptic} className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-white/10 hover:bg-white/20 rounded-lg transition-colors font-medium text-sm min-h-[48px]">
-          <LogOut className="w-4 h-4" /> Exit
-        </Link>
+        <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-white/10 hover:bg-white/20 rounded-lg transition-colors font-medium text-sm min-h-[48px]">
+          <LogOut className="w-4 h-4" /> Sign Out
+        </button>
       </div>
 
       <div className="grid md:grid-cols-[250px_1fr] gap-8">
@@ -748,7 +810,17 @@ export default function AdminDashboard() {
                 ))}
               </div>
               <div className="mt-8 flex justify-end">
-                <button onClick={() => saveMockNews(newsList)} className="bg-pink-500 hover:bg-pink-600 text-slate-900 dark:text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2">
+                <button onClick={async () => {
+                  try {
+                    setSaving(true);
+                    await saveMockNews(newsList);
+                    alert('News saved successfully');
+                  } catch (err: any) {
+                    alert('Error saving news: ' + err.message);
+                  } finally {
+                    setSaving(false);
+                  }
+                }} className="bg-pink-500 hover:bg-pink-600 text-slate-900 dark:text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2">
                   <Save className="w-5 h-5"/> Save News
                 </button>
               </div>
@@ -974,9 +1046,9 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {(activeTab !== 'dashboard' && activeTab !== 'apps' && activeTab !== 'settings') && (
+          {(!['dashboard', 'apps', 'news', 'blogs', 'videos', 'categories', 'banners', 'settings'].includes(activeTab)) && (
              <div className="flex items-center justify-center h-full text-slate-500">
-               Module "{activeTab}" is initializing...
+               Module "{activeTab}" is in development...
              </div>
           )}
         </div>

@@ -1,7 +1,48 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { AppConfig, GlobalSettings, NewsItem, BlogPost, VideoItem } from '../lib/supabase';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  // We alert the error string so the user can see it in the UI and report back
+  if (errInfo.error.includes('permissions')) {
+    console.warn("Permission denied for route: " + path + ". Current user: " + (errInfo.authInfo.email || 'Not logged in'));
+  }
+  throw new Error(JSON.stringify(errInfo));
+}
 
 // Providing fallback data immediately helps avoid layout shifts
 import { mockApps, mockSettings, mockNews, mockBlogs, mockVideos } from '../lib/supabase';
@@ -36,19 +77,34 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const unsubs = [
       onSnapshot(doc(db, 'store_data', 'apps'), (snap) => {
         if (snap.exists()) setApps(snap.data().items || []);
-      }, (err) => console.error(err)),
+      }, (err) => {
+        if (err.message.includes('permissions')) return; // Ignore permission errors on initial load if not logged in for private docs (though these are public)
+        console.error(err);
+      }),
       onSnapshot(doc(db, 'store_data', 'settings'), (snap) => {
         if (snap.exists()) setSettings(snap.data() as GlobalSettings);
-      }, (err) => console.error(err)),
+      }, (err) => {
+        if (err.message.includes('permissions')) return;
+        console.error(err);
+      }),
       onSnapshot(doc(db, 'store_data', 'news'), (snap) => {
         if (snap.exists()) setNews(snap.data().items || []);
-      }, (err) => console.error(err)),
+      }, (err) => {
+        if (err.message.includes('permissions')) return;
+        console.error(err);
+      }),
       onSnapshot(doc(db, 'store_data', 'blogs'), (snap) => {
         if (snap.exists()) setBlogs(snap.data().items || []);
-      }, (err) => console.error(err)),
+      }, (err) => {
+        if (err.message.includes('permissions')) return;
+        console.error(err);
+      }),
       onSnapshot(doc(db, 'store_data', 'videos'), (snap) => {
         if (snap.exists()) setVideos(snap.data().items || []);
-      }, (err) => console.error(err))
+      }, (err) => {
+        if (err.message.includes('permissions')) return;
+        console.error(err);
+      })
     ];
     
     // Simulate loading for UI
@@ -58,19 +114,39 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const saveApps = async (newApps: AppConfig[]) => {
-    await setDoc(doc(db, 'store_data', 'apps'), { items: newApps });
+    try {
+      await setDoc(doc(db, 'store_data', 'apps'), { items: newApps });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'store_data/apps');
+    }
   };
   const saveSettings = async (newSettings: GlobalSettings) => {
-    await setDoc(doc(db, 'store_data', 'settings'), newSettings);
+    try {
+      await setDoc(doc(db, 'store_data', 'settings'), newSettings);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'store_data/settings');
+    }
   };
   const saveNews = async (newNews: NewsItem[]) => {
-    await setDoc(doc(db, 'store_data', 'news'), { items: newNews });
+    try {
+      await setDoc(doc(db, 'store_data', 'news'), { items: newNews });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'store_data/news');
+    }
   };
   const saveBlogs = async (newBlogs: BlogPost[]) => {
-    await setDoc(doc(db, 'store_data', 'blogs'), { items: newBlogs });
+    try {
+      await setDoc(doc(db, 'store_data', 'blogs'), { items: newBlogs });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'store_data/blogs');
+    }
   };
   const saveVideos = async (newVideos: VideoItem[]) => {
-    await setDoc(doc(db, 'store_data', 'videos'), { items: newVideos });
+    try {
+      await setDoc(doc(db, 'store_data', 'videos'), { items: newVideos });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'store_data/videos');
+    }
   };
 
   return (

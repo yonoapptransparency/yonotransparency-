@@ -82,7 +82,8 @@ export default function AdminLogin() {
             <Shield className="w-10 h-10 text-pink-400" />
           </div>
         </div>
-        <h1 className="text-2xl font-bold text-center mb-8">Admin Access</h1>
+        <h1 className="text-2xl font-bold text-center mb-2">Admin Access</h1>
+        <p className="text-xs text-center text-slate-500 mb-8 font-medium">Use your Google Account: defentechscholar@gmail.com</p>
         
         <form onSubmit={handleLogin} className="space-y-6">
           {error && <div className="text-rose-400 text-sm text-center bg-rose-500/10 p-3 rounded">{error}</div>}
@@ -154,6 +155,10 @@ export default function AdminLogin() {
             </svg>
             Sign in with Google
           </button>
+        </div>
+        
+        <div className="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
+          v1.0.1
         </div>
       </div>
     </div>

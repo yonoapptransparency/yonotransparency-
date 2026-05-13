@@ -11,11 +11,15 @@ export default function Home() {
   const { apps: mockApps, settings: mockSettings, news: mockNews, blogs: mockBlogs, videos: mockVideos, saveApps: saveMockApps, saveSettings: saveMockSettings, saveNews: saveMockNews, saveBlogs: saveMockBlogs, saveVideos: saveMockVideos } = useData();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || mockSettings.categories?.[0] || 'All Apps');
   const [apps, setApps] = useState(mockApps);
 
   useEffect(() => {
+    const q = searchParams.get('q');
+    if (q && q !== searchTerm) {
+      setSearchTerm(q);
+    }
     const tab = searchParams.get('tab');
     if (tab) {
       setActiveTab(tab);
@@ -32,7 +36,26 @@ export default function Home() {
 
   const filteredApps = mockApps
     .filter(app => app.name.toLowerCase().includes(searchTerm.toLowerCase()) || app.category.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => a.serial_number - b.serial_number);
+    .sort((a, b) => {
+      if (searchTerm) {
+        const cleanSearch = searchTerm.toLowerCase().trim();
+        const aName = a.name.toLowerCase();
+        const bName = b.name.toLowerCase();
+        
+        // Exact match prioritized
+        const aExact = aName === cleanSearch;
+        const bExact = bName === cleanSearch;
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
+        
+        // Starts with prioritized
+        const aStartsWith = aName.startsWith(cleanSearch);
+        const bStartsWith = bName.startsWith(cleanSearch);
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+      }
+      return a.serial_number - b.serial_number;
+    });
 
   const bannerItems = mockSettings.banners || [];
 
@@ -47,13 +70,13 @@ export default function Home() {
         <meta property="og:image" content={mockSettings.logo_url} />
       </Helmet>
       {/* Premium Hero Section from Screenshot */}
-      <div className="text-center py-12 px-4">
+      <div className="text-center py-6 px-4">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-semibold mb-6"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold mb-3"
         >
-          <ShieldCheck className="w-4 h-4" />
+          <ShieldCheck className="w-3.5 h-3.5" />
           Verified Transparency
         </motion.div>
         
@@ -61,30 +84,29 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-4xl sm:text-5xl font-black tracking-tighter text-black dark:text-white mb-4 uppercase"
+          className="text-2xl sm:text-3xl font-black tracking-tighter text-black dark:text-white mb-2 uppercase flex justify-center items-center gap-2 flex-wrap"
         >
-          App Transparency <br />
-          <span className="text-red-600">Portal</span>
+          App Transparency <span className="text-red-600">Portal</span>
         </motion.h1>
         
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-black dark:text-slate-400 max-w-xl mx-auto text-lg mb-10 font-black uppercase tracking-tight"
+          className="text-black dark:text-slate-400 max-w-xl mx-auto text-sm mb-6 font-bold uppercase tracking-tight"
         >
-          Independent reviews & download links for apps you can trust.
+          Independent reviews for apps you can trust.
         </motion.p>
 
         {/* Search Header Style - Matching Screenshot */}
-        <div className="max-w-2xl mx-auto mb-10 px-1">
+        <div className="max-w-xl mx-auto mb-6 px-1">
           <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none z-10">
-              <Search className="h-5 w-5 text-slate-400 group-focus-within:text-red-500 transition-colors" />
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+              <Search className="h-4 w-4 text-slate-400 group-focus-within:text-red-500 transition-colors" />
             </div>
             <input
               type="text"
-              className="block w-full pl-12 pr-4 py-4 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl border border-white/50 dark:border-white/5 rounded-2xl text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all shadow-xl shadow-black/5"
+              className="block w-full pl-10 pr-4 py-3 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl border border-white/50 dark:border-white/5 rounded-xl text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all shadow-lg shadow-black/5"
               placeholder="Search apps..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

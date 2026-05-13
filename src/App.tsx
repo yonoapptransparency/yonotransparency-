@@ -65,7 +65,6 @@ function Header() {
             </div>
             <div className="flex flex-col leading-none">
               <span className="text-xl font-black tracking-tighter magic-text uppercase">{settings.site_title}</span>
-              <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-widest">Transparency</span>
             </div>
           </Link>
           
