@@ -6,8 +6,7 @@ import firebaseConfig from '../../firebase-applet-config.json';
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Use initializeFirestore to enable force long polling, which is essential for mobile networks
-// that often disrupt standard WebSockets/Streaming.
+// EXPERIMENTAL FORCE LONG POLLING IS REQUIRED for Indian Mobile ISPs!
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true
 }, firebaseConfig.firestoreDatabaseId === '(default)' ? undefined : firebaseConfig.firestoreDatabaseId);

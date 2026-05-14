@@ -129,7 +129,56 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     // Set a safety timeout for loading
     const timeout = setTimeout(() => {
       setLoading(false);
-    }, 10000);
+      
+      // FALLBACK: If we haven't received server data via onSnapshot after 5s,
+      // it means WebSockets might be blocked by the ISP or network.
+      // We forcefully fetch via HTTP explicitly.
+      if (!receivedServerUpdate) {
+        console.warn("Firestore: WebSockets appear blocked. Falling back to HTTP fetches...");
+        const forceFetch = async () => {
+          try {
+            const tempApps = await getDocFromServer(doc(db, 'store_data', 'apps'));
+            if (tempApps.exists()) {
+              const data = tempApps.data().items || [];
+              setApps(data);
+              localStorage.setItem('yonostore_apps', JSON.stringify(data));
+            }
+            const tempSettings = await getDocFromServer(doc(db, 'store_data', 'settings'));
+            if (tempSettings.exists()) {
+              const data = tempSettings.data() as GlobalSettings;
+              setSettings(data);
+              localStorage.setItem('yonostore_settings', JSON.stringify(data));
+            }
+            const tempNews = await getDocFromServer(doc(db, 'store_data', 'news'));
+            if (tempNews.exists()) {
+              const data = tempNews.data().items || [];
+              setNews(data);
+              localStorage.setItem('yonostore_news', JSON.stringify(data));
+            }
+            const tempBlogs = await getDocFromServer(doc(db, 'store_data', 'blogs'));
+            if (tempBlogs.exists()) {
+              const data = tempBlogs.data().items || [];
+              setBlogs(data);
+              localStorage.setItem('yonostore_blogs', JSON.stringify(data));
+            }
+            const tempVideos = await getDocFromServer(doc(db, 'store_data', 'videos'));
+            if (tempVideos.exists()) {
+              const data = tempVideos.data().items || [];
+              setVideos(data);
+              localStorage.setItem('yonostore_videos', JSON.stringify(data));
+            }
+            setIsConnected(true);
+            setIsLive(true);
+            setSyncVersion(v => v + 1);
+            setLastSyncTime(new Date().toLocaleTimeString());
+          } catch(err) {
+            console.error("HTTP Fallback also failed:", err);
+            setIsConnected(false);
+          }
+        };
+        forceFetch();
+      }
+    }, 5000);
 
     // Periodically check connection every 30s - less aggressive when failing
     const checkConnection = async () => {
@@ -174,6 +223,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           } else {
             setIsLive(false);
           }
+        } else if (!fromCache && auth.currentUser?.email === 'defentechscholar@gmail.com') {
+          // AUTO-SEED: If the document doesn't exist on the server, but we have a local cache and we are admin, push it up
+          const local = localStorage.getItem('yonostore_apps');
+          if (local) setDoc(doc(db, 'store_data', 'apps'), { items: JSON.parse(local), last_updated: new Date().toISOString() });
         }
         checkLoaded();
       }, (err) => {
@@ -194,6 +247,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           } else {
             setIsLive(false);
           }
+        } else if (!fromCache && auth.currentUser?.email === 'defentechscholar@gmail.com') {
+          const local = localStorage.getItem('yonostore_settings');
+          if (local) setDoc(doc(db, 'store_data', 'settings'), JSON.parse(local));
         }
         checkLoaded();
       }, (err) => {
