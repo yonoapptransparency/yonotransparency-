@@ -106,190 +106,107 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem('yonostore_videos');
     return saved ? JSON.parse(saved) : mockVideos;
   });
-  const [loading, setLoading] = useState(true);
+  // Fast persistent loading state management
+  const [loading, setLoading] = useState(() => {
+    // If we have cached apps and settings, we can show them immediately
+    const hasApps = !!localStorage.getItem('yonostore_apps');
+    const hasSettings = !!localStorage.getItem('yonostore_settings');
+    // Pre-emptively false if we have the critical data cached
+    return !(hasApps && hasSettings);
+  });
+  
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [isLive, setIsLive] = useState(false);
   const [syncVersion, setSyncVersion] = useState(0);
-  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(new Date().toLocaleTimeString());
+
+  // Helper to ensure writes hit the server
+  const withServerConfirmation = React.useCallback(async (operation: () => Promise<any>, timeoutMs: number = 20000) => {
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Cloud Sync Timeout: The update is taking a while to reach the server. This happens on slow connections. Changes usually sync eventually. (Note: You can try manually syncing from the header status indicator)")), timeoutMs)
+    );
+    return Promise.race([operation(), timeoutPromise]);
+  }, []);
 
   useEffect(() => {
     let resolvedCount = 0;
-    const totalListen = 5;
+    const hasCache = !!localStorage.getItem('yonostore_apps') && !!localStorage.getItem('yonostore_settings');
     
-    // Safety flag to track if we've received ANY server update
-    let receivedServerUpdate = false;
-
     const checkLoaded = () => {
       resolvedCount++;
-      if (resolvedCount >= totalListen) {
+      // If we have cache, we already set loading to false in initial state
+      // If no cache, we wait for at least apps and settings to pull once
+      if (resolvedCount >= 2) {
         setLoading(false);
       }
     };
 
-    // Set a safety timeout for loading
-    const timeout = setTimeout(() => {
+    // Safety fallback only if no cache
+    const timeout = !hasCache ? setTimeout(() => {
       setLoading(false);
-      
-      // FALLBACK: If we haven't received server data via onSnapshot after 5s,
-      // it means WebSockets might be blocked by the ISP or network.
-      // We forcefully fetch via HTTP explicitly.
-      if (!receivedServerUpdate) {
-        console.warn("Firestore: WebSockets appear blocked. Falling back to HTTP fetches...");
-        const forceFetch = async () => {
-          try {
-            const tempApps = await getDocFromServer(doc(db, 'store_data', 'apps'));
-            if (tempApps.exists()) {
-              const data = tempApps.data().items || [];
-              setApps(data);
-              localStorage.setItem('yonostore_apps', JSON.stringify(data));
-            }
-            const tempSettings = await getDocFromServer(doc(db, 'store_data', 'settings'));
-            if (tempSettings.exists()) {
-              const data = tempSettings.data() as GlobalSettings;
-              setSettings(data);
-              localStorage.setItem('yonostore_settings', JSON.stringify(data));
-            }
-            const tempNews = await getDocFromServer(doc(db, 'store_data', 'news'));
-            if (tempNews.exists()) {
-              const data = tempNews.data().items || [];
-              setNews(data);
-              localStorage.setItem('yonostore_news', JSON.stringify(data));
-            }
-            const tempBlogs = await getDocFromServer(doc(db, 'store_data', 'blogs'));
-            if (tempBlogs.exists()) {
-              const data = tempBlogs.data().items || [];
-              setBlogs(data);
-              localStorage.setItem('yonostore_blogs', JSON.stringify(data));
-            }
-            const tempVideos = await getDocFromServer(doc(db, 'store_data', 'videos'));
-            if (tempVideos.exists()) {
-              const data = tempVideos.data().items || [];
-              setVideos(data);
-              localStorage.setItem('yonostore_videos', JSON.stringify(data));
-            }
-            setIsConnected(true);
-            setIsLive(true);
-            setSyncVersion(v => v + 1);
-            setLastSyncTime(new Date().toLocaleTimeString());
-          } catch(err) {
-            console.error("HTTP Fallback also failed:", err);
-            setIsConnected(false);
-          }
-        };
-        forceFetch();
-      }
-    }, 5000);
+    }, 2000) : null;
 
-    // Periodically check connection every 30s - less aggressive when failing
     const checkConnection = async () => {
       try {
         const testDoc = doc(db, 'store_data', 'connectivity_test');
-        // Use a 5s race for the connectivity check to avoid long-hanging SDK internals
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
         await getDocFromServer(testDoc);
-        clearTimeout(timeoutId);
-        
         setIsConnected(true);
-        console.log("Firestore: Cloud Connection Verified.");
       } catch (err: any) {
-        // Only log if it was previously connected or null to avoid spam
-        if (isConnected !== false) {
-          console.warn("Firestore: Cloud Connection Disturbed.", err.message);
-        }
-        setIsConnected(false);
+        if (isConnected !== false) setIsConnected(false);
       }
     };
 
     checkConnection();
-    const connInterval = setInterval(checkConnection, 30000);
+    const connInterval = setInterval(checkConnection, 60000);
 
     const unsubs = [
-      onSnapshot(doc(db, 'store_data', 'apps'), { includeMetadataChanges: true }, (snap) => {
-        const fromCache = snap.metadata.fromCache;
-        console.log(`Sync [Apps]: Source=${fromCache ? 'Cache' : 'Server'}, Exists=${snap.exists()}`);
-        
+      onSnapshot(doc(db, 'store_data', 'apps'), { includeMetadataChanges: false }, (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
           setApps(data);
           localStorage.setItem('yonostore_apps', JSON.stringify(data));
-          setSyncVersion(v => v + 1);
-          if (!fromCache) {
+          if (!snap.metadata.fromCache) {
             setIsConnected(true);
             setIsLive(true);
-            receivedServerUpdate = true;
             setLastSyncTime(new Date().toLocaleTimeString());
-          } else {
-            setIsLive(false);
           }
-        } else if (!fromCache && auth.currentUser?.email === 'defentechscholar@gmail.com') {
-          // AUTO-SEED: If the document doesn't exist on the server, but we have a local cache and we are admin, push it up
-          const local = localStorage.getItem('yonostore_apps');
-          if (local) setDoc(doc(db, 'store_data', 'apps'), { items: JSON.parse(local), last_updated: new Date().toISOString() });
         }
         checkLoaded();
-      }, (err) => {
-        console.error("Sync Error [Apps]:", err);
-        checkLoaded();
       }),
-      onSnapshot(doc(db, 'store_data', 'settings'), { includeMetadataChanges: true }, (snap) => {
-        const fromCache = snap.metadata.fromCache;
+      onSnapshot(doc(db, 'store_data', 'settings'), { includeMetadataChanges: false }, (snap) => {
         if (snap.exists()) {
           const data = snap.data() as GlobalSettings;
           setSettings(data);
           localStorage.setItem('yonostore_settings', JSON.stringify(data));
-          setSyncVersion(v => v + 1);
           if (!snap.metadata.fromCache) {
             setIsConnected(true);
             setIsLive(true);
-            receivedServerUpdate = true;
-          } else {
-            setIsLive(false);
           }
-        } else if (!fromCache && auth.currentUser?.email === 'defentechscholar@gmail.com') {
-          const local = localStorage.getItem('yonostore_settings');
-          if (local) setDoc(doc(db, 'store_data', 'settings'), JSON.parse(local));
         }
         checkLoaded();
-      }, (err) => {
-        console.error("Sync Error [Settings]:", err);
-        checkLoaded();
       }),
-      onSnapshot(doc(db, 'store_data', 'news'), { includeMetadataChanges: true }, (snap) => {
+      onSnapshot(doc(db, 'store_data', 'news'), (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
           setNews(data);
           localStorage.setItem('yonostore_news', JSON.stringify(data));
-          if (!snap.metadata.fromCache) receivedServerUpdate = true;
         }
         checkLoaded();
-      }, (err) => {
-        console.error("Sync Error [News]:", err);
-        checkLoaded();
       }),
-      onSnapshot(doc(db, 'store_data', 'blogs'), { includeMetadataChanges: true }, (snap) => {
+      onSnapshot(doc(db, 'store_data', 'blogs'), (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
           setBlogs(data);
           localStorage.setItem('yonostore_blogs', JSON.stringify(data));
-          if (!snap.metadata.fromCache) receivedServerUpdate = true;
         }
         checkLoaded();
-      }, (err) => {
-        console.error("Sync Error [Blogs]:", err);
-        checkLoaded();
       }),
-      onSnapshot(doc(db, 'store_data', 'videos'), { includeMetadataChanges: true }, (snap) => {
+      onSnapshot(doc(db, 'store_data', 'videos'), (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
           setVideos(data);
           localStorage.setItem('yonostore_videos', JSON.stringify(data));
-          if (!snap.metadata.fromCache) receivedServerUpdate = true;
         }
-        checkLoaded();
-      }, (err) => {
-        console.error("Sync Error [Videos]:", err);
         checkLoaded();
       })
     ];
@@ -301,17 +218,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Helper to ensure writes hit the server
-  const withServerConfirmation = async (operation: () => Promise<any>, timeoutMs: number = 20000) => {
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Cloud Sync Timeout: The update is taking a while to reach the server. This happens on slow connections. Changes usually sync eventually. (Note: You can try manually syncing from the header status indicator)")), timeoutMs)
-    );
-    
-    // We race the operation against a timeout
-    return Promise.race([operation(), timeoutPromise]);
-  };
-
-  const saveApps = async (newApps: AppConfig[]) => {
+  // Memoized actions to prevent re-renders in children
+  const saveApps = React.useCallback(async (newApps: AppConfig[]) => {
     try {
       const docRef = doc(db, 'store_data', 'apps');
       const now = new Date().toISOString();
@@ -326,8 +234,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.error("Save Apps Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/apps');
     }
-  };
-  const saveSettings = async (newSettings: GlobalSettings) => {
+  }, []);
+
+  const saveSettings = React.useCallback(async (newSettings: GlobalSettings) => {
     try {
       const now = new Date().toISOString();
       const settingsWithTime = { ...newSettings, last_updated: now };
@@ -343,8 +252,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.error("Save Settings Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/settings');
     }
-  };
-   const saveNews = async (newNews: NewsItem[]) => {
+  }, []);
+
+  const saveNews = React.useCallback(async (newNews: NewsItem[]) => {
     try {
       const docRef = doc(db, 'store_data', 'news');
       console.log("Cloud: Pushing News update...");
@@ -357,8 +267,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.error("Save News Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/news');
     }
-  };
-  const saveBlogs = async (newBlogs: BlogPost[]) => {
+  }, []);
+
+  const saveBlogs = React.useCallback(async (newBlogs: BlogPost[]) => {
     try {
       const docRef = doc(db, 'store_data', 'blogs');
       console.log("Cloud: Pushing Blogs update...");
@@ -371,8 +282,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.error("Save Blogs Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/blogs');
     }
-  };
-  const saveVideos = async (newVideos: VideoItem[]) => {
+  }, []);
+
+  const saveVideos = React.useCallback(async (newVideos: VideoItem[]) => {
     try {
       const docRef = doc(db, 'store_data', 'videos');
       console.log("Cloud: Pushing Videos update...");
@@ -385,34 +297,31 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.error("Save Videos Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/videos');
     }
-  };
+  }, []);
 
-  const testCloudConnection = async () => {
+  const testCloudConnection = React.useCallback(async () => {
     console.log("Connectivity Test: Starting...");
-    const testId = Math.random().toString(36).substring(7);
     const testDoc = doc(db, 'store_data', 'connectivity_test');
     
     try {
-      // Step 1: Write a unique value to the cloud
       await withServerConfirmation(() => setDoc(testDoc, { 
-        last_test: testId, 
+        last_test: Math.random().toString(36).substring(7), 
         timestamp: new Date().toISOString(),
         client_info: navigator.userAgent
       }), 10000);
       
-      console.log("Connectivity Test: Write success. Verification passed.");
       return true;
     } catch (err) {
       console.error("Connectivity Test: Write failed.", err);
       return false;
     }
-  };
+  }, []);
 
-  const refreshAll = async () => {
+  const refreshAll = React.useCallback(async () => {
     console.log("Manual Refresh: Fetching latest data from Cloud...");
     setLoading(true);
     try {
-      const docs = [
+      const docsToFetch = [
         { path: 'apps', setter: setApps, key: 'items' },
         { path: 'settings', setter: setSettings },
         { path: 'news', setter: setNews, key: 'items' },
@@ -420,8 +329,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         { path: 'videos', setter: setVideos, key: 'items' }
       ];
 
-      // Manual Refresh: Clear cache and reload from server
-      for (const d of docs) {
+      await Promise.all(docsToFetch.map(async (d) => {
         try {
           const snap = await withServerConfirmation(() => getDocFromServer(doc(db, 'store_data', d.path)), 15000);
           if (snap.exists()) {
@@ -430,13 +338,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem(`yonostore_${d.path}`, JSON.stringify(data));
           }
         } catch (fetchErr) {
-          console.warn(`Sync failed for ${d.path}, skipping...`, fetchErr);
+          console.warn(`Parallel Sync failed for ${d.path}, skipping...`, fetchErr);
         }
-      }
+      }));
       
       setIsConnected(true);
       setSyncVersion(v => v + 1);
-      console.log("Manual Refresh: Success.");
+      console.log("Manual Refresh: Parallel Fetch Success.");
     } catch (err) {
       console.error("Manual refresh failed:", err);
       setIsConnected(false);
@@ -444,28 +352,35 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Memoize the context value to prevent unnecessary re-renders of consuming components
+  const value = React.useMemo(() => ({
+    apps, 
+    settings, 
+    news, 
+    blogs, 
+    videos, 
+    loading, 
+    syncVersion,
+    lastSyncTime,
+    refreshAll,
+    testCloudConnection,
+    saveApps, 
+    saveSettings, 
+    saveNews, 
+    saveBlogs, 
+    saveVideos,
+    isConnected,
+    isLive
+  }), [
+    apps, settings, news, blogs, videos, loading, syncVersion, lastSyncTime,
+    refreshAll, testCloudConnection, saveApps, saveSettings, saveNews, saveBlogs, saveVideos,
+    isConnected, isLive
+  ]);
 
   return (
-    <DataContext.Provider value={{
-      apps, 
-      settings, 
-      news, 
-      blogs, 
-      videos, 
-      loading, 
-      syncVersion,
-      lastSyncTime,
-      refreshAll,
-      testCloudConnection,
-      saveApps, 
-      saveSettings, 
-      saveNews, 
-      saveBlogs, 
-      saveVideos,
-      isConnected,
-      isLive
-    }}>
+    <DataContext.Provider value={value}>
       {children}
     </DataContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useData } from '../contexts/DataContext';
@@ -12,6 +12,7 @@ export default function Home() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || mockSettings.categories?.[0] || 'All Apps');
 
   useEffect(() => {
@@ -31,26 +32,56 @@ export default function Home() {
   }, [searchParams, location, mockSettings.categories]);
 
   const filteredApps = useMemo(() => {
-    return mockApps
-      .filter(app => {
-        const matchesSearch = app.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                             app.category.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSearch;
-      })
-      .sort((a, b) => {
-        if (searchTerm) {
-          const cleanSearch = searchTerm.toLowerCase().trim();
-          const aName = a.name.toLowerCase();
-          const bName = b.name.toLowerCase();
-          
-          if (aName === cleanSearch && bName !== cleanSearch) return -1;
-          if (aName !== cleanSearch && bName === cleanSearch) return 1;
-          
-          if (aName.startsWith(cleanSearch) && !bName.startsWith(cleanSearch)) return -1;
-          if (!aName.startsWith(cleanSearch) && bName.startsWith(cleanSearch)) return 1;
+    const term = deferredSearchTerm.toLowerCase().trim();
+    if (!term) return [...mockApps].sort((a, b) => (a.serial_number || 0) - (b.serial_number || 0));
+
+    const scored = mockApps
+      .map(app => {
+        let score = 0;
+        const name = app.name.toLowerCase();
+        const cat = app.category.toLowerCase();
+        const seoTitle = app.seo_title?.toLowerCase() || "";
+        const seoDesc = app.seo_description?.toLowerCase() || "";
+        const keywords = app.seo_keywords?.toLowerCase() || "";
+
+        // Exact matches
+        if (name === term) score += 1000;
+        if (seoTitle === term) score += 800;
+
+        // "Starts with" matches
+        if (name.startsWith(term)) score += 500;
+        if (seoTitle.startsWith(term)) score += 400;
+
+        // Word-level matches (e.g. "India" in "Best India Apps")
+        const nameWords = name.split(/\s+/);
+        if (nameWords.some(w => w === term)) score += 300;
+        if (nameWords.some(w => w.startsWith(term))) score += 200;
+
+        // SEO Keywords (highest value for non-name metadata)
+        if (keywords.includes(term)) {
+          const keywordList = keywords.split(/,\s*/);
+          if (keywordList.some(k => k === term)) score += 250;
+          else score += 100;
         }
-        return (a.serial_number || 0) - (b.serial_number || 0);
-      });
+
+        // Substring matches
+        if (name.includes(term)) score += 50;
+        if (seoTitle.includes(term)) score += 40;
+        if (cat.includes(term)) score += 30;
+        if (seoDesc.includes(term)) score += 20;
+
+        return { app, score };
+      })
+      .filter(item => item.score > 0);
+
+    return scored
+      .sort((a, b) => {
+        // Sort by score first (highest first)
+        if (b.score !== a.score) return b.score - a.score;
+        // Fallback to serial number for identical scores
+        return (a.app.serial_number || 0) - (b.app.serial_number || 0);
+      })
+      .map(item => item.app);
   }, [mockApps, searchTerm]);
 
   const bannerItems = mockSettings.banners || [];
@@ -65,45 +96,28 @@ export default function Home() {
         <meta property="og:description" content={mockSettings.meta_description} />
         <meta property="og:image" content={mockSettings.logo_url} />
       </Helmet>
-      {/* Premium Hero Section from Screenshot */}
-      <div className="text-center py-6 px-4">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold mb-3"
-        >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          Verified Transparency
-        </motion.div>
-        
+      {/* Premium Hero Section - Compact & Sleek */}
+      <div className="text-center py-4 px-4 bg-linear-to-b from-slate-50/50 dark:from-slate-900/50 to-transparent backdrop-blur-md mb-4 border-b border-black/5 dark:border-white/5">
         <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-2xl sm:text-3xl font-black tracking-tighter text-black dark:text-white mb-2 uppercase flex justify-center items-center gap-2 flex-wrap"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-base sm:text-lg font-black tracking-[0.2em] mb-4 uppercase flex justify-center items-center gap-2 italic dark:text-white"
         >
-          App Transparency <span className="text-red-600">Portal</span>
+          <ShieldCheck className="w-5 h-5 text-red-600 drop-shadow-sm" />
+          <span className="opacity-90">Secure</span> <span className="text-red-600 drop-shadow-sm">Index</span>
+          <ShieldCheck className="w-5 h-5 text-red-600 drop-shadow-sm" />
         </motion.h1>
-        
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-black dark:text-slate-400 max-w-xl mx-auto text-sm mb-6 font-bold uppercase tracking-tight"
-        >
-          Independent reviews for apps you can trust.
-        </motion.p>
 
-        {/* Search Header Style - Matching Screenshot */}
-        <div className="max-w-xl mx-auto mb-6 px-1">
+        {/* Compact Search */}
+        <div className="max-w-md mx-auto mb-1">
           <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10">
               <Search className="h-4 w-4 text-slate-400 group-focus-within:text-red-500 transition-colors" />
             </div>
             <input
               type="text"
-              className="block w-full pl-10 pr-4 py-3 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl border border-white/50 dark:border-white/5 rounded-xl text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all shadow-lg shadow-black/5"
-              placeholder="Search apps..."
+              className="block w-full pl-10 pr-4 py-2.5 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/60 dark:border-white/10 rounded-full placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:ring-4 focus:ring-red-500/5 transition-all shadow-sm dark:text-white"
+              placeholder="SEARCH PREMIUM CONTENT"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -111,72 +125,106 @@ export default function Home() {
         </div>
       </div>
 
-      <PlayStoreTabs activeTab={activeTab} onTabChange={setActiveTab} />
-      
       {!searchTerm && activeTab.toLowerCase() !== 'categories' && activeTab.toLowerCase() !== 'top charts' && (
         <FlipkartBanner items={bannerItems} />
       )}
 
-      {activeTab.toLowerCase() === 'top charts' && (
-        <div className="space-y-2 animate-fade-in">
-          <div className="bg-pink-500/10 p-4 rounded-2xl mb-6 flex items-center justify-between border border-pink-500/20">
-            <div className="flex items-center gap-3">
-              <div className="bg-pink-500 p-2 rounded-lg text-white">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-pink-800 dark:text-pink-300">Trending Now</h3>
-                <p className="text-xs text-pink-600 dark:text-pink-400">Apps with highest growth this week</p>
-              </div>
+      {/* Grid of New Apps - Compact & Glossy (Hidden if searching) */}
+      {(() => {
+        if (searchTerm) return null;
+        const isHomeTab = activeTab.toLowerCase() === (mockSettings.categories?.[0]?.toLowerCase() || 'all apps') || activeTab.toLowerCase() === 'all apps' || activeTab.toLowerCase() === 'home' || activeTab.toLowerCase() === 'apps';
+        return isHomeTab && (
+          <div className="px-2">
+            <h2 className="text-[10px] font-black mb-2 mt-2 uppercase tracking-[0.3em] text-red-600 opacity-80 flex items-center gap-2 justify-center text-center">
+              <Sparkles className="w-3 h-3 animate-pulse" />
+              Verified New Additions
+              <Sparkles className="w-3 h-3 animate-pulse" />
+            </h2>
+            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-1.5 px-1 mb-4">
+              {filteredApps.filter(app => app.is_new).slice(0, 10).map((app) => (
+                <motion.div
+                  key={app.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Link to={`/app/${app.slug}`} className="flex flex-col gap-2 group">
+                    <div className="aspect-square rounded-2xl overflow-hidden bg-white/20 border-2 border-slate-200 shadow-lg group-hover:shadow-red-500/20 transition-all relative backdrop-blur-lg">
+                      <img 
+                        src={app.icon_url || "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=128&h=128&fit=crop"} 
+                        alt={app.name} 
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                        width={128}
+                        height={128}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                      />
+                    </div>
+                    <div className="px-1 text-center">
+                      <h3 className="text-[8px] sm:text-[10px] leading-tight font-black uppercase tracking-tighter italic">{app.name}</h3>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
             </div>
           </div>
+        );
+      })()}
 
-          <div className="flex items-center justify-between px-2 mb-4">
-             <div className="flex gap-2">
-                <button className="bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 px-4 py-1.5 rounded-full text-xs font-bold border border-pink-200 dark:border-pink-800">Top free</button>
-             </div>
-          </div>
+      <PlayStoreTabs activeTab={activeTab} onTabChange={setActiveTab} hideOnSearch={!!searchTerm} />
 
-          <div className="space-y-1">
-            {filteredApps.map((app, index) => (
-              <TopChartItem key={app.id} rank={index + 1} app={app} />
+      {searchTerm && (
+        <div className="px-1">
+          <h2 className="text-[11px] font-black mt-2 mb-4 px-4 uppercase tracking-[0.3em] text-red-600 flex items-center gap-4 text-center justify-center italic">
+            <div className="flex-1 h-[1px] bg-linear-to-r from-transparent to-red-600/20"></div>
+            <Search className="w-3.5 h-3.5" />
+            <span>Search Results</span>
+            <Search className="w-3.5 h-3.5 rotate-90" />
+            <div className="flex-1 h-[1px] bg-linear-to-l from-transparent to-red-600/20"></div>
+          </h2>
+          <div className="space-y-2">
+            {filteredApps.slice(0, 30).map((app, index) => (
+              <AppListItem key={app.id} app={app} index={index + 1} />
             ))}
           </div>
         </div>
       )}
 
+      {activeTab.toLowerCase() === 'top charts' && !searchTerm && (
+        <div className="space-y-1 px-1">
+          <div className="bg-linear-to-r from-red-600/10 to-transparent p-3 rounded-2xl mb-2 flex items-center justify-between border border-red-600/10 backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <div className="bg-red-600 p-1.5 rounded-lg text-white shadow-lg shadow-red-600/20">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-black text-xs uppercase tracking-tighter">Rising Stars</h3>
+                <p className="text-[8px] opacity-60 font-bold uppercase tracking-widest">Trending high this week</p>
+              </div>
+            </div>
+          </div>
+          {filteredApps.slice(0, 50).map((app, index) => (
+            <TopChartItem key={app.id} rank={index + 1} app={app} />
+          ))}
+        </div>
+      )}
+
       {(() => {
+        if (searchTerm) return null;
         const isHomeTab = activeTab.toLowerCase() === (mockSettings.categories?.[0]?.toLowerCase() || 'all apps') || activeTab.toLowerCase() === 'all apps' || activeTab.toLowerCase() === 'home' || activeTab.toLowerCase() === 'apps';
         return isHomeTab && (
-        <div className="animate-fade-in">
-          <h2 className="text-xl font-black mb-6 px-2 mt-8 uppercase tracking-tighter text-black dark:text-white border-l-4 border-red-600 pl-4">New Applications</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-6 px-1 mb-12">
-            {filteredApps.filter(app => app.is_new).map((app) => (
-              <Link key={app.id} to={`/app/${app.slug}`} className="flex flex-col gap-3 group">
-                <div className="aspect-square rounded-3xl overflow-hidden bg-white dark:bg-white/5 border border-white dark:border-white/10 shadow-xl group-hover:shadow-red-500/10 transition-all relative">
-                  <img src={app.icon_url || "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=128&h=128&fit=crop"} alt={app.name} className="w-full h-full object-cover group-hover:scale-110 group-active:scale-95 transition-transform" />
-                  {app.is_new && (
-                    <span className="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-widest shadow-lg z-10">New</span>
-                  )}
-                </div>
-                <div className="px-1">
-                  <h3 className="text-[14px] leading-tight font-black truncate text-black dark:text-white uppercase tracking-tighter">{app.name}</h3>
-                  <div className="text-[11px] font-black text-black dark:text-slate-400 uppercase tracking-widest">{app.category}</div>
-                </div>
-              </Link>
-            ))}
-            {filteredApps.filter(app => app.is_new).length === 0 && (
-               <div className="col-span-full text-center py-6 text-slate-400 text-sm">No new apps recently added.</div>
-            )}
+          <div className="px-1">
+            <h2 className="text-[11px] font-black mt-6 mb-3 px-4 uppercase tracking-[0.3em] text-slate-400 flex items-center gap-4 text-center justify-center">
+              <div className="flex-1 h-[1px] bg-linear-to-r from-transparent to-slate-200"></div>
+              <span>Explore All</span>
+              <div className="flex-1 h-[1px] bg-linear-to-l from-transparent to-slate-200"></div>
+            </h2>
+            <div className="space-y-2">
+              {filteredApps.slice(0, 30).map((app, index) => (
+                <AppListItem key={app.id} app={app} index={index + 1} />
+              ))}
+            </div>
           </div>
-
-          <h2 className="text-xl font-black mt-12 mb-6 px-2 uppercase tracking-tighter text-black dark:text-white border-l-4 border-red-600 pl-4">All Applications</h2>
-          <div className="space-y-2">
-            {filteredApps.map((app, index) => (
-               <AppListItem key={app.id} app={app} index={index + 1} />
-            ))}
-          </div>
-        </div>
         );
       })()}
 
@@ -187,7 +235,7 @@ export default function Home() {
                 <div className="w-10 h-10 rounded-full bg-red-600/10 flex items-center justify-center text-red-600">
                    <ShieldCheck className="w-6 h-6" />
                 </div>
-                <span className="font-black text-black dark:text-white uppercase tracking-tight text-lg">{cat}</span>
+                <span className="font-black uppercase tracking-tight text-lg">{cat}</span>
              </button>
            ))}
         </div>

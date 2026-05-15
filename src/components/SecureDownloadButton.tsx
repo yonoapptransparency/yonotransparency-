@@ -51,9 +51,18 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
     };
   }, [isVerifying, countdown, appId, downloadUrl]);
 
+  const playSoftClick = () => {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    audio.volume = 0.4;
+    audio.play().catch(e => console.log("Audio play blocked", e));
+  };
+
   const handleDownload = () => {
     if (isVerifying || ready) return;
     
+    // Play sound
+    playSoftClick();
+
     // 1. Trigger Mobile Haptics
     if (window.navigator && window.navigator.vibrate) {
       window.navigator.vibrate(50);
@@ -67,6 +76,7 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
   if (ready) {
     return (
       <a 
+        onClick={playSoftClick}
         href={getFinalUrl()}
         target="_blank"
         rel="noopener noreferrer"

@@ -1,11 +1,23 @@
 import { motion } from 'framer-motion';
-import { Mail, MessageSquare, MapPin } from 'lucide-react';
+import { Mail, MessageSquare, MapPin, ArrowLeft } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { Link } from 'react-router-dom';
 
 export default function Contact() {
   const { apps: mockApps, settings: mockSettings, news: mockNews, blogs: mockBlogs, videos: mockVideos, saveApps: saveMockApps, saveSettings: saveMockSettings, saveNews: saveMockNews, saveBlogs: saveMockBlogs, saveVideos: saveMockVideos } = useData();
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
+      <div className="mb-6 px-1">
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-colors group"
+        >
+          <div className="p-2 rounded-full bg-black/5 border border-black/5 group-hover:scale-110 transition-transform">
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </div>
+          Back to storefront
+        </Link>
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -13,7 +25,7 @@ export default function Contact() {
       >
         <h1 className="text-3xl font-bold mb-6">Contact Us</h1>
         <div 
-          className="text-black dark:text-slate-400 mb-8 markdown-body font-medium"
+          className="opacity-80 mb-8 markdown-body font-medium"
           dangerouslySetInnerHTML={{ __html: mockSettings.contact_content || '' }}
         />
 
@@ -53,15 +65,15 @@ export default function Contact() {
           <form className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
-              <input type="text" className="w-full p-3 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10" placeholder="Your name" />
+              <input type="text" className="w-full p-3 rounded-xl bg-black/5 border border-black/5" placeholder="Your name" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Email</label>
-              <input type="email" className="w-full p-3 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10" placeholder="your@email.com" />
+              <input type="email" className="w-full p-3 rounded-xl bg-black/5 border border-black/5" placeholder="your@email.com" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Message</label>
-              <textarea className="w-full p-3 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 h-32" placeholder="How can we help?"></textarea>
+              <textarea className="w-full p-3 rounded-xl bg-black/5 border border-black/5 h-32" placeholder="How can we help?"></textarea>
             </div>
             <button className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-xl shadow-lg transition-colors">
               Send Message

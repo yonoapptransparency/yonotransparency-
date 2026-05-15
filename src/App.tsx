@@ -1,31 +1,49 @@
 import { DataProvider, useData } from './contexts/DataContext';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { useLocation, BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { Menu, Search, Shield, Info, Download, ArrowRight, X, Gamepad2, LayoutGrid, Search as SearchIcon, Newspaper } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Menu, Search, Shield, ShieldCheck, Info, Download, ArrowRight, X, Gamepad2, LayoutGrid, Search as SearchIcon, Newspaper, Sparkles, Send, MoreHorizontal } from 'lucide-react';
+import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Home from './pages/Home';
-import AppDetails from './pages/AppDetails';
-import DownloadPage from './pages/DownloadPage';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
+
+// Lazy Load Pages for Performance
+const Home = lazy(() => import('./pages/Home'));
+const AppDetails = lazy(() => import('./pages/AppDetails'));
+const DownloadPage = lazy(() => import('./pages/DownloadPage'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Responsibility = lazy(() => import('./pages/Responsibility'));
+const NewApps = lazy(() => import('./pages/NewApps'));
+const NewsPage = lazy(() => import('./pages/NewsPage'));
+const NewsDetailPage = lazy(() => import('./pages/NewsDetailPage'));
+const Blogs = lazy(() => import('./pages/Blogs'));
+const BlogDetailPage = lazy(() => import('./pages/BlogDetailPage'));
+const VideosPage = lazy(() => import('./pages/VideosPage'));
+const VideoDetailPage = lazy(() => import('./pages/VideoDetailPage'));
+
 import Ticker from './components/Ticker';
 import SupportWidget from './components/SupportWidget';
 import ThemeToggle from './components/ThemeToggle';
-import NewApps from './pages/NewApps';
-import NewsPage from './pages/NewsPage';
-import NewsDetailPage from './pages/NewsDetailPage';
-import Blogs from './pages/Blogs';
-import VideosPage from './pages/VideosPage';
-import VideoDetailPage from './pages/VideoDetailPage';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function Header() {
   const { settings } = useData();
+  const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -38,13 +56,13 @@ function Header() {
 
   const triggerHaptic = () => {
     if (window.navigator && window.navigator.vibrate) {
-      window.navigator.vibrate(50);
+      window.navigator.vibrate(10);
     }
   };
 
   const navVariants = settings.animations_enabled ? {
-    hidden: { y: -20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.4 } }
+    hidden: { y: -10, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.2 } }
   } : {
     hidden: { y: 0, opacity: 1 },
     visible: { y: 0, opacity: 1 }
@@ -56,35 +74,100 @@ function Header() {
         initial="hidden"
         animate="visible"
         variants={navVariants}
-        className={`glass-nav transition-all duration-300 ${scrolled ? 'py-3' : 'py-5'}`}
+        className={`glass-nav ${scrolled ? 'glass-nav-scrolled' : 'bg-transparent py-2'}`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative flex justify-between items-center">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative flex justify-between items-center">
           <Link to="/" onClick={triggerHaptic} className="flex items-center gap-2 group">
-            <div className="p-1 transition-transform group-hover:scale-105 magic-text">
-              {settings.logo_url ? <img src={settings.logo_url} className="w-10 h-10 object-contain" alt="Logo" /> : <Shield className="w-8 h-8" />}
+            <div className="p-0 transition-transform group-hover:scale-105 duration-500">
+              {settings.logo_url ? <img src={settings.logo_url} width={48} height={48} className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-xl brightness-110" alt="Logo" /> : <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-600 rounded-xl flex items-center justify-center text-white font-black italic">{settings.site_title?.substring(0, 1)}</div>}
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-xl font-black tracking-tighter magic-text uppercase">{settings.site_title}</span>
+              <span className="text-lg sm:text-xl font-black tracking-tighter uppercase italic drop-shadow-md">{settings.site_title}</span>
             </div>
           </Link>
           
           <nav className="hidden md:flex items-center gap-4 lg:gap-8 text-sm font-medium">
-            <Link to="/" onClick={triggerHaptic} className="magic-text transition-colors p-2 font-bold uppercase tracking-tight">Home</Link>
-            <Link to="/new-apps" onClick={triggerHaptic} className="magic-text transition-colors p-2 font-bold uppercase tracking-tight flex items-center gap-1">New App <span className="flex w-2 h-2 rounded-full bg-red-600 animate-pulse"></span></Link>
-            <Link to="/categories" onClick={triggerHaptic} className="magic-text transition-colors p-2 font-bold uppercase tracking-tight">Categories</Link>
-            <Link to="/videos" onClick={triggerHaptic} className="magic-text transition-colors p-2 font-bold uppercase tracking-tight">Videos</Link>
-            <Link to="/blogs" onClick={triggerHaptic} className="magic-text transition-colors p-2 font-bold uppercase tracking-tight">Blogs</Link>
-            <Link to="/app-checker" onClick={triggerHaptic} className="magic-text transition-colors p-2 font-bold uppercase tracking-tight">App Checker</Link>
-            <div className="flex items-center gap-2">
+            <Link to="/" onClick={triggerHaptic} className={`magic-text transition-all p-2 font-bold uppercase tracking-tight relative ${pathname === '/' ? 'text-red-600' : ''}`}>
+              Home
+              {pathname === '/' && <motion.div layoutId="header-active" className="absolute bottom-0 left-2 right-2 h-0.5 bg-red-600" />}
+            </Link>
+            <Link to="/new-apps" onClick={triggerHaptic} className={`magic-text transition-all p-2 font-bold uppercase tracking-tight flex items-center gap-1 relative ${pathname === '/new-apps' ? 'text-red-600' : ''}`}>
+              New App <span className="flex w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+              {pathname === '/new-apps' && <motion.div layoutId="header-active" className="absolute bottom-0 left-2 right-2 h-0.5 bg-red-600" />}
+            </Link>
+            <Link to="/news" onClick={triggerHaptic} className={`magic-text transition-all p-2 font-bold uppercase tracking-tight relative ${pathname === '/news' ? 'text-red-600' : ''}`}>
+              News
+              {pathname === '/news' && <motion.div layoutId="header-active" className="absolute bottom-0 left-2 right-2 h-0.5 bg-red-600" />}
+            </Link>
+            <div className="relative group/more" onMouseEnter={() => setMoreOpen(true)} onMouseLeave={() => setMoreOpen(false)}>
+              <button 
+                className={`magic-text transition-all p-2 font-bold uppercase tracking-tight flex items-center gap-1 relative ${['/videos', '/blogs', '/contact', '/privacy', '/terms', '/about', '/responsibility'].includes(pathname) ? 'text-red-600' : ''}`}
+                onClick={triggerHaptic}
+              >
+                More <MoreHorizontal className="w-4 h-4" />
+              </button>
+              
+              <AnimatePresence>
+                {moreOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2"
+                  >
+                    {[
+                      { to: '/videos', label: 'All App', icon: LayoutGrid },
+                      { to: '/blogs', label: 'Blogs', icon: LayoutGrid },
+                      { to: '/about', label: 'About Us', icon: Info },
+                      { to: '/contact', label: 'Contact', icon: Send },
+                      { to: '/responsibility', label: 'Safety', icon: ShieldCheck },
+                      { to: '/privacy', label: 'Privacy', icon: ShieldCheck },
+                      { to: '/terms', label: 'Terms', icon: ShieldCheck },
+                    ].map((item) => (
+                      <Link 
+                        key={item.to}
+                        to={item.to} 
+                        onClick={() => { setMoreOpen(false); triggerHaptic(); }}
+                        className={`flex items-center gap-3 px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors ${pathname === item.to ? 'text-red-600' : ''}`}
+                      >
+                        <item.icon className="w-3 h-3" />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div className="flex items-center gap-2 ml-4 border-l border-black/10 pl-4">
+              {settings.helpline_telegram && (
+                <a 
+                  href={settings.helpline_telegram.startsWith('http') ? settings.helpline_telegram : `https://t.me/${settings.helpline_telegram.replace('@', '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center min-h-[48px] min-w-[48px] bg-[#0088cc]/10 text-[#0088cc] rounded-full border border-[#0088cc]/20 hover:bg-[#0088cc]/20 transition-colors"
+                  aria-label="Telegram"
+                >
+                  <Send className="w-5 h-5" />
+                </a>
+              )}
               <SupportWidget />
               <ThemeToggle />
             </div>
-            <Link to="/admin/login" onClick={triggerHaptic} className="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-full transition-all flex items-center justify-center font-bold shadow-lg shadow-red-600/30">
-              Admin
-            </Link>
           </nav>
 
           <div className="md:hidden flex items-center gap-2">
+            {settings.helpline_telegram && (
+              <a 
+                href={settings.helpline_telegram.startsWith('http') ? settings.helpline_telegram : `https://t.me/${settings.helpline_telegram.replace('@', '')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center min-h-[48px] min-w-[48px] bg-[#0088cc]/10 text-[#0088cc] rounded-full border border-[#0088cc]/20 hover:bg-[#0088cc]/20 transition-colors"
+                aria-label="Telegram"
+              >
+                <Send className="w-4 h-4" />
+              </a>
+            )}
             <SupportWidget />
             <ThemeToggle />
             <button 
@@ -106,11 +189,11 @@ function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[60] bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl flex flex-col px-6 py-8"
+            className="fixed inset-0 z-[60] bg-transparent backdrop-blur-3xl flex flex-col px-6 py-8"
           >
             <div className="flex justify-between items-center mb-12">
               <span className="text-xl font-black flex items-center gap-2 magic-text uppercase tracking-tighter">
-                {settings.logo_url ? <img src={settings.logo_url} className="w-6 h-6 object-contain" alt="Logo" /> : <Shield className="w-6 h-6 text-red-600" />} {settings.site_title}
+                {settings.logo_url ? <img src={settings.logo_url} width={24} height={24} className="w-6 h-6 object-contain" alt="Logo" /> : <Shield className="w-6 h-6 text-red-600" />} {settings.site_title}
               </span>
               <button 
                 onClick={() => { triggerHaptic(); setMenuOpen(false); }}
@@ -121,18 +204,67 @@ function Header() {
               </button>
             </div>
             
-            <nav className="flex flex-col gap-6 text-lg font-medium">
-              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/" className="border-b border-white/10 pb-4 min-h-[48px] flex items-center magic-text font-black uppercase tracking-tight">Home</Link>
-          <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/new-apps" className="border-b border-white/10 pb-4 min-h-[48px] flex items-center magic-text font-black uppercase tracking-tight gap-2">New App <span className="flex w-2 h-2 rounded-full bg-red-600 animate-pulse"></span></Link>
-          <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/categories" className="border-b border-white/10 pb-4 min-h-[48px] flex items-center magic-text font-black uppercase tracking-tight">Categories</Link>
-          <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/app-checker" className="border-b border-white/10 pb-4 min-h-[48px] flex items-center magic-text font-black uppercase tracking-tight">App Checker</Link>
-          <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/blogs" className="border-b border-white/10 pb-4 min-h-[48px] flex items-center magic-text font-black uppercase tracking-tight">Blogs</Link>
-          <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/videos" className="border-b border-white/10 pb-4 min-h-[48px] flex items-center magic-text font-black uppercase tracking-tight">Videos</Link>
-              <div className="flex justify-between items-center py-4 border-b border-white/10 px-2 bg-white/5 rounded-xl backdrop-blur-md">
-                <span className="text-slate-800 dark:text-white">Theme</span>
-                <ThemeToggle />
+            <nav className="flex flex-col gap-2 text-lg font-medium">
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/" className={`px-4 py-3 rounded-2xl transition-all ${pathname === '/' ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}>
+                <div className="flex items-center gap-3 font-black uppercase tracking-tight">
+                  <LayoutGrid className="w-5 h-5" /> Home
+                </div>
+              </Link>
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/new-apps" className={`px-4 py-3 rounded-2xl transition-all ${pathname === '/new-apps' ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}>
+                <div className="flex items-center gap-3 font-black uppercase tracking-tight">
+                  <Sparkles className="w-5 h-5" /> New App
+                  <span className="flex w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                </div>
+              </Link>
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/news" className={`px-4 py-3 rounded-2xl transition-all ${pathname === '/news' ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}>
+                <div className="flex items-center gap-3 font-black uppercase tracking-tight">
+                  <Newspaper className="w-5 h-5" /> News
+                </div>
+              </Link>
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/videos" className={`px-4 py-3 rounded-2xl transition-all ${pathname === '/videos' ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}>
+                <div className="flex items-center gap-3 font-black uppercase tracking-tight">
+                  <LayoutGrid className="w-5 h-5" /> All App
+                </div>
+              </Link>
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/blogs" className={`px-4 py-3 rounded-2xl transition-all ${pathname === '/blogs' ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}>
+                <div className="flex items-center gap-3 font-black uppercase tracking-tight">
+                  <Menu className="w-5 h-5" /> Blogs
+                </div>
+              </Link>
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/responsibility" className={`px-4 py-3 rounded-2xl transition-all ${pathname === '/responsibility' ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}>
+                <div className="flex items-center gap-3 font-black uppercase tracking-tight">
+                  <ShieldCheck className="w-5 h-5" /> Responsibility
+                </div>
+              </Link>
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/about" className={`px-4 py-3 rounded-2xl transition-all ${pathname === '/about' ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}>
+                <div className="flex items-center gap-3 font-black uppercase tracking-tight">
+                  <Info className="w-5 h-5" /> About Us
+                </div>
+              </Link>
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/contact" className={`px-4 py-3 rounded-2xl transition-all ${pathname === '/contact' ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}>
+                <div className="flex items-center gap-3 font-black uppercase tracking-tight">
+                  <Send className="w-5 h-5" /> Contact
+                </div>
+              </Link>
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/privacy" className={`px-4 py-3 rounded-2xl transition-all ${pathname === '/privacy' ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}>
+                <div className="flex items-center gap-3 font-black uppercase tracking-tight">
+                  <ShieldCheck className="w-5 h-5" /> Privacy
+                </div>
+              </Link>
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/terms" className={`px-4 py-3 rounded-2xl transition-all ${pathname === '/terms' ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}>
+                <div className="flex items-center gap-3 font-black uppercase tracking-tight">
+                  <ShieldCheck className="w-5 h-5" /> Terms
+                </div>
+              </Link>
+              
+              <div className="mt-4 p-4 rounded-3xl bg-black/5 flex flex-col gap-4">
+                <div className="flex justify-between items-center px-2">
+                  <span className="font-bold text-sm uppercase opacity-60">Dark Mode</span>
+                  <ThemeToggle />
+                </div>
               </div>
-              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/admin/login" className="text-pink-500 dark:text-pink-400 mt-4 min-h-[48px] flex items-center">Admin Access</Link>
+              
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/admin/login" className="text-center text-xs font-bold opacity-40 mt-6 hover:text-red-500 transition-colors">Admin Portal &copy; 2026</Link>
             </nav>
           </motion.div>
         )}
@@ -144,39 +276,52 @@ function Header() {
 function Footer() {
   const { settings } = useData();
   return (
-    <footer className="border-t border-slate-200 dark:border-white/10 py-8 mt-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col items-center text-center">
-        <h3 className="text-xl font-black tracking-tight mb-4 flex items-center gap-2 text-black dark:text-white uppercase">
-          <div className="p-1 transition-transform">
-            {settings.logo_url ? <img src={settings.logo_url} className="w-8 h-8 object-contain" alt="Logo" /> : <Shield className="w-8 h-8 text-red-600" />}
+    <footer className="white-theme-portal">
+      <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
+        <h3 className="text-xl font-black tracking-tight mb-4 flex items-center gap-2 uppercase">
+          <div className="p-1 transition-transform hover:scale-110">
+            {settings.logo_url ? (
+              <img 
+                src={settings.logo_url} 
+                width={32} 
+                height={32} 
+                className="w-8 h-8 object-contain drop-shadow-lg" 
+                alt="Logo" 
+              />
+            ) : (
+              <Shield className="w-8 h-8 text-red-600" />
+            )}
           </div>
-          {settings.site_title}
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-red-400">
+            {settings.site_title}
+          </span>
         </h3>
-        <p className="text-black dark:text-slate-400 text-sm mb-6 max-w-md font-medium">
+        <p className="text-sm mb-6 max-w-md font-black uppercase tracking-widest leading-relaxed opacity-60">
           {settings.meta_description}
         </p>
-        <div className="flex flex-wrap justify-center gap-6 text-sm font-bold mb-8 uppercase tracking-tight">
-          <Link to="/" className="text-black dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors">Home</Link>
-          <Link to="/about" className="text-black dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors">About Us</Link>
-          <Link to="/contact" className="text-black dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors">Contact</Link>
-          <Link to="/videos" className="text-black dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors">Videos</Link>
-          <Link to="/blogs" className="text-black dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors">Blogs</Link>
-          <Link to="/privacy" className="text-black dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors">Privacy</Link>
-          <Link to="/terms" className="text-black dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors">Terms</Link>
+        <div className="flex flex-wrap justify-center gap-6 text-[10px] font-black mb-8 uppercase tracking-[0.2em]">
+          <Link to="/" className="hover:text-red-600 transition-colors">Home</Link>
+          <Link to="/about" className="hover:text-red-600 transition-colors">About Us</Link>
+          <Link to="/contact" className="hover:text-red-600 transition-colors">Contact</Link>
+          <Link to="/videos" className="hover:text-red-600 transition-colors">All App</Link>
+          <Link to="/blogs" className="hover:text-red-600 transition-colors">Blogs</Link>
+          <Link to="/responsibility" className="hover:text-red-600 transition-colors">Safety</Link>
+          <Link to="/privacy" className="hover:text-red-600 transition-colors">Privacy</Link>
+          <Link to="/terms" className="hover:text-red-600 transition-colors">Terms</Link>
         </div>
         
         {(settings.disclaimer_text || settings.ethics_discrimination_text) && (
           <div className="max-w-3xl text-center space-y-4 mb-8">
             {settings.disclaimer_text && (
-              <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                <h4 className="text-sm font-black text-black dark:text-slate-300 mb-1">Platform Disclaimer</h4>
-                <p className="text-xs font-bold text-black dark:text-slate-400">{settings.disclaimer_text}</p>
+              <div className="bg-black/5 border border-black/10 rounded-lg p-4">
+                <h4 className="text-[10px] font-black mb-1 uppercase tracking-widest opacity-80">Platform Disclaimer</h4>
+                <p className="text-[10px] font-bold opacity-60">{settings.disclaimer_text}</p>
               </div>
             )}
             {settings.ethics_discrimination_text && (
-              <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                <h4 className="text-sm font-black text-black dark:text-slate-300 mb-1">Ethics & Discrimination</h4>
-                <p className="text-xs font-bold text-black dark:text-slate-400">{settings.ethics_discrimination_text}</p>
+              <div className="bg-black/5 border border-black/10 rounded-lg p-4">
+                <h4 className="text-[10px] font-black mb-1 uppercase tracking-widest opacity-80">Ethics & Discrimination</h4>
+                <p className="text-[10px] font-bold opacity-60">{settings.ethics_discrimination_text}</p>
               </div>
             )}
           </div>
@@ -184,15 +329,15 @@ function Footer() {
 
         {settings.important_notice && (
           <div className="max-w-3xl w-full text-center mb-8">
-            <div className="bg-red-600/10 border border-red-600/30 rounded-2xl p-6">
-              <h4 className="text-sm font-black text-red-600 mb-2 uppercase tracking-widest">Important Notice</h4>
-              <p className="text-sm text-black dark:text-red-400 font-bold whitespace-pre-wrap">{settings.important_notice}</p>
+            <div className="bg-red-600/5 border border-red-600/10 rounded-2xl p-6">
+              <h4 className="text-[10px] font-black text-red-600 mb-2 uppercase tracking-[0.3em]">Important Notice</h4>
+              <p className="text-xs font-black whitespace-pre-wrap opacity-70">{settings.important_notice}</p>
             </div>
           </div>
         )}
 
-        <div className="text-black dark:text-slate-500 text-xs font-black uppercase tracking-tight flex items-center gap-2">
-          &copy; 2026 {settings.site_title}. All rights reserved.
+        <div className="text-[9px] font-black uppercase tracking-[0.25em] flex items-center gap-2 opacity-40">
+          &copy; 2026 {settings.site_title}. Verified Platform.
           <SyncStatus />
         </div>
       </div>
@@ -298,7 +443,7 @@ function BackToTop() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 p-4 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-xl shadow-pink-500/20 glass-panel border-none"
+          className="fixed bottom-24 md:bottom-8 right-6 z-50 p-4 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-2xl shadow-red-600/40 border-2 border-white/20 transition-all hover:scale-110 active:scale-95"
           aria-label="Back to top"
         >
           <ArrowRight className="w-6 h-6 -rotate-90" />
@@ -308,121 +453,160 @@ function BackToTop() {
   );
 }
 
+function LoadingScreen() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 min-h-[40vh]">
+      <div className="w-10 h-10 border-3 border-red-600/20 border-t-red-600 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(220,38,38,0.2)]"></div>
+      <p className="text-[10px] font-black uppercase tracking-[0.6em] text-red-600 italic animate-pulse">Syncing Hub...</p>
+    </div>
+  );
+}
+
 function AppContent() {
-  const { settings, loading } = useData();
+  const { settings } = useData();
+  const location = useLocation();
   const triggerHaptic = () => {
     if (window.navigator && window.navigator.vibrate) {
-      window.navigator.vibrate(50);
+      window.navigator.vibrate(10);
     }
   };
 
+  // Memoize static layout parts to prevent redundant re-renders
+  const memoizedHeader = useMemo(() => <Header />, [location.pathname, settings]);
+  const memoizedFooter = useMemo(() => <Footer />, [settings]);
+  const memoizedBottomNav = useMemo(() => <BottomNav />, [location.pathname]);
+
   useEffect(() => {
-    document.title = settings.site_title;
+    // Simplify metadata update for better performance feel
+    document.title = settings.site_title || 'YonoStore';
     
-    const updateMeta = (name: string, content: string, isProperty = false) => {
-      const attr = isProperty ? 'property' : 'name';
-      let meta = document.querySelector(`meta[${attr}="${name}"]`);
-      if (!meta) {
-        meta = document.createElement('meta');
-        meta.setAttribute(attr, name);
-        document.head.appendChild(meta);
-      }
-      meta.setAttribute("content", content);
+    const setMeta = (selector: string, content: string) => {
+      const el = document.querySelector(selector);
+      if (el) el.setAttribute('content', content);
     };
 
-    updateMeta("description", settings.meta_description);
-    updateMeta("og:title", settings.site_title, true);
-    updateMeta("og:description", settings.meta_description, true);
-    updateMeta("og:type", "website", true);
-    
-    // Add canonical link for SEO
-    let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.rel = 'canonical';
-      document.head.appendChild(canonical);
+    if (settings.meta_description) {
+      setMeta('meta[name="description"]', settings.meta_description);
+      setMeta('meta[property="og:description"]', settings.meta_description);
     }
-    canonical.href = window.location.href;
-    
-    if (settings.favicon_url) {
-      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-      }
-      link.href = settings.favicon_url;
-    }
-  }, [settings]);
+  }, [settings, location.pathname]);
 
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Ticker />
-        <Header />
-        
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 pb-24">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/new-apps" element={<NewApps />} />
-            <Route path="/app/:slug" element={<AppDetails />} />
-            <Route path="/download/:slug" element={<DownloadPage />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/news" element={<NewsPage />} />
-            <Route path="/news/:slug" element={<NewsDetailPage />} />
-            <Route path="/videos" element={<VideosPage />} />
-            <Route path="/videos/:slug" element={<VideoDetailPage />} />
-            <Route path="/blogs" element={<Blogs />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/*" element={<AdminDashboard />} />
-            <Route path="*" element={<div className="text-center py-20 text-slate-500">Feature arriving soon. Check back later.</div>} />
-          </Routes>
-        </main>
-        
-        <Footer />
-        <BottomNav />
-        <BackToTop />
-      </div>
-    </Router>
+    <div className="flex flex-col min-h-screen selection:bg-red-600/20">
+      <ScrollToTop />
+      <Ticker />
+      {memoizedHeader}
+      
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 pb-24 overflow-x-hidden relative">
+        <Suspense fallback={<LoadingScreen />}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="will-change-[opacity,transform]"
+            >
+              <Routes location={location}>
+                <Route path="/" element={<Home />} />
+                <Route path="/new-apps" element={<NewApps />} />
+                <Route path="/app/:slug" element={<AppDetails />} />
+                <Route path="/download/:slug" element={<DownloadPage />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/responsibility" element={<Responsibility />} />
+                <Route path="/news" element={<NewsPage />} />
+                <Route path="/news/:slug" element={<NewsDetailPage />} />
+                <Route path="/videos" element={<VideosPage />} />
+                <Route path="/videos/:slug" element={<VideoDetailPage />} />
+                <Route path="/blogs" element={<Blogs />} />
+                <Route path="/blog/:slug" element={<BlogDetailPage />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin/*" element={<AdminDashboard />} />
+                <Route path="*" element={<div className="text-center py-20 text-slate-500">Feature arriving soon. Check back later.</div>} />
+              </Routes>
+            </motion.div>
+          </AnimatePresence>
+        </Suspense>
+      </main>
+      
+      {memoizedFooter}
+      {memoizedBottomNav}
+      <BackToTop />
+    </div>
   );
 }
 
 export default function App() {
   return (
     <HelmetProvider>
-      <DataProvider>
-        <AppContent />
-      </DataProvider>
+      <ThemeProvider>
+        <DataProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </DataProvider>
+      </ThemeProvider>
     </HelmetProvider>
   );
 }
 
 function BottomNav() {
+  const { pathname } = useLocation();
   const triggerHaptic = () => {
     if (window.navigator && window.navigator.vibrate) {
-      window.navigator.vibrate(20);
+      window.navigator.vibrate(10);
     }
   };
 
+  const isActive = (path: string) => pathname === path;
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/50 dark:bg-black/50 backdrop-blur-md border-t border-black/5 dark:border-white/5 md:hidden">
-      <div className="flex justify-around items-center h-20 max-w-lg mx-auto px-4">
-        <Link to="/?tab=Games" onClick={triggerHaptic} className="flex flex-col items-center gap-1 group">
-          <Gamepad2 className="w-6 h-6 fill-current text-black dark:text-white transition-transform group-active:scale-90" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-black dark:text-white">Games</span>
-        </Link>
-        <Link to="/?tab=All Apps" onClick={triggerHaptic} className="flex flex-col items-center gap-1">
-          <div className="bg-red-600 text-white p-3 rounded-2xl shadow-xl shadow-red-600/30 -mt-6 border-4 border-white dark:border-zinc-900 active:scale-90 transition-transform">
-            <LayoutGrid className="w-6 h-6 fill-current" />
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-transparent md:hidden pb-safe">
+      <div className="flex justify-around items-center h-14 max-w-lg mx-auto px-2">
+        <Link to="/videos" onClick={triggerHaptic} className={`flex flex-col items-center gap-0.5 group relative transition-all duration-300 ${isActive('/videos') ? 'scale-105 -translate-y-1' : 'hover:-translate-y-0.5'}`}>
+          <div className={`p-1 rounded-lg transition-all ${isActive('/videos') ? 'bg-red-600/5 shadow-[0_0_10px_rgba(220,38,38,0.1)]' : ''}`}>
+            <LayoutGrid className={`w-4 h-4 transition-colors ${isActive('/videos') ? 'text-red-600' : 'opacity-50 group-hover:text-red-500'}`} />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-red-600">Explore</span>
+          <span className={`text-[7px] font-black uppercase tracking-tighter transition-colors ${isActive('/videos') ? 'text-red-600' : 'opacity-50'}`}>All App</span>
+          {isActive('/videos') && <motion.div layoutId="nav-pill" className="absolute -bottom-1 w-3 h-0.5 bg-red-600 rounded-full" />}
         </Link>
-        <Link to="/news" onClick={triggerHaptic} className="flex flex-col items-center gap-1 group font-medium">
-          <Newspaper className="w-6 h-6 fill-current text-black dark:text-white transition-transform group-active:scale-90" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-black dark:text-white">News</span>
+        <Link to="/new-apps" onClick={triggerHaptic} className={`flex flex-col items-center gap-0.5 group relative transition-all duration-300 ${isActive('/new-apps') ? 'scale-105 -translate-y-1' : 'hover:-translate-y-0.5'}`}>
+          <div className={`p-1 rounded-lg transition-all ${isActive('/new-apps') ? 'bg-red-600/5 shadow-[0_0_10px_rgba(220,38,38,0.1)]' : ''}`}>
+            <Sparkles className={`w-4 h-4 transition-colors ${isActive('/new-apps') ? 'text-red-600' : 'opacity-50 group-hover:text-red-500'}`} />
+          </div>
+          <span className={`text-[7px] font-black uppercase tracking-tighter transition-colors ${isActive('/new-apps') ? 'text-red-600' : 'opacity-50'}`}>News</span>
+          {isActive('/new-apps') && <motion.div layoutId="nav-pill" className="absolute -bottom-1 w-3 h-0.5 bg-red-600 rounded-full" />}
+        </Link>
+        
+        <Link to="/" onClick={triggerHaptic} className="flex flex-col items-center group -mt-4 relative">
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.9 }}
+            className={`bg-red-600 text-white p-2.5 rounded-xl shadow-xl shadow-red-600/30 border border-white/20 transition-all ${pathname === '/' ? 'ring-2 ring-red-600/20 scale-105' : 'opacity-90'}`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </motion.div>
+          <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 drop-shadow-sm ${pathname === '/' ? 'text-red-600' : 'text-red-500 opacity-60'}`}>Explore</span>
+          {pathname === '/' && <motion.div layoutId="nav-pill" className="absolute -bottom-1 w-5 h-0.5 bg-red-600 rounded-full" />}
+        </Link>
+
+        <Link to="/news" onClick={triggerHaptic} className={`flex flex-col items-center gap-0.5 group relative transition-all duration-300 ${isActive('/news') ? 'scale-105 -translate-y-1' : 'hover:-translate-y-0.5'}`}>
+          <div className={`p-1 rounded-lg transition-all ${isActive('/news') ? 'bg-red-600/5 shadow-[0_0_10px_rgba(220,38,38,0.1)]' : ''}`}>
+            <Newspaper className={`w-4 h-4 transition-colors ${isActive('/news') ? 'text-red-600' : 'opacity-50 group-hover:text-red-500'}`} />
+          </div>
+          <span className={`text-[7px] font-black uppercase tracking-tighter transition-colors ${isActive('/news') ? 'text-red-600' : 'opacity-50'}`}>Updates</span>
+          {isActive('/news') && <motion.div layoutId="nav-pill" className="absolute -bottom-1 w-3 h-0.5 bg-red-600 rounded-full" />}
+        </Link>
+        <Link to="/contact" onClick={triggerHaptic} className={`flex flex-col items-center gap-0.5 group relative transition-all duration-300 ${isActive('/contact') ? 'scale-105 -translate-y-1' : 'hover:-translate-y-0.5'}`}>
+          <div className={`p-1 rounded-lg transition-all ${isActive('/contact') ? 'bg-red-600/5 shadow-[0_0_10px_rgba(220,38,38,0.1)]' : ''}`}>
+            <Info className={`w-4 h-4 transition-colors ${isActive('/contact') ? 'text-red-600' : 'opacity-50 group-hover:text-red-500'}`} />
+          </div>
+          <span className={`text-[7px] font-black uppercase tracking-tighter transition-colors ${isActive('/contact') ? 'text-red-600' : 'opacity-50'}`}>Help</span>
+          {isActive('/contact') && <motion.div layoutId="nav-pill" className="absolute -bottom-1 w-3 h-0.5 bg-red-600 rounded-full" />}
         </Link>
       </div>
     </div>

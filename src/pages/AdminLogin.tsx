@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Shield, Mail, KeyRound } from 'lucide-react';
+import { Shield, Mail, KeyRound, Loader2 } from 'lucide-react';
 import { auth } from '../lib/firebase';
+import { useData } from '../contexts/DataContext';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 export default function AdminLogin() {
+  const { settings } = useData();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
@@ -113,16 +115,20 @@ export default function AdminLogin() {
       <div className="glass-panel p-10 w-full max-w-md">
         <div className="flex justify-center mb-6">
           <div className="bg-pink-500/20 p-4 rounded-full">
-            <Shield className="w-10 h-10 text-pink-400" />
+            {settings.logo_url ? (
+              <img src={settings.logo_url} width={48} height={48} className="w-12 h-12 object-contain" alt="Logo" />
+            ) : (
+              <Shield className="w-10 h-10 text-pink-400" />
+            )}
           </div>
         </div>
-        <h1 className="text-2xl font-bold text-center mb-2">Admin Access</h1>
-        <p className="text-xs text-center text-slate-500 mb-6 font-medium">Use your Google Account: defentechscholar@gmail.com</p>
+        <h1 className="text-2xl font-bold text-center mb-2">Admin Authority</h1>
+        <p className="text-xs text-center text-slate-500 mb-6 font-medium">Restricted Access Portal</p>
         
         {domainMismatch && (
           <div className="mb-6 bg-amber-500/10 border border-amber-500/30 p-4 rounded-lg">
             <p className="text-xs text-amber-500 font-bold mb-2">AUTH DOMAIN NOTICE</p>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+            <p className="text-xs opacity-60 mb-3">
               You are currently on <strong>{window.location.hostname}</strong>. 
               Firebase might reject login from this URL unless you've added it to "Authorized Domains".
             </p>
@@ -135,7 +141,7 @@ export default function AdminLogin() {
               </a>
               <a 
                 href="http://yonoinfo.in/admin/login" 
-                className="block w-full text-center bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white text-xs font-bold py-2 rounded transition-colors"
+                className="block w-full text-center bg-black/5 hover:bg-black/10 text-black text-xs font-bold py-2 rounded transition-colors"
               >
                 Go to Main Domain (yonoinfo.in)
               </a>
@@ -143,12 +149,7 @@ export default function AdminLogin() {
           </div>
         )}
 
-        <div className="mb-6 text-center">
-          <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-            Project: <span className="text-pink-500 select-all">gen-lang-client-0825832493</span>
-          </p>
-          <p className="text-[8px] text-slate-400 mt-1">If this ID doesn't match your Firebase Console, login will fail.</p>
-        </div>
+
 
         <form onSubmit={handleLogin} className="space-y-6">
           {error && <div className="text-rose-400 text-sm text-center bg-rose-500/10 p-3 rounded">{error}</div>}
@@ -156,32 +157,32 @@ export default function AdminLogin() {
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Email Address</label>
+              <label className="block text-sm font-medium opacity-60 mb-2">Email Address</label>
               <div className="relative">
                 <input 
                   type="email" 
                   required
-                  className="w-full bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="w-full bg-black/5 border border-black/5 rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
                   value={email}
                   placeholder="admin@example.com"
                   onChange={(e) => { setEmail(e.target.value); setError(null); }}
                 />
-                <Mail className="w-5 h-5 absolute left-3 top-3.5 text-slate-400" />
+                <Mail className="w-5 h-5 absolute left-3 top-3.5 opacity-40" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Password</label>
+              <label className="block text-sm font-medium opacity-60 mb-2">Password</label>
               <div className="relative">
                 <input 
                   type="password" 
                   required
-                  className="w-full bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="w-full bg-black/5 border border-black/5 rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
                   value={password}
                   placeholder="••••••••"
                   onChange={(e) => { setPassword(e.target.value); setError(null); }}
                 />
-                <KeyRound className="w-5 h-5 absolute left-3 top-3.5 text-slate-400" />
+                <KeyRound className="w-5 h-5 absolute left-3 top-3.5 opacity-40" />
               </div>
               <div className="flex justify-end mt-2">
                 <button 
@@ -204,13 +205,13 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/10 text-center">
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Or sign in with a single click</p>
+        <div className="mt-6 pt-6 border-t border-black/10 text-center">
+          <p className="text-sm opacity-50 mb-4">Or sign in with a single click</p>
           <button 
             type="button"
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className={`w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/20 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-semibold py-3 rounded-lg transition-all shadow-sm flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full bg-white border border-black/10 hover:bg-slate-50 text-slate-900 font-semibold py-3 rounded-lg transition-all shadow-sm flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -222,7 +223,7 @@ export default function AdminLogin() {
           </button>
         </div>
         
-        <div className="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
+        <div className="mt-8 text-center text-xs opacity-40">
           v1.0.1
         </div>
       </div>

@@ -32,6 +32,7 @@ export interface GlobalSettings {
   contact_content?: string;
   privacy_content?: string;
   terms_content?: string;
+  responsibility_content?: string;
   important_notice?: string;
   categories: string[];
   banners: Banner[];
@@ -97,11 +98,15 @@ export interface Review {
 
 export interface BlogPost {
   id: string;
+  slug: string;
   title: string;
   content: string;
   author: string;
   cover_url: string;
   published_at: string;
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string;
 }
 
 export interface NewsUpdate {
@@ -254,6 +259,7 @@ export const mockSettings: GlobalSettings = savedSettings ? JSON.parse(savedSett
   contact_content: '<p>Have questions or feedback? We\'d love to hear from you. Our team typically responds within 24-48 hours.</p>',
   privacy_content: '<h2>1. Information We Collect</h2><p>We collect information to provide better services to all our users. The types of information we collect include usage data and device info.</p>',
   terms_content: '<h2>1. Acceptance of Terms</h2><p>By accessing and using this application, you agree to be bound by these Terms and Conditions.</p>',
+  responsibility_content: '<p>Our website is dedicated to maintaining the highest standards of transparency and user safety. We take our responsibility seriously to ensure that every application listed on our platform is thoroughly vetted.</p><p>Users are also encouraged to take responsibility for their own device security and data privacy.</p>',
   important_notice: 'Please note: Download apps at your own risk. We verify safety, but you are responsible for your device security.',
   categories: ['All Apps', 'Categories', 'Top Charts', 'Games', 'Tools'],
   banners: [
@@ -294,11 +300,15 @@ const savedBlogs = localStorage.getItem('yonostore_blogs');
 export const mockBlogs: BlogPost[] = savedBlogs ? JSON.parse(savedBlogs) : [
   {
     id: '1',
+    slug: 'future-mobile-security',
     title: 'The Future of Mobile Security',
     content: 'As mobile devices become central to our lives, securing them is more important than ever...',
     author: 'Admin Team',
     cover_url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80',
-    published_at: new Date().toISOString()
+    published_at: new Date().toISOString(),
+    seo_title: 'Future of Mobile Security - Blog',
+    seo_description: 'Exploring the upcoming trends in mobile device protection.',
+    seo_keywords: 'mobile security, privacy, encryption, 2026 tech'
   }
 ];
 

@@ -1,26 +1,28 @@
 import { motion } from 'framer-motion';
-import { mockSettings } from '../lib/supabase';
+import { useData } from '../contexts/DataContext';
 
 export default function Ticker() {
-  if (!mockSettings.ticker_text) return null;
+  const { settings } = useData();
+  if (!settings.ticker_text) return null;
 
   return (
-    <div className="bg-pink-100 dark:bg-slate-950 text-pink-600 dark:text-pink-400 py-2 overflow-hidden border-b border-pink-200 dark:border-pink-900/50 flex items-center relative z-50">
-      <div className="bg-pink-500 w-2 h-2 rounded-full absolute left-4 z-10 shadow-[0_0_8px_rgba(236,72,153,0.8)] animate-pulse" />
+    <div className="bg-transparent py-2.5 overflow-hidden border-b border-black/5 flex items-center relative z-[70] select-none pointer-events-none">
+      <div className="bg-red-600 w-1.5 h-1.5 rounded-full absolute left-4 z-10 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.3)]" />
       
       <div className="flex whitespace-nowrap overflow-hidden pl-10 w-full relative">
-        {/* We use two motion.div elements to create a seamless loop */}
         <motion.div
-          className="inline-block whitespace-nowrap min-w-full font-mono text-xs sm:text-sm font-black uppercase tracking-widest magic-text"
-          animate={{ x: [0, -1000] }}
+          className="inline-block whitespace-nowrap min-w-full font-black text-[10px] sm:text-xs uppercase tracking-[0.25em] italic magic-text"
+          animate={{ x: ["0%", "-100%"] }}
           transition={{
             repeat: Infinity,
             ease: "linear",
-            duration: 25
+            duration: 35
           }}
         >
-          <span className="mx-12">{mockSettings.ticker_text}</span>
-          <span className="mx-12">{mockSettings.ticker_text}</span>
+          <span className="mx-10">{settings.ticker_text}</span>
+          <span className="mx-10">{settings.ticker_text}</span>
+          <span className="mx-10">{settings.ticker_text}</span>
+          <span className="mx-10">{settings.ticker_text}</span>
         </motion.div>
       </div>
     </div>

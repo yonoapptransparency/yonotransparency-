@@ -2,6 +2,7 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import crypto from "crypto";
+import compression from "compression";
 
 // Secret key for AES-256-CBC encryption
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
@@ -11,6 +12,8 @@ async function startServer() {
   const app = express();
   const PORT = process.env.PORT || 3000;
 
+  // Use compression for faster transfers
+  app.use(compression());
   app.use(express.json());
 
   // API Route: Secure Link
@@ -18,7 +21,7 @@ async function startServer() {
     const { id, timestamp } = req.query;
     
     // User-Agent validation (reject curl, wget, basic scrapers)
-    const userAgent = req.headers['user-agent'] || '';
+    const userAgent = (req.headers['user-agent'] as string) || '';
     if (!userAgent || /curl|wget|bot|spider|crawler/i.test(userAgent)) {
       res.status(403).json({ error: 'Access Denied: Bot detected' });
       return;
@@ -41,15 +44,12 @@ async function startServer() {
       }
       
       // If the url was not base64 encoded, decoding it might result in garbage or original string.
-      // Let's ensure targetUrl is usable.
       if (!targetUrl.startsWith('http')) {
-        // Did we fail decoding?
         if (req.query.url.startsWith('http')) {
            targetUrl = req.query.url;
         } else if (targetUrl === 'U2FsdGVkX19xxxxxx' || targetUrl.trim() === '') {
            targetUrl = `https://example.com/mock-secure-redirect?original=${targetUrl}`;
         } else {
-           // Maybe they typed google.com without https://
            targetUrl = 'https://' + targetUrl.replace(/^[^\w]+/, '');
         }
       }
@@ -68,16 +68,28 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    // Production static files
+    // Production static files with aggressive caching for assets
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      maxAge: '1d', // Cache for 1 day instead of 1 year for safety but performance
+      etag: true,
+      lastModified: true,
+      index: false
+    }));
+    
+    // Specifically handle assets (JS, CSS, Images) with long-term caching
+    app.use('/assets', express.static(path.join(distPath, 'assets'), {
+      maxAge: '1y',
+      immutable: true
+    }));
+    
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
   app.listen(PORT as number, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
   });
 }
 

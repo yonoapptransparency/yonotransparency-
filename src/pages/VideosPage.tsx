@@ -1,89 +1,88 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useData } from '../contexts/DataContext';
-import { Video as VideoIcon, PlayCircle } from 'lucide-react';
+import { LayoutGrid, Sparkles, Filter, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { AppListItem } from '../components/PlayStoreUI';
+import { Link } from 'react-router-dom';
 
 export default function VideosPage() {
-  const { apps: mockApps, settings: mockSettings, news: mockNews, blogs: mockBlogs, videos: mockVideos, saveApps: saveMockApps, saveSettings: saveMockSettings, saveNews: saveMockNews, saveBlogs: saveMockBlogs, saveVideos: saveMockVideos } = useData();
+  const { apps: mockApps, settings: mockSettings } = useData();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredVideos = mockVideos.filter(video => 
-    video.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    video.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const allCategoryApps = useMemo(() => {
+    return mockApps.filter(app => {
+      const appCategories = app.category ? app.category.toLowerCase().split(',').map(c => c.trim()) : [];
+      const matchesCategory = appCategories.some(cat => cat === 'all app' || cat === 'all apps');
+      
+      if (!searchTerm) return matchesCategory;
+      
+      const matchesSearch = app.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (app.seo_title && app.seo_title.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      return matchesCategory && matchesSearch;
+    }).sort((a, b) => (a.serial_number || 0) - (b.serial_number || 0));
+  }, [mockApps, searchTerm]);
 
   return (
-    <div className="animate-fade-in max-w-6xl mx-auto py-8">
+    <div className="animate-fade-in max-w-5xl mx-auto py-4 px-2">
+      <div className="px-2 mb-6">
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-colors group"
+        >
+          <div className="p-2 rounded-full bg-black/5 border border-black/5 group-hover:scale-110 transition-transform">
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </div>
+          Back to storefront
+        </Link>
+      </div>
       <Helmet>
-        <title>Videos - YonoStore</title>
-        <meta name="description" content="Watch the latest videos and tutorials about apps and games." />
+        <title>All Premium Apps - {mockSettings.site_title}</title>
+        <meta name="description" content="Explore our complete collection of verified premium applications." />
       </Helmet>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-4xl font-black tracking-tighter text-black dark:text-white flex items-center gap-3 uppercase">
-            <VideoIcon className="w-8 h-8 text-red-600" />
-            Videos
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6 px-2">
+        <div className="space-y-1">
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tighter flex items-center gap-3 uppercase italic leading-none dark:text-white">
+            {mockSettings.logo_url ? <img src={mockSettings.logo_url} className="w-10 h-10 object-contain brightness-110" alt="" /> : <LayoutGrid className="w-8 h-8 text-pink-600" />}
+            All <span className="text-pink-600">Premium</span> Apps
           </h1>
-          <p className="text-black dark:text-slate-400 mt-2 font-bold uppercase tracking-widest text-xs">
-            Watch the latest app reviews, tutorials, and tech updates.
+          <p className="opacity-40 font-black uppercase tracking-[0.4em] text-[8px] sm:text-[10px] flex items-center gap-3 dark:text-white italic">
+            <Sparkles className="w-4 h-4 text-pink-500 animate-pulse" />
+            Vetted & Verified Intelligence Index
           </p>
         </div>
         
-        <input 
-          type="search" 
-          placeholder="Search videos..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full md:w-64 bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-xl p-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-pink-500 transition-all outline-none"
-        />
+        <div className="relative w-full sm:w-80 group">
+          <div className="absolute left-5 top-1/2 -translate-y-1/2 z-10">
+            <Filter className="w-4 h-4 text-pink-500 opacity-40 group-focus-within:opacity-100 transition-opacity" />
+          </div>
+          <input 
+            type="search" 
+            placeholder="DECRYPT FEED..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-3xl border-2 border-white/20 dark:border-white/10 rounded-[1.5rem] pl-14 pr-6 py-4 text-slate-900 dark:text-white placeholder-slate-400 text-xs font-black focus:ring-4 focus:ring-pink-500/10 transition-all outline-none uppercase tracking-[0.2em] shadow-2xl"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredVideos.map((video, index) => (
-          <motion.div 
-            key={video.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="group block bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-pink-500/10 hover:border-pink-500/30 transition-all duration-300"
-          >
-            <div className="relative aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
-              <img 
-                src={`https://img.youtube.com/vi/${video.youtube_url.split('v=')[1]?.split('&')[0] || video.youtube_url.split('/').pop()}/maxresdefault.jpg`} 
-                alt={video.title}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.youtube_url.split('v=')[1]?.split('&')[0] || video.youtube_url.split('/').pop()}/hqdefault.jpg`;
-                }}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                <PlayCircle className="w-16 h-16 text-white opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <h3 className="font-black text-xl text-black dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-2 mb-2 uppercase tracking-tight">
-                {video.title}
-              </h3>
-              <p className="text-black dark:text-slate-400 text-sm line-clamp-3 mb-4 font-medium uppercase tracking-tight">
-                {video.description}
-              </p>
-              
-              <div className="flex items-center justify-between text-xs text-black shrink-0 font-black uppercase tracking-widest">
-                <span>{new Date(video.created_at).toLocaleDateString()}</span>
-                <Link to={`/videos/${video.slug}`} className="text-red-600 font-black hover:underline uppercase tracking-widest">Watch Video →</Link>
-              </div>
-            </div>
-          </motion.div>
+      <div className="grid gap-2 px-1">
+        {allCategoryApps.map((app, index) => (
+          <AppListItem key={app.id} app={app} index={index + 1} />
         ))}
       </div>
       
-      {filteredVideos.length === 0 && (
-        <div className="text-center py-20 text-slate-500">
-          No videos found matching your search.
+      {allCategoryApps.length === 0 && (
+        <div className="text-center py-40 bg-white/40 dark:bg-slate-900/40 backdrop-blur-3xl border-4 border-dashed border-white/20 dark:border-white/10 m-4 rounded-[4rem] shadow-inner">
+          <div className="bg-pink-600/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl border-2 border-pink-500/20">
+            <LayoutGrid className="w-10 h-10 text-pink-600 opacity-50" />
+          </div>
+          <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-3 dark:text-white">Feed Interrupted</h3>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] max-w-[250px] mx-auto opacity-70 italic">
+            {searchTerm ? "Search query returned zero matches" : "Syncing newly verified applications. Stand by."}
+          </p>
         </div>
       )}
     </div>

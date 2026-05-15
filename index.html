@@ -3,6 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+      // Early internal theme detection
+      (function() {
+        try {
+          const theme = localStorage.getItem('theme') || 'light';
+          if (theme === 'dark') document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
     <title>YonoStore - Premium independent App Transparency Portal</title>
     <meta name="description" content="Discover verified applications with independent transparency reviews. Secure downloads and honest ratings for the apps you use every day." />
     <meta name="keywords" content="yonostore, app reviews, secure downloads, transparency portal, apk downloader" />
