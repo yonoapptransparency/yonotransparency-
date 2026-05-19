@@ -76,13 +76,13 @@ function Header() {
         variants={navVariants}
         className={`glass-nav ${scrolled ? 'glass-nav-scrolled bg-white/30 dark:bg-black/30 backdrop-blur-xl' : 'bg-transparent py-2'}`}
       >
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative flex justify-between items-center">
-          <Link to="/" onClick={triggerHaptic} className="flex items-center gap-2 group">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 relative flex justify-between items-center">
+          <Link to="/" onClick={triggerHaptic} className="flex items-center gap-2 sm:gap-3 group">
             <div className="p-0 transition-transform group-hover:scale-105 duration-500">
-              {settings.logo_url ? <img src={settings.logo_url} width={48} height={48} className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-xl brightness-110" alt="Logo" /> : <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-600 rounded-xl flex items-center justify-center text-white font-black italic">{settings.site_title?.substring(0, 1)}</div>}
+              {settings.logo_url ? <img src={settings.logo_url} width={48} height={48} className="w-10 h-10 sm:w-14 sm:h-14 object-contain drop-shadow-xl brightness-110" alt="Logo" /> : <div className="w-10 h-10 sm:w-14 sm:h-14 bg-red-600 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-black italic">{settings.site_title?.substring(0, 1)}</div>}
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-lg sm:text-xl font-black tracking-tighter uppercase italic drop-shadow-md">{settings.site_title}</span>
+              <span className="text-base sm:text-2xl font-black tracking-tighter uppercase italic drop-shadow-md">{settings.site_title}</span>
             </div>
           </Link>
           
@@ -156,13 +156,13 @@ function Header() {
             </div>
           </nav>
 
-          <div className="md:hidden flex items-center gap-2">
+          <div className="md:hidden flex items-center gap-2.5">
             {settings.helpline_telegram && (
               <a 
                 href={settings.helpline_telegram.startsWith('http') ? settings.helpline_telegram : `https://t.me/${settings.helpline_telegram.replace('@', '')}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center min-h-[48px] min-w-[48px] bg-[#0088cc]/10 text-[#0088cc] rounded-full border border-[#0088cc]/20 hover:bg-[#0088cc]/20 transition-colors"
+                className="flex items-center justify-center min-h-[44px] min-w-[44px] bg-[#0088cc]/10 text-[#0088cc] rounded-full border border-[#0088cc]/20"
                 aria-label="Telegram"
               >
                 <Send className="w-4 h-4" />
@@ -171,7 +171,7 @@ function Header() {
             <SupportWidget />
             <ThemeToggle />
             <button 
-              className="flex items-center justify-center min-h-[48px] min-w-[48px] bg-red-600 rounded-full shadow-lg active:scale-90 transition-transform"
+              className="flex items-center justify-center min-h-[44px] min-w-[44px] bg-red-600 rounded-full shadow-lg active:scale-95"
               onClick={() => { triggerHaptic(); setMenuOpen(true); }}
               aria-label="Open menu"
             >
@@ -566,47 +566,34 @@ function BottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-transparent md:hidden pb-safe">
-      <div className="flex justify-around items-center h-14 max-w-lg mx-auto px-2">
-        <Link to="/videos" onClick={triggerHaptic} className={`flex flex-col items-center gap-0.5 group relative transition-all duration-300 ${isActive('/videos') ? 'scale-105 -translate-y-1' : 'hover:-translate-y-0.5'}`}>
-          <div className={`p-1 rounded-lg transition-all ${isActive('/videos') ? 'bg-red-600/5 shadow-[0_0_10px_rgba(220,38,38,0.1)]' : ''}`}>
-            <LayoutGrid className={`w-4 h-4 transition-colors ${isActive('/videos') ? 'text-red-600' : 'opacity-50 group-hover:text-red-500'}`} />
-          </div>
-          <span className={`text-[7px] font-black uppercase tracking-tighter transition-colors ${isActive('/videos') ? 'text-red-600' : 'opacity-50'}`}>All App</span>
-          {isActive('/videos') && <motion.div layoutId="nav-pill" className="absolute -bottom-1 w-3 h-0.5 bg-red-600 rounded-full" />}
+      <div className="flex justify-around items-center h-12 max-w-sm mx-auto px-1">
+        <Link to="/videos" onClick={triggerHaptic} className={`flex flex-col items-center gap-0 group relative transition-all duration-200 ${isActive('/videos') ? 'scale-105' : ''}`}>
+          <LayoutGrid className={`w-3.5 h-3.5 transition-colors ${isActive('/videos') ? 'text-red-600' : 'opacity-40'}`} />
+          <span className={`text-[6px] font-black uppercase tracking-tighter transition-colors ${isActive('/videos') ? 'text-red-600' : 'opacity-40'}`}>Apps</span>
         </Link>
-        <Link to="/new-apps" onClick={triggerHaptic} className={`flex flex-col items-center gap-0.5 group relative transition-all duration-300 ${isActive('/new-apps') ? 'scale-105 -translate-y-1' : 'hover:-translate-y-0.5'}`}>
-          <div className={`p-1 rounded-lg transition-all ${isActive('/new-apps') ? 'bg-red-600/5 shadow-[0_0_10px_rgba(220,38,38,0.1)]' : ''}`}>
-            <Sparkles className={`w-4 h-4 transition-colors ${isActive('/new-apps') ? 'text-red-600' : 'opacity-50 group-hover:text-red-500'}`} />
-          </div>
-          <span className={`text-[7px] font-black uppercase tracking-tighter transition-colors ${isActive('/new-apps') ? 'text-red-600' : 'opacity-50'}`}>News</span>
-          {isActive('/new-apps') && <motion.div layoutId="nav-pill" className="absolute -bottom-1 w-3 h-0.5 bg-red-600 rounded-full" />}
+        <Link to="/new-apps" onClick={triggerHaptic} className={`flex flex-col items-center gap-0 group relative transition-all duration-200 ${isActive('/new-apps') ? 'scale-105' : ''}`}>
+          <Sparkles className={`w-3.5 h-3.5 transition-colors ${isActive('/new-apps') ? 'text-red-600' : 'opacity-40'}`} />
+          <span className={`text-[6px] font-black uppercase tracking-tighter transition-colors ${isActive('/new-apps') ? 'text-red-600' : 'opacity-40'}`}>Hot</span>
         </Link>
         
-        <Link to="/" onClick={triggerHaptic} className="flex flex-col items-center group -mt-4 relative">
+        <Link to="/" onClick={triggerHaptic} className="flex flex-col items-center group -mt-4 relative transition-all duration-200">
           <motion.div 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.9 }}
-            className={`bg-red-600 text-white p-2.5 rounded-xl shadow-xl shadow-red-600/30 border border-white/20 transition-all ${pathname === '/' ? 'ring-2 ring-red-600/20 scale-105' : 'opacity-90'}`}
+            className={`bg-red-600 text-white p-2 rounded-xl shadow-lg border border-white/20 transition-all ${pathname === '/' ? 'ring-2 ring-red-600/20 scale-110' : 'opacity-90'}`}
           >
-            <LayoutGrid className="w-4 h-4" />
+            <LayoutGrid className="w-3.5 h-3.5" />
           </motion.div>
-          <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 drop-shadow-sm ${pathname === '/' ? 'text-red-600' : 'text-red-500 opacity-60'}`}>Explore</span>
-          {pathname === '/' && <motion.div layoutId="nav-pill" className="absolute -bottom-1 w-5 h-0.5 bg-red-600 rounded-full" />}
+          <span className={`text-[6px] font-black uppercase tracking-tighter mt-1 drop-shadow-sm ${pathname === '/' ? 'text-red-600' : 'text-red-500 opacity-60'}`}>Home</span>
         </Link>
 
-        <Link to="/news" onClick={triggerHaptic} className={`flex flex-col items-center gap-0.5 group relative transition-all duration-300 ${isActive('/news') ? 'scale-105 -translate-y-1' : 'hover:-translate-y-0.5'}`}>
-          <div className={`p-1 rounded-lg transition-all ${isActive('/news') ? 'bg-red-600/5 shadow-[0_0_10px_rgba(220,38,38,0.1)]' : ''}`}>
-            <Newspaper className={`w-4 h-4 transition-colors ${isActive('/news') ? 'text-red-600' : 'opacity-50 group-hover:text-red-500'}`} />
-          </div>
-          <span className={`text-[7px] font-black uppercase tracking-tighter transition-colors ${isActive('/news') ? 'text-red-600' : 'opacity-50'}`}>Updates</span>
-          {isActive('/news') && <motion.div layoutId="nav-pill" className="absolute -bottom-1 w-3 h-0.5 bg-red-600 rounded-full" />}
+        <Link to="/news" onClick={triggerHaptic} className={`flex flex-col items-center gap-0 group relative transition-all duration-200 ${isActive('/news') ? 'scale-105' : ''}`}>
+          <Newspaper className={`w-3.5 h-3.5 transition-colors ${isActive('/news') ? 'text-red-600' : 'opacity-40'}`} />
+          <span className={`text-[6px] font-black uppercase tracking-tighter transition-colors ${isActive('/news') ? 'text-red-600' : 'opacity-40'}`}>News</span>
         </Link>
-        <Link to="/contact" onClick={triggerHaptic} className={`flex flex-col items-center gap-0.5 group relative transition-all duration-300 ${isActive('/contact') ? 'scale-105 -translate-y-1' : 'hover:-translate-y-0.5'}`}>
-          <div className={`p-1 rounded-lg transition-all ${isActive('/contact') ? 'bg-red-600/5 shadow-[0_0_10px_rgba(220,38,38,0.1)]' : ''}`}>
-            <Info className={`w-4 h-4 transition-colors ${isActive('/contact') ? 'text-red-600' : 'opacity-50 group-hover:text-red-500'}`} />
-          </div>
-          <span className={`text-[7px] font-black uppercase tracking-tighter transition-colors ${isActive('/contact') ? 'text-red-600' : 'opacity-50'}`}>Help</span>
-          {isActive('/contact') && <motion.div layoutId="nav-pill" className="absolute -bottom-1 w-3 h-0.5 bg-red-600 rounded-full" />}
+        <Link to="/contact" onClick={triggerHaptic} className={`flex flex-col items-center gap-0 group relative transition-all duration-200 ${isActive('/contact') ? 'scale-105' : ''}`}>
+          <Info className={`w-3.5 h-3.5 transition-colors ${isActive('/contact') ? 'text-red-600' : 'opacity-40'}`} />
+          <span className={`text-[6px] font-black uppercase tracking-tighter transition-colors ${isActive('/contact') ? 'text-red-600' : 'opacity-40'}`}>Help</span>
         </Link>
       </div>
     </div>

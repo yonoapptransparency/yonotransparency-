@@ -29,8 +29,31 @@ export default function NewsPage() {
         </Link>
       </div>
       <Helmet>
-        <title>Latest News</title>
-        <meta name="description" content="Read the latest news and updates." />
+        <title>Latest News & Updates - {mockSettings.site_title}</title>
+        <meta name="description" content="Stay updated with the latest news, transmissions, and intel from our secure network." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={window.location.origin + "/news"} />
+        
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={`Latest News & Updates - ${mockSettings.site_title}`} />
+        <meta property="og:description" content="Stay updated with the latest news, transmissions, and intel from our secure network." />
+        <meta property="og:image" content={mockSettings.logo_url} />
+        <meta property="og:url" content={window.location.origin + "/news"} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`Latest News & Updates - ${mockSettings.site_title}`} />
+        <meta name="twitter:description" content="Stay updated with the latest news, transmissions, and intel from our secure network." />
+        <meta name="twitter:image" content={mockSettings.logo_url} />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "Latest News",
+            "description": "Latest news and updates from our portal.",
+            "url": window.location.origin + "/news"
+          })}
+        </script>
       </Helmet>
       <div className="mb-8 px-1">
         <h1 className="text-3xl font-black mb-6 flex items-center gap-3 uppercase tracking-tighter dark:text-white italic">

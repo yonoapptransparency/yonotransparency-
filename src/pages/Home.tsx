@@ -92,9 +92,36 @@ export default function Home() {
         <title>{mockSettings.site_title}</title>
         <meta name="description" content={mockSettings.meta_description} />
         {mockSettings.seo_keywords && <meta name="keywords" content={mockSettings.seo_keywords} />}
+        <meta name="author" content="Transparency Portal" />
+        <meta name="robots" content="index, follow" />
+        
+        <meta property="og:type" content="website" />
         <meta property="og:title" content={mockSettings.site_title} />
         <meta property="og:description" content={mockSettings.meta_description} />
         <meta property="og:image" content={mockSettings.logo_url} />
+        <meta property="og:url" content={window.location.origin} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={mockSettings.site_title} />
+        <meta name="twitter:description" content={mockSettings.meta_description} />
+        <meta name="twitter:image" content={mockSettings.logo_url} />
+
+        <link rel="canonical" href={window.location.origin} />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": mockSettings.site_title,
+            "url": window.location.origin,
+            "description": mockSettings.meta_description,
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": `${window.location.origin}/?q={search_term_string}`,
+              "query-input": "required name=search_term_string"
+            }
+          })}
+        </script>
       </Helmet>
       {/* Premium Hero Section - Compact & Sleek */}
       <div className="text-center py-4 px-4 bg-linear-to-b from-slate-50/50 dark:from-slate-900/50 to-transparent backdrop-blur-md mb-4 border-b border-black/5 dark:border-white/5">

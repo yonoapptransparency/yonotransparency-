@@ -198,20 +198,20 @@ export const AppListItem = React.memo(({ app, index }: { app: any; index?: numbe
     <motion.div
       initial={{ opacity: 0, y: 5 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-5px" }}
-      transition={{ duration: 0.2, delay: (index || 0) % 6 * 0.015 }}
+      viewport={{ once: true, margin: "-2px" }}
+      transition={{ duration: 0.1, delay: (index || 0) % 6 * 0.005 }}
       className="will-change-[opacity,transform]"
     >
       <Link 
         to={`/app/${app.slug}`}
-        className="flex items-center gap-4 sm:gap-6 p-4 sm:p-5 mb-4 glass-panel hover:brightness-110 dark:hover:brightness-[1.15] transition-all duration-300 active:scale-[0.98] group rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.5)] border-t border-white/20 dark:border-white/5"
+        className="flex items-center gap-4 sm:gap-6 p-4 sm:p-5 mb-4 glass-panel hover:brightness-110 dark:hover:brightness-[1.15] transition-all duration-300 active:scale-[0.98] group rounded-2xl sm:rounded-[2rem] border-t border-white/10 dark:border-white/5"
       >
-        <div className="w-8 text-base sm:text-lg font-black opacity-30 text-center shrink-0 italic text-slate-400 dark:text-zinc-600">
+        <div className="w-6 sm:w-8 text-[10px] sm:text-base font-black opacity-30 text-center shrink-0 italic text-slate-400 dark:text-zinc-600">
           {displayIndex}
         </div>
 
         <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0">
-          <div className="w-full h-full rounded-2xl overflow-hidden bg-white shadow-xl border-2 border-slate-200 dark:border-white/10 relative z-10 transition-transform group-hover:scale-105 duration-700">
+          <div className="w-full h-full rounded-2xl overflow-hidden bg-white shadow-md border border-slate-200 dark:border-white/10 relative z-10 transition-transform group-hover:scale-105 duration-300">
             <img 
               src={app.icon_url || "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=128&h=128&fit=crop"} 
               alt={app.name} 
@@ -221,12 +221,11 @@ export const AppListItem = React.memo(({ app, index }: { app: any; index?: numbe
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="absolute -inset-1 blur-xl bg-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </div>
         
-        <div className="flex-1 min-w-0 flex flex-col justify-center px-1">
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <h3 className="font-black text-base sm:text-lg leading-tight uppercase tracking-tighter italic dark:text-zinc-100 break-words w-full">
+        <div className="flex-1 min-w-0 flex flex-col justify-center px-1 sm:px-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 flex-wrap">
+            <h3 className="font-black text-sm sm:text-lg leading-tight uppercase tracking-tighter italic dark:text-zinc-100 break-words w-full">
               {app.name}
             </h3>
             {app.safety_status === 'Verified' && (
@@ -234,18 +233,18 @@ export const AppListItem = React.memo(({ app, index }: { app: any; index?: numbe
             )}
           </div>
 
-          <div className="text-xs sm:text-sm font-black uppercase tracking-widest leading-none opacity-60 dark:text-zinc-400">{app.category} • {app.file_size}</div>
+          <div className="text-[10px] sm:text-sm font-black uppercase tracking-wider sm:tracking-widest leading-none opacity-60 dark:text-zinc-400 truncate max-w-full">{app.category} • {app.file_size}</div>
 
-          <div className="flex items-center gap-2.5 leading-none mt-1">
-            <span className="text-xs sm:text-sm font-black opacity-40 tracking-tighter dark:text-zinc-500">
+          <div className="flex items-center gap-2 sm:gap-2.5 leading-none mt-1 sm:mt-1.5">
+            <span className="text-[10px] sm:text-sm font-black opacity-40 tracking-tighter dark:text-zinc-500">
               {app.rating ? app.rating.toFixed(1) : '10.0'}
             </span>
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-400 text-amber-400" />
           </div>
         </div>
         
-        <div className="shrink-0 pr-2">
-          <div className="bg-red-600 text-white px-6 py-2 text-xs sm:text-sm font-black rounded-full transition-all uppercase tracking-widest shadow-2xl shadow-red-600/30 active:scale-95 hover:scale-105 hover:brightness-110">
+        <div className="shrink-0 pr-1 sm:pr-2">
+          <div className="bg-red-600 text-white px-5 py-2 sm:px-6 sm:py-2 text-[11px] sm:text-sm font-black rounded-full transition-all uppercase tracking-widest shadow-lg active:scale-95 hover:scale-105">
             Get
           </div>
         </div>
@@ -260,19 +259,19 @@ export const TopChartItem = React.memo(({ rank, app }: TopChartItemProps) => {
       initial={{ opacity: 0, x: -5 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.2, delay: (rank % 8) * 0.015 }}
+      transition={{ duration: 0.15, delay: (rank % 8) * 0.01 }}
       className="will-change-[opacity,transform]"
     >
       <Link 
         to={`/app/${app.slug}`}
-        className="flex items-center gap-4 sm:gap-6 p-4 sm:p-5 mb-3 glass-panel hover:brightness-110 dark:hover:brightness-[1.15] transition-all duration-300 active:scale-[0.99] group rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.5)] border-t border-white/20 dark:border-white/5"
+        className="flex items-center gap-4 sm:gap-6 p-4 sm:p-5 mb-3 glass-panel hover:brightness-110 dark:hover:brightness-[1.15] transition-all duration-300 active:scale-[0.99] group rounded-[1.5rem] shadow-sm dark:shadow-[0_25px_60px_rgba(0,0,0,0.5)] border-t border-white/10 dark:border-white/5"
       >
-        <div className="w-8 text-base sm:text-lg font-black opacity-30 text-center shrink-0 italic text-slate-400 dark:text-zinc-600">
+        <div className="w-6 sm:w-8 text-[10px] sm:text-base font-black opacity-30 text-center shrink-0 italic text-slate-400 dark:text-zinc-600">
           {rank}
         </div>
         
         <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0">
-          <div className="w-full h-full rounded-2xl overflow-hidden bg-white shadow-xl border-2 border-slate-200 dark:border-white/10 relative z-10 transition-transform group-hover:scale-105 duration-700">
+          <div className="w-full h-full rounded-2xl overflow-hidden bg-white shadow-md border border-slate-200 dark:border-white/10 relative z-10 transition-transform group-hover:scale-105 duration-300">
             <img 
               src={app.icon_url || "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=128&h=128&fit=crop"} 
               alt={app.name} 
@@ -282,25 +281,24 @@ export const TopChartItem = React.memo(({ rank, app }: TopChartItemProps) => {
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="absolute -inset-1 blur-xl bg-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </div>
         
-        <div className="flex-1 min-w-0 flex flex-col justify-center px-1">
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <h3 className="font-black text-base sm:text-lg leading-tight uppercase tracking-tighter italic dark:text-zinc-100 break-words w-full">
+        <div className="flex-1 min-w-0 flex flex-col justify-center px-1 sm:px-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 flex-wrap">
+            <h3 className="font-black text-sm sm:text-lg leading-tight uppercase tracking-tighter italic dark:text-zinc-100 break-words w-full">
               {app.name}
             </h3>
             {app.safety_status === 'Verified' && <ShieldCheck className="w-4 h-4 shrink-0 text-green-500" />}
           </div>
-          <span className="text-xs sm:text-sm font-black opacity-60 uppercase tracking-widest leading-none dark:text-zinc-400">{app.category} • {app.file_size}</span>
-          <div className="flex items-center gap-2.5 text-xs sm:text-sm font-black opacity-40 mt-1 uppercase tracking-tighter leading-none dark:text-zinc-500">
+          <span className="text-[10px] sm:text-sm font-black opacity-60 uppercase tracking-widest leading-none dark:text-zinc-400">{app.category} • {app.file_size}</span>
+          <div className="flex items-center gap-2 sm:gap-2.5 text-[10px] sm:text-sm font-black opacity-40 mt-1 sm:mt-1.5 uppercase tracking-tighter leading-none dark:text-zinc-500">
             <span>{app.rating ? app.rating.toFixed(1) : '10.0'}</span>
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-400 text-amber-400" />
           </div>
         </div>
         
-        <div className="shrink-0 pr-2">
-          <div className="bg-red-600 text-white px-6 py-2 text-xs sm:text-sm font-black rounded-full transition-all uppercase tracking-widest shadow-2xl shadow-red-600/30 active:scale-95 hover:scale-105 hover:brightness-110">
+        <div className="shrink-0 pr-1 sm:pr-2">
+          <div className="bg-red-600 text-white px-5 py-2 sm:px-6 sm:py-2 text-[11px] sm:text-sm font-black rounded-full transition-all uppercase tracking-widest shadow-lg active:scale-95 hover:scale-105">
             Get
           </div>
         </div>

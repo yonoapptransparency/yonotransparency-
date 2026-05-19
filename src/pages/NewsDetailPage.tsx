@@ -60,13 +60,69 @@ export default function NewsDetailPage() {
   return (
     <div className="animate-fade-in max-w-4xl mx-auto px-4 sm:px-6 mb-20">
       <Helmet>
-        <title>{newsItem.seo_title || newsItem.title}</title>
+        <title>{newsItem.seo_title || newsItem.title} - {mockSettings.site_title}</title>
         <meta name="description" content={newsItem.seo_description || newsItem.description} />
         {newsItem.seo_keywords && <meta name="keywords" content={newsItem.seo_keywords} />}
+        <meta name="author" content={newsItem.ceo_name || "Transparency Portal"} />
+        <meta name="robots" content="index, follow" />
+        {newsItem.target_region && <meta name="geo.region" content={newsItem.target_region} />}
+        {newsItem.target_region && <meta name="coverage" content={newsItem.target_region} />}
+        <link rel="canonical" href={window.location.origin + "/news/" + newsItem.slug} />
+
         <meta property="og:title" content={newsItem.seo_title || newsItem.title} />
         <meta property="og:description" content={newsItem.seo_description || newsItem.description} />
         <meta property="og:image" content={newsItem.og_image_url || newsItem.logo_url} />
         <meta property="og:type" content="article" />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="article:published_time" content={new Date().toISOString()} />
+        <meta property="article:author" content={newsItem.ceo_name} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={newsItem.seo_title || newsItem.title} />
+        <meta name="twitter:description" content={newsItem.seo_description || newsItem.description} />
+        <meta name="twitter:image" content={newsItem.og_image_url || newsItem.logo_url} />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "NewsArticle",
+            "headline": newsItem.title,
+            "description": newsItem.description,
+            "image": [newsItem.logo_url],
+            "datePublished": new Date().toISOString(),
+            "author": [{
+              "@type": "Person",
+              "name": newsItem.ceo_name || "Admin",
+              "jobTitle": newsItem.ceo_description || "Chief Intelligence Officer"
+            }]
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": window.location.origin
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "News",
+                "item": window.location.origin + "/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": newsItem.title,
+                "item": window.location.href
+              }
+            ]
+          })}
+        </script>
       </Helmet>
       
       <div className="mb-6">

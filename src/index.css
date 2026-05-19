@@ -4,12 +4,12 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* THE INDEPENDENT THEME & CONTRAST LOCK: VERSION 3.0 */
+/* THE INDEPENDENT THEME & CONTRAST LOCK: VERSION 4.0 */
 :root, .light {
-  --bg-primary: #F0F2F5; /* Soft Professional Grey */
-  --text-primary: #1A1A1A; /* Near Black */
-  --text-secondary: #4B5563; /* Slate Grey */
-  --card-bg: rgba(255, 255, 255, 0.7);
+  --bg-primary: #F0F2F5; 
+  --text-primary: #1A1A1A; 
+  --text-secondary: #4B5563; 
+  --card-bg: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(0, 0, 0, 0.05);
   --accent-red: #DC2626;
   --ticker-bg: rgba(255, 255, 255, 0.1);
@@ -17,11 +17,11 @@
 }
 
 html.dark {
-  --bg-primary: #000000; /* Pure Void */
-  --text-primary: #FFFFFF; /* Pure Light */
-  --text-secondary: #9CA3AF; /* Muted Grey */
-  --card-bg: rgba(15, 15, 15, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --bg-primary: #000000; 
+  --text-primary: #FFFFFF; 
+  --text-secondary: #9CA3AF; 
+  --card-bg: rgba(20, 20, 20, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
   --accent-red: #EF4444;
   --ticker-bg: rgba(0, 0, 0, 0.2);
   color-scheme: dark;
@@ -37,6 +37,7 @@ body {
   background-attachment: fixed;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* Fix for Invisibility */
@@ -48,42 +49,26 @@ p, h1, h2, h3, h4, h5, h6, span, div, li, a {
   color: #FFFFFF !important;
 }
 
-/* Updated Magic Text for perfect visibility */
-.magic-text {
-  color: var(--text-primary) !important;
-  text-shadow: 0 0 10px rgba(0,0,0,0.05);
-}
-
-html.dark .magic-text {
-  text-shadow: 0 0 15px rgba(255,255,255,0.1);
-}
-
 /* Performance-Optimized Spatial Glassmorphism */
 .glass-panel {
   background: var(--card-bg) !important;
-  backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(8px) saturate(110%);
+  -webkit-backdrop-filter: blur(8px) saturate(110%);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px -10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
   border-radius: 1.5rem;
   position: relative;
   overflow: hidden;
-  will-change: transform, opacity;
+  transform: translateZ(0); /* Force GPU acceleration */
 }
 
-.glass-panel::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  opacity: 0.3;
+/* Smoother transitions for dark mode */
+.glass-panel, .glass-nav, .glass-footer {
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 html.dark .glass-panel {
-  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.4);
 }
 
 .glass-nav {

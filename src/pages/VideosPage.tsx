@@ -39,7 +39,30 @@ export default function VideosPage() {
       </div>
       <Helmet>
         <title>All Premium Apps - {mockSettings.site_title}</title>
-        <meta name="description" content="Explore our complete collection of verified premium applications." />
+        <meta name="description" content="Explore our complete collection of verified premium applications. Vetted for security and performance." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={window.location.origin + "/videos"} />
+        
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={`All Premium Apps - ${mockSettings.site_title}`} />
+        <meta property="og:description" content="Explore our complete collection of verified premium applications. Vetted for security and performance." />
+        <meta property="og:image" content={mockSettings.logo_url} />
+        <meta property="og:url" content={window.location.origin + "/videos"} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`All Premium Apps - ${mockSettings.site_title}`} />
+        <meta name="twitter:description" content="Explore our complete collection of verified premium applications. Vetted for security and performance." />
+        <meta name="twitter:image" content={mockSettings.logo_url} />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "All Premium Apps",
+            "description": "Comprehensive list of our premium apps.",
+            "url": window.location.origin + "/videos"
+          })}
+        </script>
       </Helmet>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6 px-2">

@@ -2,17 +2,44 @@ import { useEffect, useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { FileText, Calendar, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 export default function Blogs() {
   const { settings: mockSettings, blogs: mockBlogs } = useData();
 
   useEffect(() => {
-    document.title = `Blogs - ${mockSettings.site_title}`;
     window.scrollTo(0, 0);
-  }, [mockSettings.site_title]);
+  }, []);
 
   return (
     <div className="animate-fade-in max-w-5xl mx-auto py-8">
+      <Helmet>
+        <title>Intelligence Logs & Stories - {mockSettings.site_title}</title>
+        <meta name="description" content="In-depth logs, stories, and articles about our secure ecosystem." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={window.location.origin + "/blogs"} />
+        
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={`Intelligence Logs & Stories - ${mockSettings.site_title}`} />
+        <meta property="og:description" content="In-depth logs, stories, and articles about our secure ecosystem." />
+        <meta property="og:image" content={mockSettings.logo_url} />
+        <meta property="og:url" content={window.location.origin + "/blogs"} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`Intelligence Logs & Stories - ${mockSettings.site_title}`} />
+        <meta name="twitter:description" content="In-depth logs, stories, and articles about our secure ecosystem." />
+        <meta name="twitter:image" content={mockSettings.logo_url} />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "Intelligence Logs",
+            "description": "Blogs and stories from our portal.",
+            "url": window.location.origin + "/blogs"
+          })}
+        </script>
+      </Helmet>
       <div className="px-4 mb-6">
         <Link 
           to="/" 

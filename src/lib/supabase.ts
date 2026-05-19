@@ -51,6 +51,8 @@ export interface NewsItem {
   seo_description: string;
   seo_keywords?: string;
   og_image_url?: string;
+  canonical_url?: string;
+  target_region?: string;
   content: string;
   link: string;
 }
@@ -64,6 +66,7 @@ export interface AppConfig {
   seo_keywords?: string;
   og_image_url?: string;
   canonical_url?: string;
+  target_region?: string;
   category: string;
   version: string;
   file_size: string;
@@ -107,6 +110,8 @@ export interface BlogPost {
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string;
+  canonical_url?: string;
+  target_region?: string;
 }
 
 export interface NewsUpdate {

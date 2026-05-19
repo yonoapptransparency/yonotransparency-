@@ -153,9 +153,15 @@ const AppsTab = React.memo(({ appsList, editingAppId, setEditingAppId, handleDel
               <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">SEO OG Image URL (Social Sharing)</label>
               <input type="text" name="og_image_url" defaultValue={editApp?.og_image_url} placeholder="Image URL for social media shares" className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Canonical URL</label>
-              <input type="url" name="canonical_url" defaultValue={editApp?.canonical_url} placeholder="Original URL to prevent SEO penalty" className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Canonical URL</label>
+                <input type="url" name="canonical_url" defaultValue={editApp?.canonical_url} placeholder="Original URL to prevent SEO penalty" className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Target Region (GEO Optimization)</label>
+                <input type="text" name="target_region" defaultValue={editApp?.target_region} placeholder="e.g., Global, India, USA" className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
+              </div>
             </div>
 
             <div>
@@ -473,11 +479,27 @@ const NewsTab = React.memo(({ newsList, handleAddNews, handleDeleteNews, handleN
                   <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Meta Description</label>
                   <textarea value={item.seo_description} onChange={e => handleNewsChange(item.id, 'seo_description', e.target.value)} rows={2} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-medium"></textarea>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Social OG Image</label>
                     <input type="text" value={item.og_image_url} onChange={e => handleNewsChange(item.id, 'og_image_url', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-mono text-[10px]" />
                   </div>
+                  <div>
+                    <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Canonical URL</label>
+                    <input type="text" value={item.canonical_url} onChange={e => handleNewsChange(item.id, 'canonical_url', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-mono text-[10px]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Target Region</label>
+                    <input type="text" value={item.target_region} onChange={e => handleNewsChange(item.id, 'target_region', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-bold text-[10px]" placeholder="Global" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Keywords</label>
+                    <input type="text" value={item.seo_keywords} onChange={e => handleNewsChange(item.id, 'seo_keywords', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-bold text-[10px]" placeholder="keyword1, keyword2" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
                   <div>
                     <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Source Link</label>
                     <input type="text" value={item.link} onChange={e => handleNewsChange(item.id, 'link', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-mono text-[10px]" />
@@ -540,6 +562,18 @@ const BlogsTab = React.memo(({ blogs, handleAddBlog, handleDeleteBlog, handleBlo
                 <div>
                   <label className="block text-[9px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Title</label>
                   <input type="text" value={blog.seo_title || ''} onChange={(e) => handleBlogChange(blog.id, 'seo_title', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-2 text-[10px] dark:text-white" />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Keywords</label>
+                  <input type="text" value={blog.seo_keywords || ''} onChange={(e) => handleBlogChange(blog.id, 'seo_keywords', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-2 text-[10px] dark:text-white" placeholder="keyword1, keyword2" />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Canonical URL</label>
+                  <input type="text" value={blog.canonical_url || ''} onChange={(e) => handleBlogChange(blog.id, 'canonical_url', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-2 text-[10px] dark:text-white" placeholder="https://..." />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Target Region</label>
+                  <input type="text" value={blog.target_region || ''} onChange={(e) => handleBlogChange(blog.id, 'target_region', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-2 text-[10px] dark:text-white" placeholder="Global" />
                 </div>
                 <div>
                   <label className="block text-[9px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Description</label>
@@ -756,6 +790,7 @@ export default function AdminDashboard() {
         seo_keywords: formData.get('seo_keywords') as string || '',
         og_image_url: formData.get('og_image_url') as string || '',
         canonical_url: formData.get('canonical_url') as string || '',
+        target_region: formData.get('target_region') as string || '',
         icon_url: formData.get('icon_url') as string || '',
         category: formData.getAll('category_list').length > 0 ? formData.getAll('category_list').join(', ') : mockSettings.categories?.[0] || 'General',
         version: '1.0',
@@ -859,6 +894,8 @@ export default function AdminDashboard() {
       seo_description: 'News SEO Meta Description',
       seo_keywords: '',
       og_image_url: '',
+      canonical_url: '',
+      target_region: 'Global',
       content: 'Detailed markdown content here...',
       link: ''
     };
@@ -897,7 +934,9 @@ export default function AdminDashboard() {
       published_at: new Date().toISOString(),
       seo_title: 'New Blog Post',
       seo_description: 'Read our latest blog post.',
-      seo_keywords: ''
+      seo_keywords: '',
+      canonical_url: '',
+      target_region: 'Global'
     };
     setBlogs([...blogs, newBlog]);
   };

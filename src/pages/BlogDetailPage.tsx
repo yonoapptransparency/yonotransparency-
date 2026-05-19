@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
 
 export default function BlogDetailPage() {
-  const { blogs: mockBlogs } = useData();
+  const { blogs: mockBlogs, settings: mockSettings } = useData();
   const { slug } = useParams();
   const blog = mockBlogs.find(b => b.slug === slug);
   const [commentText, setCommentText] = useState('');
@@ -23,13 +23,68 @@ export default function BlogDetailPage() {
   return (
     <div className="animate-fade-in max-w-4xl mx-auto px-4 sm:px-6 mb-20">
       <Helmet>
-        <title>{blog.seo_title || blog.title}</title>
+        <title>{blog.seo_title || blog.title} - {mockSettings.site_title}</title>
         <meta name="description" content={blog.seo_description || blog.content.substring(0, 160)} />
         {blog.seo_keywords && <meta name="keywords" content={blog.seo_keywords} />}
+        <meta name="author" content={blog.author || "Administrator"} />
+        <meta name="robots" content="index, follow" />
+        {blog.target_region && <meta name="geo.region" content={blog.target_region} />}
+        {blog.target_region && <meta name="coverage" content={blog.target_region} />}
+        <link rel="canonical" href={window.location.origin + "/blog/" + blog.slug} />
+
         <meta property="og:title" content={blog.seo_title || blog.title} />
         <meta property="og:description" content={blog.seo_description || blog.content.substring(0, 160)} />
         <meta property="og:image" content={blog.cover_url} />
         <meta property="og:type" content="article" />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="article:published_time" content={new Date(blog.published_at).toISOString()} />
+        <meta property="article:author" content={blog.author} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={blog.seo_title || blog.title} />
+        <meta name="twitter:description" content={blog.seo_description || blog.content.substring(0, 160)} />
+        <meta name="twitter:image" content={blog.cover_url} />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": blog.title,
+            "description": blog.content.substring(0, 160),
+            "image": [blog.cover_url],
+            "datePublished": new Date(blog.published_at).toISOString(),
+            "author": [{
+              "@type": "Person",
+              "name": blog.author || "Admin"
+            }]
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": window.location.origin
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Blogs",
+                "item": window.location.origin + "/blogs"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": blog.title,
+                "item": window.location.href
+              }
+            ]
+          })}
+        </script>
       </Helmet>
       
       <div className="mb-8">

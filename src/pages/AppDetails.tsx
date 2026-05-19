@@ -59,6 +59,25 @@ export default function AppDetails() {
     }
   };
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": window.location.origin
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": app.name,
+        "item": window.location.href
+      }
+    ]
+  };
+
   const relatedApps = useMemo(() => {
     const currentCats = app.category ? app.category.toLowerCase().split(',').map(c => c.trim()) : [];
     return mockApps
@@ -89,6 +108,8 @@ export default function AppDetails() {
         {app.seo_keywords && <meta name="keywords" content={app.seo_keywords} />}
         <meta name="author" content="Transparency Portal" />
         <meta name="robots" content="index, follow" />
+        {app.target_region && <meta name="geo.region" content={app.target_region} />}
+        {app.target_region && <meta name="coverage" content={app.target_region} />}
         
         <meta property="og:type" content="website" />
         <meta property="og:title" content={title} />
@@ -101,9 +122,12 @@ export default function AppDetails() {
         <meta name="twitter:description" content={desc} />
         <meta name="twitter:image" content={ogImage} />
 
-        {app.canonical_url && <link rel="canonical" href={app.canonical_url} />}
+        {app.canonical_url ? <link rel="canonical" href={app.canonical_url} /> : <link rel="canonical" href={window.location.href} />}
         <script type="application/ld+json">
           {JSON.stringify(softwareSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
         </script>
         {faqSchema && (
           <script type="application/ld+json">
@@ -111,34 +135,36 @@ export default function AppDetails() {
           </script>
         )}
       </Helmet>
-      <div className="max-w-2xl mx-auto">
-        <div className="glass-panel p-6 sm:p-10 mb-6 flex flex-col items-center text-center shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] dark:shadow-[0_45px_100px_-20px_rgba(0,0,0,0.8)] relative transition-all duration-500">
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-600/40 to-transparent"></div>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <div className="glass-panel p-6 sm:p-12 mb-8 flex flex-col items-center text-center shadow-2xl relative transition-all duration-300">
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-600/40 text-transparent"></div>
           
-          <div className="relative mb-6">
-            <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-[2.5rem] overflow-hidden shrink-0 shadow-2xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-white/10 group">
+          <div className="relative mb-8">
+            <div className="relative w-24 h-24 sm:w-40 sm:h-40 rounded-2xl sm:rounded-[3rem] overflow-hidden shrink-0 shadow-2xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-white/10 group">
               {app.icon_url ? (
-                <img src={app.icon_url || undefined} alt={app.name} width={128} height={128} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <img src={app.icon_url || undefined} alt={app.name} width={160} height={160} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl font-black bg-slate-800 text-slate-500 uppercase">
+                <div className="w-full h-full flex items-center justify-center text-4xl sm:text-6xl font-black bg-slate-800 text-slate-500 uppercase">
                   {app.name.substring(0, 1)}
                 </div>
               )}
             </div>
-            <div className="absolute -inset-2 blur-2xl bg-red-600/15 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute -inset-4 blur-3xl bg-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </div>
           
-          <div className="flex flex-col items-center w-full max-w-lg">
-            <div className="mb-4">
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tighter uppercase italic text-slate-900 dark:text-white leading-tight mb-3 drop-shadow-sm">{app.name}</h1>
-              <div className="flex justify-center flex-wrap gap-2.5">
+          <div className="flex flex-col items-center w-full max-w-2xl px-2">
+            <div className="mb-6">
+              <h1 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase italic text-slate-900 dark:text-white leading-tight mb-4 drop-shadow-sm break-words px-4">
+                {app.name}
+              </h1>
+              <div className="flex justify-center flex-wrap gap-3">
                 {app.is_new && (
-                  <div className="px-3 py-1 bg-red-600/10 text-red-600 text-[9px] font-black rounded-lg uppercase tracking-widest animate-pulse border border-red-600/10">
+                  <div className="px-3 py-1 bg-red-600/10 text-red-600 text-[9px] sm:text-[11px] font-black rounded-lg uppercase tracking-widest animate-pulse border border-red-600/10 shadow-sm">
                     NEW RELEASE
                   </div>
                 )}
                 <div className={cn(
-                  "px-3 py-1 text-[9px] font-black rounded-lg flex items-center gap-1.5 uppercase tracking-widest border",
+                  "px-3 py-1 text-[9px] sm:text-[11px] font-black rounded-lg flex items-center gap-1.5 uppercase tracking-widest border shadow-sm",
                   app.safety_status === 'Verified' ? "bg-green-500/10 text-green-600 border-green-500/10" : "bg-amber-500/10 text-amber-600 border-amber-500/10"
                 )}>
                   {app.safety_status === 'Verified' ? <ShieldCheck className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
@@ -147,18 +173,18 @@ export default function AppDetails() {
               </div>
             </div>
             
-            <div className="grid grid-cols-4 gap-2.5 w-full mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full mb-10">
               {[
                 { label: 'VERSION', value: app.version },
                 { label: 'SIZE', value: app.file_size },
-                { label: 'GENRE', value: app.category.split(',')[0] },
+                { label: 'TYPE', value: app.category.split(',')[0] },
                 { label: 'RATING', value: app.rating ? app.rating.toFixed(1) : '10.0', icon: Star },
               ].map((item, i) => (
-                <div key={i} className="bg-white/50 dark:bg-black/20 rounded-2xl p-3 text-center border border-black/5 dark:border-white/5 backdrop-blur-sm shadow-sm group hover:border-red-600/20 transition-all">
-                  <div className="text-[8px] mb-1 font-black uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500 group-hover:text-red-500 transition-colors">{item.label}</div>
-                  <div className="font-black text-[11px] leading-none text-slate-900 dark:text-zinc-200 flex items-center justify-center gap-1">
-                    {item.icon && <item.icon className="w-3 h-3 text-amber-500 fill-amber-500" />}
-                    {item.value}
+                <div key={i} className="bg-white/50 dark:bg-black/20 rounded-2xl p-4 sm:p-5 text-center border border-black/5 dark:border-white/5 backdrop-blur-sm shadow-sm group hover:border-red-600/20 transition-all">
+                  <div className="text-[8px] sm:text-[10px] mb-1.5 font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 group-hover:text-red-500 transition-colors">{item.label}</div>
+                  <div className="font-black text-[12px] sm:text-[14px] leading-none text-slate-900 dark:text-zinc-200 flex items-center justify-center gap-1">
+                    {item.icon && <item.icon className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />}
+                    <span className="truncate max-w-full">{item.value}</span>
                   </div>
                 </div>
               ))}
@@ -166,10 +192,9 @@ export default function AppDetails() {
   
             <Link 
               to={`/download/${app.slug}`} 
-              className="w-full sm:w-auto min-w-[240px] bg-red-600 hover:bg-red-700 text-white font-black py-4 px-10 rounded-[2rem] flex items-center justify-center gap-3 transition-all active:scale-95 text-[12px] uppercase tracking-[0.25em] italic shadow-2xl shadow-red-600/40 relative overflow-hidden group"
+              className="w-full sm:w-auto min-w-[280px] sm:min-w-[400px] bg-red-600 hover:bg-red-700 text-white font-black py-5 px-12 rounded-2xl sm:rounded-[2.5rem] flex items-center justify-center gap-3 transition-all active:scale-95 text-[12px] sm:text-[14px] uppercase tracking-[0.2em] italic shadow-2xl shadow-red-600/30 relative overflow-hidden group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              SECURE DOWNLOAD <ArrowRight className="w-4 h-4" />
+              SECURE DOWNLOAD <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         </div>

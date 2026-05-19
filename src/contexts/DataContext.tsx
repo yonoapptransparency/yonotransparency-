@@ -144,7 +144,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     // Safety fallback only if no cache
     const timeout = !hasCache ? setTimeout(() => {
       setLoading(false);
-    }, 1000) : null;
+    }, 300) : null;
 
     const checkConnection = async () => {
       try {
