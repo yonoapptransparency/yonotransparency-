@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useDeferredValue } from 'react';
-import { Link, useSearchParams, useLocation } from 'react-router-dom';
+import { Link, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useData } from '../contexts/DataContext';
 import { Search, ShieldAlert, ShieldCheck, Sparkles, ArrowRight, TrendingUp } from 'lucide-react';
@@ -10,6 +10,7 @@ import { FlipkartBanner, PlayStoreTabs, TopChartItem, AppListItem } from '../com
 export default function Home() {
   const { apps: mockApps, settings: mockSettings } = useData();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const deferredSearchTerm = useDeferredValue(searchTerm);
@@ -147,8 +148,18 @@ export default function Home() {
               placeholder="SEARCH PREMIUM CONTENT"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && filteredApps.length > 0) {
+                  navigate(`/app/${filteredApps[0].slug}`);
+                }
+              }}
             />
           </div>
+          {searchTerm && filteredApps.length > 0 && (
+            <div className="mt-2 text-[10px] font-black text-red-600 uppercase tracking-widest animate-pulse">
+              Press Enter to view direct match: {filteredApps[0].name}
+            </div>
+          )}
         </div>
       </div>
 

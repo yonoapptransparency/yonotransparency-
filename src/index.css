@@ -47,15 +47,14 @@ p, h1, h2, h3, h4, h5, h6, span, div, li, a {
   border-radius: 2rem;
   position: relative;
   overflow: hidden;
-  will-change: transform;
 }
 
 .glass-nav {
-  @apply sticky top-0 z-50 transition-all duration-500 ease-out;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  @apply sticky top-0 z-50 transition-all duration-300 ease-out;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .glass-nav-scrolled {

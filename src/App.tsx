@@ -47,10 +47,17 @@ function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 20);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -139,55 +146,60 @@ function Header() {
               </AnimatePresence>
             </div>
 
-            <div className="flex items-center gap-2 ml-4 border-l border-black/10 pl-4">
+            <div className="flex items-center gap-3 ml-4 border-l border-black/10 pl-4">
+              {/* Premium Search Capsule Bar */}
               <button 
                 onClick={() => { triggerHaptic(); setSearchOpen(true); }}
-                className="flex items-center justify-center min-h-[48px] min-w-[48px] hover:bg-slate-50 rounded-full transition-colors group"
-                aria-label="Search"
+                className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-100/50 transition-all text-left px-4 py-2 w-44 lg:w-52 xl:w-60 rounded-full group shadow-inner"
+                aria-label="Search Store"
               >
-                <Search className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:text-red-600 transition-all" />
+                <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-red-600 transition-colors shrink-0" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-slate-600 transition-colors truncate">Search store...</span>
               </button>
+
               {settings.helpline_telegram && (
                 <a 
                   href={settings.helpline_telegram.startsWith('http') ? settings.helpline_telegram : `https://t.me/${settings.helpline_telegram.replace('@', '')}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-center min-h-[48px] min-w-[48px] bg-[#0088cc]/10 text-[#0088cc] rounded-full border border-[#0088cc]/20 hover:bg-[#0088cc]/20 transition-colors"
+                  className="flex items-center justify-center min-h-[44px] min-w-[44px] bg-[#0088cc]/10 text-[#0088cc] rounded-full border border-[#0088cc]/20 hover:bg-[#0088cc]/20 transition-colors"
                   aria-label="Telegram"
                 >
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4" />
                 </a>
               )}
               <SupportWidget />
             </div>
           </nav>
 
-          <div className="md:hidden flex items-center gap-2.5">
+          <div className="md:hidden flex items-center gap-2">
+            {/* Mobile Touch-Target Search Capsule Bar */}
             <button 
               onClick={() => { triggerHaptic(); setSearchOpen(true); }}
-              className="flex items-center justify-center min-h-[44px] min-w-[44px] hover:bg-slate-50 rounded-full transition-colors"
+              className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-full border border-slate-100/50 active:scale-95 transition-all text-left shadow-sm group"
               aria-label="Search"
             >
-              <Search className="w-4 h-4 opacity-40" />
+              <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-red-600 transition-colors" />
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Search...</span>
             </button>
             {settings.helpline_telegram && (
               <a 
                 href={settings.helpline_telegram.startsWith('http') ? settings.helpline_telegram : `https://t.me/${settings.helpline_telegram.replace('@', '')}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center min-h-[44px] min-w-[44px] bg-[#0088cc]/10 text-[#0088cc] rounded-full border border-[#0088cc]/20"
+                className="flex items-center justify-center min-h-[40px] min-w-[40px] bg-[#0088cc]/10 text-[#0088cc] rounded-full border border-[#0088cc]/20"
                 aria-label="Telegram"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3.5 h-3.5" />
               </a>
             )}
             <SupportWidget />
             <button 
-              className="flex items-center justify-center min-h-[44px] min-w-[44px] bg-red-600 rounded-full shadow-lg active:scale-95"
+              className="flex items-center justify-center min-h-[40px] min-w-[40px] bg-red-600 rounded-full shadow-lg active:scale-95"
               onClick={() => { triggerHaptic(); setMenuOpen(true); }}
               aria-label="Open menu"
             >
-              <Menu className="w-5 h-5 text-white" />
+              <Menu className="w-4 h-4 text-white" />
             </button>
           </div>
         </div>
@@ -201,22 +213,22 @@ function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[60] bg-transparent backdrop-blur-xl flex flex-col px-6 py-8"
+            className="fixed inset-0 z-[60] bg-white/98 dark:bg-slate-950/98 backdrop-blur-2xl flex flex-col px-6 py-8 overflow-y-auto"
           >
-            <div className="flex justify-between items-center mb-12">
+            <div className="flex justify-between items-center mb-8 shrink-0">
               <span className="text-xl font-black flex items-center gap-2 uppercase tracking-tighter">
                 {settings.logo_url ? <img src={settings.logo_url} width={24} height={24} className="w-6 h-6 object-contain" alt="Logo" /> : <Shield className="w-6 h-6 text-red-600" />} {settings.site_title}
               </span>
               <button 
                 onClick={() => { triggerHaptic(); setMenuOpen(false); }}
-                className="flex items-center justify-center min-h-[48px] min-w-[48px] bg-red-600 text-white rounded-full shadow-lg active:scale-90 transition-transform"
+                className="flex items-center justify-center min-h-[44px] min-w-[44px] bg-red-600 text-white rounded-full shadow-lg active:scale-90 transition-transform"
                 aria-label="Close menu"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <nav className="flex flex-col gap-2 text-lg font-medium">
+            <nav className="grid grid-cols-2 gap-2.5 mb-6 shrink-0">
               {[
                 { to: '/', label: 'Home', icon: LayoutGrid },
                 { to: '/new-apps', label: 'New App', icon: Sparkles, hot: true },
@@ -228,22 +240,26 @@ function Header() {
                 { to: '/contact', label: 'Contact', icon: Send },
                 { to: '/privacy', label: 'Privacy', icon: ShieldCheck },
                 { to: '/terms', label: 'Terms', icon: ShieldCheck },
-              ].map((item) => (
-                <Link 
-                  key={item.to}
-                  onClick={() => { triggerHaptic(); setMenuOpen(false); }} 
-                  to={item.to} 
-                  className={`px-4 py-3 rounded-2xl transition-all ${pathname === item.to ? 'bg-red-600 text-white shadow-lg' : 'hover:bg-black/5'}`}
-                >
-                  <div className="flex items-center gap-3 font-black uppercase tracking-tight">
-                    <item.icon className="w-5 h-5" /> {item.label}
-                    {item.hot && <span className="flex w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>}
-                  </div>
-                </Link>
-              ))}
-              
-              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/admin/login" className="text-center text-xs font-bold opacity-40 mt-10 hover:text-red-500 transition-colors">Admin Portal &copy; 2026</Link>
+              ].map((item) => {
+                const active = pathname === item.to;
+                return (
+                  <Link 
+                    key={item.to}
+                    onClick={() => { triggerHaptic(); setMenuOpen(false); }} 
+                    to={item.to} 
+                    className={`flex items-center gap-3 p-3 rounded-2xl transition-all border ${active ? 'bg-red-600 text-white shadow-lg shadow-red-600/10 border-transparent' : 'bg-slate-50 hover:bg-slate-100/50 border-slate-100 text-slate-800'}`}
+                  >
+                    <item.icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
+                    <span className="text-xs font-black uppercase tracking-wide truncate">{item.label}</span>
+                    {item.hot && <span className="flex w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse ml-auto shrink-0"></span>}
+                  </Link>
+                );
+              })}
             </nav>
+            
+            <div className="mt-auto pt-6 border-t border-black/5 text-center shrink-0">
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/admin/login" className="text-xs font-black uppercase tracking-[0.2em] text-red-600 hover:opacity-80 transition-opacity">Admin Portal &copy; 2026</Link>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -410,10 +426,17 @@ function BackToTop() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setVisible(window.scrollY > window.innerHeight / 2);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setVisible(window.scrollY > window.innerHeight / 2);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -477,6 +500,43 @@ function AppContent() {
     if (settings.meta_description) {
       setMeta('meta[name="description"]', settings.meta_description);
       setMeta('meta[property="og:description"]', settings.meta_description);
+    }
+
+    // Dynamically synchronize favicon with firebase database changes live across all selectors!
+    if (settings.favicon_url) {
+      const targetUrl = settings.favicon_url;
+      const rels = ['icon', 'shortcut icon', 'apple-touch-icon'];
+      
+      rels.forEach(rel => {
+        let link: HTMLLinkElement | null = document.querySelector(`link[rel="${rel}"]`) || document.querySelector(`link[rel*="${rel}"]`);
+        if (link) {
+          link.href = targetUrl;
+        } else {
+          const newLink = document.createElement('link');
+          newLink.rel = rel;
+          newLink.href = targetUrl;
+          document.head.appendChild(newLink);
+        }
+      });
+      
+      // Attempt to also update the parent document element if we are within an iframe of the same origin (such as preview environments relative hosting)
+      try {
+        if (window.parent && window.parent !== window && window.parent.document) {
+          rels.forEach(rel => {
+            let parentLink: HTMLLinkElement | null = window.parent.document.querySelector(`link[rel="${rel}"]`) || window.parent.document.querySelector(`link[rel*="${rel}"]`);
+            if (parentLink) {
+              parentLink.href = targetUrl;
+            } else {
+              const newLink = window.parent.document.createElement('link');
+              newLink.rel = rel;
+              newLink.href = targetUrl;
+              window.parent.document.head.appendChild(newLink);
+            }
+          });
+        }
+      } catch (e) {
+        // Silently catch cross-origin iframe security errors (standard and expected)
+      }
     }
   }, [settings, location.pathname]);
 

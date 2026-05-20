@@ -41,7 +41,7 @@ export default function GlobalSearch({ isOpen, onClose }: { isOpen: boolean; onC
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') onClose();
-    if (e.key === 'Enter' && results.length === 1) {
+    if (e.key === 'Enter' && results.length > 0) {
       navigate(`/app/${results[0].slug}`);
       onClose();
     }
@@ -67,7 +67,7 @@ export default function GlobalSearch({ isOpen, onClose }: { isOpen: boolean; onC
           >
             <div className="relative group">
               <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-                {query.length > 1 ? (
+                {query.length > 0 ? (
                   <Zap className="w-6 h-6 text-red-600 animate-pulse" />
                 ) : (
                   <Search className="w-6 h-6 text-slate-300" />
@@ -91,7 +91,7 @@ export default function GlobalSearch({ isOpen, onClose }: { isOpen: boolean; onC
             </div>
 
             <AnimatePresence>
-              {query.length > 1 && (
+              {query.length > 0 && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
