@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, Shield, LogOut, Save, Upload, Type, Link as LinkIcon, ToggleLeft, Layers, Newspaper as BookIcon, Plus, Trash2, Video as VideoIcon } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, Shield, LogOut, Save, Upload, Type, Link as LinkIcon, ToggleLeft, Layers, Newspaper, Plus, Trash2, Video as VideoIcon } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 function FaqEditor({ initialFaqs }: { initialFaqs: {question: string, answer: string}[] }) {
   const [faqs, setFaqs] = React.useState(initialFaqs || []);
@@ -473,7 +474,7 @@ const SettingsTab = React.memo(({ mockSettings, handleSaveSettings, saving }: an
 const NewsTab = React.memo(({ newsList, handleAddNews, handleDeleteNews, handleNewsChange, saveMockNews, saving, setSaving }: any) => (
   <div className="animate-fade-in space-y-6">
     <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 border-black/10 dark:border-white/10 shadow-xl shadow-pink-500/5">
-      <h2 className="text-2xl font-black flex items-center gap-2 dark:text-white uppercase italic tracking-tighter"><BookIcon className="w-6 h-6 text-pink-500 underline" /> Manage News & Books</h2>
+      <h2 className="text-2xl font-black flex items-center gap-2 dark:text-white uppercase italic tracking-tighter"><Newspaper className="w-6 h-6 text-pink-500 underline" /> Manage News System</h2>
       <button onClick={handleAddNews} className="flex items-center gap-2 bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest italic transition-all shadow-lg shadow-pink-500/30 active:scale-95"><Plus className="w-5 h-5" /> Add New Item</button>
     </div>
     <div className="grid gap-8">
@@ -569,7 +570,7 @@ const NewsTab = React.memo(({ newsList, handleAddNews, handleDeleteNews, handleN
     </div>
     <div className="mt-12 flex justify-center">
       <button onClick={async () => { try { setSaving(true); await saveMockNews(newsList); alert('System Synced: News Published & Verified.'); } catch(e:any){ alert(e.message); } finally { setSaving(false); } }} className="bg-pink-500 hover:bg-pink-600 text-white px-20 py-5 rounded-[2.5rem] font-black uppercase tracking-[0.2em] italic flex items-center gap-3 shadow-2xl shadow-pink-500/40 transform hover:scale-[1.05] transition-all active:scale-95">
-        {saving ? 'Transmitting Data...' : <><Save className="w-6 h-6"/> Save System Books</>}
+        {saving ? 'Transmitting Data...' : <><Save className="w-6 h-6"/> Save News System</>}
       </button>
     </div>
   </div>
@@ -746,6 +747,33 @@ export default function AdminDashboard() {
     setVideosList(mockVideos);
     setCategoriesList(mockSettings.categories || []);
   }, [mockApps, mockNews, mockSettings, mockBlogs, mockVideos]);
+
+  // Auto-seed missing Firestore collections under admin auth!
+  React.useEffect(() => {
+    if (user && !saving) {
+      const autoSeed = async () => {
+        try {
+          const newsDocRef = doc(db, 'store_data', 'news');
+          const newsSnap = await getDoc(newsDocRef);
+          if (!newsSnap.exists()) {
+            console.log("Admin Seeder: Seeding news to Firestore...");
+            await setDoc(newsDocRef, { items: mockNews });
+          }
+
+          const videosDocRef = doc(db, 'store_data', 'videos');
+          const videosSnap = await getDoc(videosDocRef);
+          if (!videosSnap.exists()) {
+            console.log("Admin Seeder: Seeding videos to Firestore...");
+            await setDoc(videosDocRef, { items: mockVideos });
+          }
+        } catch (e) {
+          console.error("Admin Seeder failed to check/seed empty tables:", e);
+        }
+      };
+      const t = setTimeout(autoSeed, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [user]);
 
   const triggerHaptic = (intensity = 50) => {
     if (window.navigator && window.navigator.vibrate) {
@@ -942,12 +970,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSaveBooks = async () => {
+  const handleSaveNews = async () => {
     setSaving(true);
     try {
       await saveMockNews(newsList);
       triggerHaptic();
-      alert('Books saved successfully. Go to Book Section to see.');
+      alert('News saved successfully. Go to News Section to see.');
     } catch (err: any) {
       alert('Error saving news: ' + err.message);
     } finally {
@@ -1137,7 +1165,7 @@ export default function AdminDashboard() {
             <h3 className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em] italic mb-2 ml-4 dark:text-white">Navigation</h3>
             <SidebarItem id="dashboard" label="Dashboard" icon={LayoutDashboard} active={activeTab === 'dashboard'} onClick={handleTabChange} />
             <SidebarItem id="apps" label="Applications" icon={FileText} active={activeTab === 'apps'} onClick={handleTabChange} />
-            <SidebarItem id="news" label="Books System" icon={BookIcon} active={activeTab === 'news'} onClick={handleTabChange} />
+            <SidebarItem id="news" label="News System" icon={Newspaper} active={activeTab === 'news'} onClick={handleTabChange} />
             <SidebarItem id="blogs" label="Global Blogs" icon={FileText} active={activeTab === 'blogs'} onClick={handleTabChange} />
             <SidebarItem id="videos" label="Video Matrix" icon={VideoIcon} active={activeTab === 'videos'} onClick={handleTabChange} />
             
