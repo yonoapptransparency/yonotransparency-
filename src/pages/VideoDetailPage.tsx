@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useData } from '../contexts/DataContext';
@@ -13,11 +13,46 @@ interface Comment {
 }
 
 export default function VideoDetailPage() {
-  const { videos: mockVideos, settings: mockSettings, loading, videosSyncedWithServer, serverVideosFetched } = useData();
+  const { videos: mockVideos, settings: mockSettings, loading, videosSyncedWithServer, serverVideosFetched, refreshAll } = useData();
   const { slug } = useParams();
   const videoItem = mockVideos.find(v => v.slug?.toLowerCase() === slug?.toLowerCase());
   const [commentText, setCommentText] = useState('');
   
+  const [triedRefresh, setTriedRefresh] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
+  // Automatically trigger a silent cloud sync if the requested item is not found in local cache
+  useEffect(() => {
+    let active = true;
+    const fetchLatestVideo = async () => {
+      const found = mockVideos.some(v => v.slug?.toLowerCase() === slug?.toLowerCase());
+      if (!found && !triedRefresh && !isRefreshing) {
+        if (active) {
+          setIsRefreshing(true);
+        }
+        console.log(`Deep Link Sync: Video "${slug}" not found in local cache. Syncing latest indices...`);
+        try {
+          await refreshAll(true);
+        } catch (e) {
+          console.error("Deep Link Video Auto-Sync failed:", e);
+        } finally {
+          if (active) {
+            setTriedRefresh(true);
+            setIsRefreshing(false);
+          }
+        }
+      }
+    };
+    fetchLatestVideo();
+    return () => {
+      active = false;
+    };
+  }, [slug, mockVideos, triedRefresh, isRefreshing, refreshAll]);
+
   const getInitialComments = () => {
     const saved = localStorage.getItem(`video_comments_${slug}`);
     if (saved) {
@@ -56,7 +91,7 @@ export default function VideoDetailPage() {
   }
 
   // Graceful interstitial for slow database cold-starts or deep links on first visit
-  if (!videoItem && (!serverVideosFetched || !videosSyncedWithServer)) {
+  if (!videoItem && (!serverVideosFetched || !videosSyncedWithServer || isRefreshing)) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[40vh] text-center px-4 max-w-sm mx-auto">
         <div className="w-10 h-10 border-3 border-red-500/20 border-t-red-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(239,68,68,0.2)]"></div>

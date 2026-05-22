@@ -4,13 +4,15 @@ import { useData } from '../contexts/DataContext';
 
 export default function FallbackRouteMatcher() {
   const location = useLocation();
-  const { apps, news, blogs, videos, loading, serverAppsFetched, appsSyncedWithServer } = useData();
+  const { apps, news, blogs, videos, loading, refreshAll } = useData();
   
   // Clean pathname into a lowercase slug
   const rawPath = location.pathname;
   const slug = rawPath.replace(/^\/|\/$/g, '').toLowerCase().trim();
   
   const [resolvedType, setResolvedType] = useState<'app' | 'news' | 'blog' | 'video' | 'loading' | 'not_found'>('loading');
+  const [triedRefresh, setTriedRefresh] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (loading) {
@@ -47,13 +49,27 @@ export default function FallbackRouteMatcher() {
       return;
     }
 
-    // Force waiting if server apps sync is currently in progress
-    if (!appsSyncedWithServer || !serverAppsFetched) {
+    // Trigger on-demand sync from servers if we haven't found a match yet in local cache
+    if (!triedRefresh && !isRefreshing) {
+      setIsRefreshing(true);
+      console.log(`Fallback Match: Slug "${slug}" not found in cache. Triggering full sync...`);
+      refreshAll(true)
+        .catch(err => console.error("Fallback route match auto-sync failed:", err))
+        .finally(() => {
+          setTriedRefresh(true);
+          setIsRefreshing(false);
+        });
       setResolvedType('loading');
-    } else {
-      setResolvedType('not_found');
+      return;
     }
-  }, [slug, apps, news, blogs, videos, loading, appsSyncedWithServer, serverAppsFetched]);
+
+    if (isRefreshing) {
+      setResolvedType('loading');
+      return;
+    }
+
+    setResolvedType('not_found');
+  }, [slug, apps, news, blogs, videos, loading, triedRefresh, isRefreshing, refreshAll]);
 
   if (resolvedType === 'loading') {
     return (

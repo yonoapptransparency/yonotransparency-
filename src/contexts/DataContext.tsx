@@ -118,10 +118,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   });
   // Fast persistent loading state management
   const [loading, setLoading] = useState(() => {
-    // If we have cached apps and settings, we can show them immediately
     const hasApps = !!localStorage.getItem('yonostore_apps');
     const hasSettings = !!localStorage.getItem('yonostore_settings');
-    // Pre-emptively false if we have the critical data cached
     return !(hasApps && hasSettings);
   });
   
@@ -163,17 +161,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     const checkLoaded = (docName: keyof typeof loadedDocs) => {
       loadedDocs[docName] = true;
-      // If we have cache, we already set loading to false in initial state
-      // If no cache, we wait for at least core collections (apps and settings) to pull once
       if (loadedDocs.apps && loadedDocs.settings) {
         setLoading(false);
       }
     };
 
-    // Safety fallback only if no cache - allow database up to 10 seconds to resolve initially
-    const timeout = !hasCache ? setTimeout(() => {
+    // Safety fallback - prevent any hanging sync loops after max 10 seconds
+    const timeout = setTimeout(() => {
       setLoading(false);
-    }, 10000) : null;
+    }, 10000);
 
     // Fast sync fallback for deep links (especially new apps not in cache) - raised to 10 seconds to prevent premature failure states
     const syncTimeout = setTimeout(() => {
@@ -189,6 +185,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setServerNewsFetched(true);
       setServerBlogsFetched(true);
       setServerVideosFetched(true);
+      setLoading(false);
     }, 10000);
 
     const checkConnection = async () => {
@@ -211,6 +208,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           setServerNewsFetched(true);
           setServerBlogsFetched(true);
           setServerVideosFetched(true);
+          setLoading(false);
         }
       }
     };
@@ -224,6 +222,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           const data = snap.data().items || [];
           setApps(data);
           localStorage.setItem('yonostore_apps', JSON.stringify(data));
+          
           if (!snap.metadata.fromCache) {
             setIsConnected(true);
             setIsLive(true);
@@ -232,12 +231,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             setServerAppsFetched(true);
             setLoadedFromServer(true);
           }
+          checkLoaded('apps');
         } else {
           setAppsSyncedWithServer(true);
           setServerAppsFetched(true);
           setLoadedFromServer(true);
+          checkLoaded('apps');
         }
-        checkLoaded('apps');
       }, (err) => {
         console.warn("Firestore apps listener error, falling back:", err);
         setAppsSyncedWithServer(true);
@@ -272,15 +272,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           const data = snap.data().items || [];
           setNews(data);
           localStorage.setItem('yonostore_news', JSON.stringify(data));
+          
           if (!snap.metadata.fromCache) {
             setNewsSyncedWithServer(true);
             setServerNewsFetched(true);
           }
+          checkLoaded('news');
         } else {
           setNewsSyncedWithServer(true);
           setServerNewsFetched(true);
+          checkLoaded('news');
         }
-        checkLoaded('news');
       }, (err) => {
         console.warn("Firestore news listener error, falling back:", err);
         setNewsSyncedWithServer(true);
@@ -292,15 +294,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           const data = snap.data().items || [];
           setBlogs(data);
           localStorage.setItem('yonostore_blogs', JSON.stringify(data));
+          
           if (!snap.metadata.fromCache) {
             setBlogsSyncedWithServer(true);
             setServerBlogsFetched(true);
           }
+          checkLoaded('blogs');
         } else {
           setBlogsSyncedWithServer(true);
           setServerBlogsFetched(true);
+          checkLoaded('blogs');
         }
-        checkLoaded('blogs');
       }, (err) => {
         console.warn("Firestore blogs listener error, falling back:", err);
         setBlogsSyncedWithServer(true);
@@ -312,15 +316,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           const data = snap.data().items || [];
           setVideos(data);
           localStorage.setItem('yonostore_videos', JSON.stringify(data));
+          
           if (!snap.metadata.fromCache) {
             setVideosSyncedWithServer(true);
             setServerVideosFetched(true);
           }
+          checkLoaded('videos');
         } else {
           setVideosSyncedWithServer(true);
           setServerVideosFetched(true);
+          checkLoaded('videos');
         }
-        checkLoaded('videos');
       }, (err) => {
         console.warn("Firestore videos listener error, falling back:", err);
         setVideosSyncedWithServer(true);

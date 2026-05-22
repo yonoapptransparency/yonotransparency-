@@ -7,13 +7,44 @@ import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
 
 export default function BlogDetailPage() {
-  const { blogs: mockBlogs, settings: mockSettings, loading, blogsSyncedWithServer, serverBlogsFetched } = useData();
+  const { blogs: mockBlogs, settings: mockSettings, loading, blogsSyncedWithServer, serverBlogsFetched, refreshAll } = useData();
   const { slug } = useParams();
   const blog = mockBlogs.find(b => b.slug?.toLowerCase() === slug?.toLowerCase());
   
+  const [triedRefresh, setTriedRefresh] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [slug]);
+
+  // Automatically trigger a silent cloud sync if the requested item is not found in local cache
+  useEffect(() => {
+    let active = true;
+    const fetchLatestBlog = async () => {
+      const found = mockBlogs.some(b => b.slug?.toLowerCase() === slug?.toLowerCase());
+      if (!found && !triedRefresh && !isRefreshing) {
+        if (active) {
+          setIsRefreshing(true);
+        }
+        console.log(`Deep Link Sync: Blog "${slug}" not found in local cache. Syncing latest indices...`);
+        try {
+          await refreshAll(true);
+        } catch (e) {
+          console.error("Deep Link Blog Auto-Sync failed:", e);
+        } finally {
+          if (active) {
+            setTriedRefresh(true);
+            setIsRefreshing(false);
+          }
+        }
+      }
+    };
+    fetchLatestBlog();
+    return () => {
+      active = false;
+    };
+  }, [slug, mockBlogs, triedRefresh, isRefreshing, refreshAll]);
 
   // Initial loading phase (waiting for setup/cache checks)
   if (loading) {
@@ -26,7 +57,7 @@ export default function BlogDetailPage() {
   }
 
   // Graceful interstitial for slow database cold-starts or deep links on first visit
-  if (!blog && (!serverBlogsFetched || !blogsSyncedWithServer)) {
+  if (!blog && (!serverBlogsFetched || !blogsSyncedWithServer || isRefreshing)) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[40vh] text-center px-4 max-w-sm mx-auto">
         <div className="w-10 h-10 border-3 border-red-500/20 border-t-red-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(239,68,68,0.2)]"></div>
