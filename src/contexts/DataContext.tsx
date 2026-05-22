@@ -123,12 +123,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem('yonostore_videos');
     return saved ? JSON.parse(saved) : mockVideos;
   });
-  // Fast persistent loading state management
-  const [loading, setLoading] = useState(() => {
-    const hasApps = !!localStorage.getItem('yonostore_apps');
-    const hasSettings = !!localStorage.getItem('yonostore_settings');
-    return !(hasApps && hasSettings);
-  });
+  // Fast persistent loading state management - initialized to false to enable instant display of statically compiled fallbacks
+  const [loading, setLoading] = useState(false);
   
   const [loadedFromServer, setLoadedFromServer] = useState(false);
   const [appsSyncedWithServer, setAppsSyncedWithServer] = useState(false);

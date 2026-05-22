@@ -15,11 +15,6 @@ export default function FallbackRouteMatcher() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    if (loading) {
-      setResolvedType('loading');
-      return;
-    }
-
     if (!slug) {
       setResolvedType('not_found');
       return;
@@ -46,6 +41,11 @@ export default function FallbackRouteMatcher() {
     const videoExists = videos.some(v => v.slug?.toLowerCase() === slug);
     if (videoExists) {
       setResolvedType('video');
+      return;
+    }
+
+    if (loading) {
+      setResolvedType('loading');
       return;
     }
 
