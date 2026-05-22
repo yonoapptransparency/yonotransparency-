@@ -14,9 +14,9 @@ interface Comment {
 }
 
 export default function NewsDetailPage() {
-  const { news: mockNews, settings: mockSettings, loading, loadedFromServer } = useData();
+  const { news: mockNews, settings: mockSettings, loading, newsSyncedWithServer } = useData();
   const { slug } = useParams();
-  const newsItem = mockNews.find(n => n.slug === slug);
+  const newsItem = mockNews.find(n => n.slug?.toLowerCase() === slug?.toLowerCase());
   const [commentText, setCommentText] = useState('');
   
   const getInitialComments = () => {
@@ -53,7 +53,7 @@ export default function NewsDetailPage() {
     setCommentText('');
   };
 
-  if (loading || (!newsItem && !loadedFromServer)) {
+  if (loading || (!newsItem && !newsSyncedWithServer)) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[40vh]">
         <div className="w-10 h-10 border-3 border-red-600/20 border-t-red-600 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(220,38,38,0.2)]"></div>

@@ -71,6 +71,11 @@ interface DataContextType {
   videos: VideoItem[];
   loading: boolean;
   loadedFromServer: boolean;
+  appsSyncedWithServer: boolean;
+  settingsSyncedWithServer: boolean;
+  newsSyncedWithServer: boolean;
+  blogsSyncedWithServer: boolean;
+  videosSyncedWithServer: boolean;
   syncVersion: number;
   lastSyncTime: string | null;
   refreshAll: () => Promise<void>;
@@ -117,6 +122,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   });
   
   const [loadedFromServer, setLoadedFromServer] = useState(false);
+  const [appsSyncedWithServer, setAppsSyncedWithServer] = useState(false);
+  const [settingsSyncedWithServer, setSettingsSyncedWithServer] = useState(false);
+  const [newsSyncedWithServer, setNewsSyncedWithServer] = useState(false);
+  const [blogsSyncedWithServer, setBlogsSyncedWithServer] = useState(false);
+  const [videosSyncedWithServer, setVideosSyncedWithServer] = useState(false);
   
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [isLive, setIsLive] = useState(false);
@@ -132,27 +142,39 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    let resolvedCount = 0;
     const hasCache = !!localStorage.getItem('yonostore_apps') && !!localStorage.getItem('yonostore_settings');
     
-    const checkLoaded = () => {
-      resolvedCount++;
+    const loadedDocs = {
+      apps: false,
+      settings: false,
+      news: false,
+      blogs: false,
+      videos: false
+    };
+
+    const checkLoaded = (docName: keyof typeof loadedDocs) => {
+      loadedDocs[docName] = true;
       // If we have cache, we already set loading to false in initial state
-      // If no cache, we wait for at least apps and settings to pull once
-      if (resolvedCount >= 2) {
+      // If no cache, we wait for at least core collections (apps and settings) to pull once
+      if (loadedDocs.apps && loadedDocs.settings) {
         setLoading(false);
       }
     };
 
-    // Safety fallback only if no cache
+    // Safety fallback only if no cache - allow database up to 6 seconds to resolve initially
     const timeout = !hasCache ? setTimeout(() => {
       setLoading(false);
-    }, 300) : null;
+    }, 6000) : null;
 
     // Fast sync fallback for deep links (especially new apps not in cache)
     const syncTimeout = setTimeout(() => {
       setLoadedFromServer(true);
-    }, 5000);
+      setAppsSyncedWithServer(true);
+      setSettingsSyncedWithServer(true);
+      setNewsSyncedWithServer(true);
+      setBlogsSyncedWithServer(true);
+      setVideosSyncedWithServer(true);
+    }, 2500);
 
     const checkConnection = async () => {
       try {
@@ -164,6 +186,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (err.message?.includes('offline') || err.code === 'unavailable') {
           setIsConnected(false);
           setLoadedFromServer(true); // default to True if offline/stuck
+          setAppsSyncedWithServer(true);
+          setSettingsSyncedWithServer(true);
+          setNewsSyncedWithServer(true);
+          setBlogsSyncedWithServer(true);
+          setVideosSyncedWithServer(true);
         }
       }
     };
@@ -181,12 +208,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             setIsConnected(true);
             setIsLive(true);
             setLastSyncTime(new Date().toLocaleTimeString());
+            setAppsSyncedWithServer(true);
             setLoadedFromServer(true);
           }
         } else {
+          setAppsSyncedWithServer(true);
           setLoadedFromServer(true);
         }
-        checkLoaded();
+        checkLoaded('apps');
       }),
       onSnapshot(doc(db, 'store_data', 'settings'), { includeMetadataChanges: true }, (snap) => {
         if (snap.exists()) {
@@ -196,36 +225,53 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           if (!snap.metadata.fromCache) {
             setIsConnected(true);
             setIsLive(true);
+            setSettingsSyncedWithServer(true);
             setLoadedFromServer(true);
           }
         } else {
+          setSettingsSyncedWithServer(true);
           setLoadedFromServer(true);
         }
-        checkLoaded();
+        checkLoaded('settings');
       }),
-      onSnapshot(doc(db, 'store_data', 'news'), (snap) => {
+      onSnapshot(doc(db, 'store_data', 'news'), { includeMetadataChanges: true }, (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
           setNews(data);
           localStorage.setItem('yonostore_news', JSON.stringify(data));
+          if (!snap.metadata.fromCache) {
+            setNewsSyncedWithServer(true);
+          }
+        } else {
+          setNewsSyncedWithServer(true);
         }
-        checkLoaded();
+        checkLoaded('news');
       }),
-      onSnapshot(doc(db, 'store_data', 'blogs'), (snap) => {
+      onSnapshot(doc(db, 'store_data', 'blogs'), { includeMetadataChanges: true }, (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
           setBlogs(data);
           localStorage.setItem('yonostore_blogs', JSON.stringify(data));
+          if (!snap.metadata.fromCache) {
+            setBlogsSyncedWithServer(true);
+          }
+        } else {
+          setBlogsSyncedWithServer(true);
         }
-        checkLoaded();
+        checkLoaded('blogs');
       }),
-      onSnapshot(doc(db, 'store_data', 'videos'), (snap) => {
+      onSnapshot(doc(db, 'store_data', 'videos'), { includeMetadataChanges: true }, (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
           setVideos(data);
           localStorage.setItem('yonostore_videos', JSON.stringify(data));
+          if (!snap.metadata.fromCache) {
+            setVideosSyncedWithServer(true);
+          }
+        } else {
+          setVideosSyncedWithServer(true);
         }
-        checkLoaded();
+        checkLoaded('videos');
       })
     ];
     
@@ -363,6 +409,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       
       setIsConnected(true);
       setSyncVersion(v => v + 1);
+      setAppsSyncedWithServer(true);
+      setSettingsSyncedWithServer(true);
+      setNewsSyncedWithServer(true);
+      setBlogsSyncedWithServer(true);
+      setVideosSyncedWithServer(true);
+      setLoadedFromServer(true);
       console.log("Manual Refresh: Parallel Fetch Success.");
     } catch (err) {
       console.error("Manual refresh failed:", err);
@@ -382,6 +434,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     videos, 
     loading, 
     loadedFromServer,
+    appsSyncedWithServer,
+    settingsSyncedWithServer,
+    newsSyncedWithServer,
+    blogsSyncedWithServer,
+    videosSyncedWithServer,
     syncVersion,
     lastSyncTime,
     refreshAll,
@@ -394,7 +451,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     isConnected,
     isLive
   }), [
-    apps, settings, news, blogs, videos, loading, loadedFromServer, syncVersion, lastSyncTime,
+    apps, settings, news, blogs, videos, loading, loadedFromServer,
+    appsSyncedWithServer, settingsSyncedWithServer, newsSyncedWithServer, blogsSyncedWithServer, videosSyncedWithServer,
+    syncVersion, lastSyncTime,
     refreshAll, testCloudConnection, saveApps, saveSettings, saveNews, saveBlogs, saveVideos,
     isConnected, isLive
   ]);

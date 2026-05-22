@@ -115,6 +115,10 @@ const AppsTab = React.memo(({ appsList, editingAppId, setEditingAppId, handleDel
               <input type="text" name="name" defaultValue={editApp?.name} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" required />
             </div>
             <div>
+              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Custom App Slug (URL Part)</label>
+              <input type="text" name="slug" defaultValue={editApp?.slug} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" placeholder="Leave blank to auto-generate from name" />
+            </div>
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">App Icon / Logo URL</label>
               <input type="text" name="icon_url" defaultValue={editApp?.icon_url} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" placeholder="Link to the app logo image" />
             </div>
@@ -864,10 +868,14 @@ export default function AdminDashboard() {
     try {
       const formData = new FormData(e.currentTarget);
       const name = formData.get('name') as string || 'New App';
+      const customSlugInput = formData.get('slug') as string;
+      const slug = customSlugInput?.trim() 
+        ? customSlugInput.trim().toLowerCase().replace(/[^a-z0-9-_]+/g, '-') 
+        : name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const appData = {
         id: Math.random().toString(36).substr(2, 9),
         name,
-        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        slug,
         seo_title: formData.get('seo_title') as string || name,
         seo_description: formData.get('seo_description') as string || '',
         seo_keywords: formData.get('seo_keywords') as string || '',

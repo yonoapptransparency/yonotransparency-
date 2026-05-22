@@ -9,9 +9,9 @@ import { motion } from 'framer-motion';
 import SecureDownloadButton from '../components/SecureDownloadButton';
 
 export default function DownloadPage() {
-  const { apps: mockApps, settings: mockSettings, loading, loadedFromServer } = useData();
+  const { apps: mockApps, settings: mockSettings, loading, appsSyncedWithServer } = useData();
   const { slug } = useParams();
-  const app = mockApps.find(a => a.slug === slug);
+  const app = mockApps.find(a => a.slug?.toLowerCase() === slug?.toLowerCase());
   const [downloading, setDownloading] = useState(false);
   
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function DownloadPage() {
     }
   };
 
-  if (loading || (!app && !loadedFromServer)) {
+  if (loading || (!app && !appsSyncedWithServer)) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[40vh]">
         <div className="w-10 h-10 border-3 border-red-600/20 border-t-red-600 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(220,38,38,0.2)]"></div>
