@@ -82,7 +82,7 @@ interface DataContextType {
   serverVideosFetched: boolean;
   syncVersion: number;
   lastSyncTime: string | null;
-  refreshAll: () => Promise<void>;
+  refreshAll: (silent?: boolean) => Promise<void>;
   testCloudConnection: () => Promise<boolean>;
   saveApps: (apps: AppConfig[]) => Promise<void>;
   saveSettings: (settings: GlobalSettings) => Promise<void>;
@@ -436,9 +436,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const refreshAll = React.useCallback(async () => {
+  const refreshAll = React.useCallback(async (silent = false) => {
     console.log("Manual Refresh: Fetching latest data from Cloud...");
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const docsToFetch = [
         { path: 'apps', setter: setApps, key: 'items' },

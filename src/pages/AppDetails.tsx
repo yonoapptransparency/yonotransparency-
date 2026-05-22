@@ -3,17 +3,48 @@ import { Helmet } from 'react-helmet-async';
 import { useData } from '../contexts/DataContext';
 import { ShieldCheck, ShieldAlert, ArrowRight, ArrowLeft, Star, Sparkles, Info, FileText } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AppListItem } from '../components/PlayStoreUI';
 
 export default function AppDetails() {
-  const { apps: mockApps, settings: mockSettings, loading, appsSyncedWithServer, serverAppsFetched } = useData();
+  const { apps: mockApps, settings: mockSettings, loading, appsSyncedWithServer, serverAppsFetched, refreshAll } = useData();
   const { slug } = useParams();
   const app = mockApps.find(a => a.slug?.toLowerCase() === slug?.toLowerCase());
   
+  const [triedRefresh, setTriedRefresh] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [slug]);
+
+  // Automatically trigger a silent cloud sync if the requested app is not found in local cache
+  useEffect(() => {
+    let active = true;
+    const fetchLatestApps = async () => {
+      const found = mockApps.some(a => a.slug?.toLowerCase() === slug?.toLowerCase());
+      if (!found && !triedRefresh && !isRefreshing) {
+        if (active) {
+          setIsRefreshing(true);
+        }
+        console.log(`Deep Link Sync: App "${slug}" not found in local cache. Syncing latest indices...`);
+        try {
+          await refreshAll(true);
+        } catch (e) {
+          console.error("Deep Link Auto-Sync failed:", e);
+        } finally {
+          if (active) {
+            setTriedRefresh(true);
+            setIsRefreshing(false);
+          }
+        }
+      }
+    };
+    fetchLatestApps();
+    return () => {
+      active = false;
+    };
+  }, [slug, mockApps, triedRefresh, isRefreshing, refreshAll]);
 
   // Initial loading phase (waiting for setup/cache checks)
   if (loading) {
@@ -26,7 +57,7 @@ export default function AppDetails() {
   }
 
   // Graceful interstitial for slow database cold-starts or deep links on first visit
-  if (!app && (!serverAppsFetched || !appsSyncedWithServer)) {
+  if (!app && (!serverAppsFetched || !appsSyncedWithServer || isRefreshing)) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[40vh] text-center px-4 max-w-sm mx-auto">
         <div className="w-10 h-10 border-3 border-red-500/20 border-t-red-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(239,68,68,0.2)]"></div>
