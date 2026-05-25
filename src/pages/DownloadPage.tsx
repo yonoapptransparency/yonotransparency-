@@ -17,9 +17,39 @@ export default function DownloadPage() {
   const [triedRefresh, setTriedRefresh] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [verifyInterval, setVerifyInterval] = useState<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+    // Reset verification states on transition to another application
+    setIsVerified(false);
+    setIsVerifying(false);
+    setProgress(0);
+    if (verifyInterval) {
+      clearInterval(verifyInterval);
+      setVerifyInterval(null);
+    }
   }, [slug]);
+
+  // Handle browser Back-Forward Cache (Bfcache) restorative states to guarantee fresh, re-executable gateway handshake
+  useEffect(() => {
+    const handlePageShow = () => {
+      setIsVerified(false);
+      setIsVerifying(false);
+      setProgress(0);
+      if (verifyInterval) {
+        clearInterval(verifyInterval);
+        setVerifyInterval(null);
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, [verifyInterval]);
 
   // Automatically trigger a silent cloud sync if the requested app is not found in local cache
   useEffect(() => {
@@ -49,9 +79,13 @@ export default function DownloadPage() {
     };
   }, [slug, mockApps, triedRefresh, isRefreshing, refreshAll]);
 
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    return () => {
+      if (verifyInterval) {
+        clearInterval(verifyInterval);
+      }
+    };
+  }, [verifyInterval]);
 
   const playSoftClick = () => {
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
@@ -59,27 +93,30 @@ export default function DownloadPage() {
     audio.play().catch(e => console.log("Audio play blocked", e));
   };
 
-  const handleVerifyStart = () => {
+  const startVerification = () => {
+    if (isVerifying || isVerified) return;
+    
     playSoftClick();
     setIsVerifying(true);
+    setProgress(0);
+    
+    if (verifyInterval) {
+      clearInterval(verifyInterval);
+    }
+
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
+          setVerifyInterval(null);
           setIsVerified(true);
           setIsVerifying(false);
           return 100;
         }
-        return prev + 2;
+        return prev + 10; // smooth 10-step verification (0.5 second overall)
       });
-    }, 40);
-  };
-
-  const handleVerifyCancel = () => {
-    if (!isVerified) {
-      setIsVerifying(false);
-      setProgress(0);
-    }
+    }, 50);
+    setVerifyInterval(interval);
   };
 
   // Initial loading phase (waiting for setup/cache checks)
@@ -251,29 +288,26 @@ export default function DownloadPage() {
               </div>
             </div>
 
-            <div className="w-full max-w-lg relative" onClick={playSoftClick}>
+            <div className="w-full max-w-lg relative">
               <button
-                onMouseDown={handleVerifyStart}
-                onMouseUp={handleVerifyCancel}
-                onMouseLeave={handleVerifyCancel}
-                onTouchStart={handleVerifyStart}
-                onTouchEnd={handleVerifyCancel}
-                className="w-full relative h-20 bg-red-600 rounded-3xl overflow-hidden active:scale-95 transition-all cursor-pointer shadow-xl shadow-red-600/20"
+                onClick={startVerification}
+                disabled={isVerifying}
+                className="w-full relative h-20 bg-red-600 hover:bg-red-500 rounded-3xl overflow-hidden active:scale-[0.98] transition-all cursor-pointer shadow-xl shadow-red-600/20 flex items-center justify-center border-b-4 border-red-800"
               >
                 <div 
-                   className="absolute inset-y-0 left-0 bg-black/10 transition-all duration-75"
+                   className="absolute inset-y-0 left-0 bg-black/15 transition-all duration-75"
                    style={{ width: `${progress}%` }}
                 ></div>
 
                 <div className="absolute inset-0 flex items-center justify-center gap-5 px-6">
-                  <Lock className={cn("w-5 h-5 text-white transition-all", isVerifying ? "animate-pulse scale-110" : "")} />
-                  <span className="text-base font-black text-white uppercase tracking-[0.3em] italic truncate">
-                    {progress > 0 ? `LINKING ARCHIVE ${progress}%` : "Authorize Extraction"}
+                  <Fingerprint className={cn("w-6 h-6 text-white transition-all", isVerifying ? "animate-pulse scale-110 text-red-200" : "animate-bounce")} />
+                  <span className="text-base font-black text-white uppercase tracking-[0.2em] italic truncate text-shadow-sm">
+                    {isVerifying ? `SCANNING BIOMETRICS ${progress}%` : "TAP TO AUTHORIZE EXTRACTION"}
                   </span>
                 </div>
               </button>
               
-              <p className="mt-6 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 italic">BIOMETRIC HANDSHAKE REQUIRED TO UNLOCK</p>
+              <p className="mt-6 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 italic">SECURE GATEWAY: TAP CONTAINER TO INITIALIZE VERIFICATION</p>
             </div>
           </div>
         ) : (
