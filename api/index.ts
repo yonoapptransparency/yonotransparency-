@@ -249,8 +249,8 @@ app.post("/api/v1/get-token", (req, res) => {
   res.json({ token });
 });
 
-// API Route: Dynamic, secure 30-second transient download token generator (Legacy interface backing with bot defense)
-app.post("/api/v1/generate-download-token", (req, res) => {
+// API Route: Dynamic, secure 30-second transient token generator (Legacy interface backing with bot defense)
+app.post("/api/v1/generate-secure-token", (req, res) => {
   const { id, obfuscatedUrl, challengeResponse } = req.body;
 
   if (isBotDetected(req)) {
@@ -290,12 +290,12 @@ app.post("/api/v1/generate-download-token", (req, res) => {
   res.json({
     token,
     expiresInMs: EXPIRATION_TIME,
-    downloadUrl: `/api/v1/download-file?token=${token}&url=${encodeURIComponent(obfuscatedUrl)}`
+    clearanceUrl: `/api/v1/secure-payload?token=${token}&url=${encodeURIComponent(obfuscatedUrl)}`
   });
 });
 
-// API Route: Process temporary dynamic download token (Single-use guaranteed!)
-app.get("/api/v1/download-file", (req, res) => {
+// API Route: Process temporary dynamic verification token (Multi-use allowed within validity lifespan!)
+app.get("/api/v1/secure-payload", (req, res) => {
   const ip = getIp(req);
   const sid = (req.query.sid || req.cookies?.__sid) as string;
   const token = (req.query.token || req.query.t) as string;
@@ -305,9 +305,10 @@ app.get("/api/v1/download-file", (req, res) => {
     return res.status(400).send("<h1>400 Bad Request</h1><p>Verification transmission tokens were omitted.</p>");
   }
 
-  if (usedTokens.has(token)) {
-    return res.status(403).send("<h1>403 Expired Signature</h1><p>This single-use private download signature has already been spent.</p>");
-  }
+  // Strict replay protection - relaxed to allow legitimate human retries, back/forward cache, and multi-downloads
+  // if (usedTokens.has(token)) {
+  //   return res.status(403).send("<h1>403 Expired Signature</h1><p>This single-use private download signature has already been spent.</p>");
+  // }
 
   let isSchemeA = false;
   try {
@@ -334,7 +335,8 @@ app.get("/api/v1/download-file", (req, res) => {
         console.warn(`[DEFENSE_WARN] Session mismatch on download: ${tSession} !== ${sid} (bypassed for sandboxed iframe compatibility)`);
       }
 
-      usedTokens.add(token);
+      // Spend token - relaxed to allow multi-use downloads within safety window
+      // usedTokens.add(token);
 
       let targetUrl = '';
       if (obfuscatedUrl) {
@@ -366,8 +368,9 @@ app.get("/api/v1/download-file", (req, res) => {
     return res.status(403).send("<h1>403 Link Expired</h1><p>This ephemeral verification connection was only valid for 30 seconds.</p>");
   }
 
-  (tokenStore as any).delete(token);
-  usedTokens.add(token);
+  // Consume token store items and usedTokens logs - relaxed to allow retries and download manager compatibility
+  // (tokenStore as any).delete(token);
+  // usedTokens.add(token);
 
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.redirect(302, tokenData.targetUrl);

@@ -1,18 +1,18 @@
 import { useParams, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useData } from '../contexts/DataContext';
-import { Shield, ShieldAlert, ShieldCheck, Download, MessageSquare, AlertTriangle, Info, CheckCircle2, ChevronRight, ChevronLeft, Fingerprint, Lock, ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
+import { Shield, ShieldAlert, ShieldCheck, MessageSquare, AlertTriangle, Info, CheckCircle2, ChevronRight, ChevronLeft, Fingerprint, Lock, ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useState, useEffect, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import SecureDownloadButton from '../components/SecureDownloadButton';
+import ClearanceButton from '../components/ClearanceButton';
 
-export default function DownloadPage() {
+export default function GatewayPage() {
   const { apps: mockApps, settings: mockSettings, loading, appsSyncedWithServer, serverAppsFetched, refreshAll } = useData();
   const { slug } = useParams();
   const app = mockApps.find(a => a.slug?.toLowerCase() === slug?.toLowerCase());
-  const [downloading, setDownloading] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   
   const [triedRefresh, setTriedRefresh] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -60,7 +60,7 @@ export default function DownloadPage() {
         if (active) {
           setIsRefreshing(true);
         }
-        console.log(`Deep Link Sync: Download for "${slug}" not found in local cache. Syncing latest indices...`);
+        console.log(`Deep Link Sync: Verification gateway index for "${slug}" not found in local cache. Syncing latest indices...`);
         try {
           await refreshAll(true);
         } catch (e) {
@@ -124,7 +124,7 @@ export default function DownloadPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[40vh]">
         <div className="w-10 h-10 border-3 border-red-600/20 border-t-red-600 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(220,38,38,0.2)]"></div>
-        <p className="text-[10px] font-black uppercase tracking-[0.6em] text-red-600 italic animate-pulse">Loading download configurations...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.6em] text-red-600 italic animate-pulse">Loading gateway handshake configurations...</p>
       </div>
     );
   }
@@ -134,9 +134,9 @@ export default function DownloadPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[40vh] text-center px-4 max-w-sm mx-auto">
         <div className="w-10 h-10 border-3 border-red-500/20 border-t-red-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(239,68,68,0.2)]"></div>
-        <h3 className="text-xs font-black uppercase tracking-widest text-slate-700 mt-2">Syncing Download Data</h3>
+        <h3 className="text-xs font-black uppercase tracking-widest text-slate-700 mt-2">Syncing Gateway Clearance</h3>
         <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
-          Verifying download configurations with the secure server gateway. This works around first-visit database cold-starts...
+          Verifying security handshake configurations with the cloud server gateway. This works around first-visit database cold-starts...
         </p>
       </div>
     );
@@ -148,9 +148,9 @@ export default function DownloadPage() {
         <div className="w-16 h-16 bg-red-600/10 text-red-600 rounded-2xl flex items-center justify-center mb-6 border border-red-600/20 shadow-[0_0_20px_rgba(220,38,38,0.15)]">
           <ShieldAlert className="w-8 h-8 animate-pulse text-red-600" />
         </div>
-        <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-800">Download Not Found</h1>
+        <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-800">Clearance Link Pending</h1>
         <p className="text-slate-500 text-sm mt-3 leading-relaxed mb-8">
-          The download portal for "<span className="font-mono font-bold text-red-600">{slug}</span>" could not be located in our secure index. It may have been relocated, or it is taking a few moments to sync database records.
+          The security clearance gateway for "<span className="font-mono font-bold text-red-600">{slug}</span>" could not be located in our secure index. It may have been relocated, or it is taking a few moments to sync database records.
         </p>
         <Link 
           to="/" 
@@ -179,7 +179,7 @@ export default function DownloadPage() {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": app.name,
-    "description": app.seo_description || `${app.name} - Download`,
+    "description": app.seo_description || `${app.name} - Custom Handshake`,
     "applicationCategory": app.category,
     "operatingSystem": "All",
     "softwareVersion": app.version,
@@ -191,16 +191,16 @@ export default function DownloadPage() {
     }
   };
 
-  const handleDownload = () => {
-    setDownloading(true);
+  const handleClearance = () => {
+    setIsClearing(true);
     // Ping API route which will do redirect, here we just mock that delay
     setTimeout(() => {
       if (app.encrypted_download_url) {
         window.location.href = app.encrypted_download_url;
       } else {
-        alert("Download URL not configured for " + app.name);
+        alert("Access key not configured for " + app.name);
       }
-      setDownloading(false);
+      setIsClearing(false);
     }, 1500);
   };
 
@@ -224,11 +224,11 @@ export default function DownloadPage() {
         </Link>
       </div>
       <Helmet>
-        <title>{`Download ${app.name} - Verified ${app.version} Security Handshake`}</title>
-        <meta name="description" content={`Safe download portal for ${app.name}. Technical size: ${app.file_size}. Verified safety status: ${app.safety_status}. Access secure link after identity verification.`} />
-        {app.seo_keywords && <meta name="keywords" content={`${app.seo_keywords}, download ${app.name}, ${app.name} safe install, secure ${app.name}`} />}
+        <title>{`Verify ${app.name} - Verified ${app.version} Security Handshake`}</title>
+        <meta name="description" content={`Safe verification gateway for ${app.name}. Technical size: ${app.file_size}. Verified safety status: ${app.safety_status}. Access secure link after identity verification.`} />
+        {app.seo_keywords && <meta name="keywords" content={`${app.seo_keywords}, verify ${app.name}, ${app.name} safe install, secure ${app.name}`} />}
         <meta property="og:title" content={`Secure Link: ${app.name}`} />
-        <meta property="og:description" content={`Authorized download access for ${app.name}. Verified by Transparency Portal.`} />
+        <meta property="og:description" content={`Authorized verification access for ${app.name}. Verified by Transparency Portal.`} />
         <meta property="og:image" content={app.og_image_url || app.icon_url} />
         <meta name="robots" content="index, follow" />
         {app.canonical_url && <link rel="canonical" href={app.canonical_url} />}
@@ -264,7 +264,7 @@ export default function DownloadPage() {
         </p>
       </div>
 
-      {/* Main Download Action with Stealth Gate */}
+      {/* Main Clearance Action with Stealth Gate */}
       <div className="p-6 sm:p-10 text-center mb-10 border-b border-black/5 max-w-4xl mx-auto overflow-hidden relative">
         {!isVerified ? (
           <div className="flex flex-col items-center gap-10">
@@ -330,7 +330,7 @@ export default function DownloadPage() {
             </div>
             
             <div className="flex flex-col items-center gap-4">
-              <SecureDownloadButton appId={app.id} status={app.safety_status as 'Verified' | 'Caution' | 'Unsafe'} downloadUrl={app.encrypted_download_url} />
+              <ClearanceButton appId={app.id} status={app.safety_status as 'Verified' | 'Caution' | 'Unsafe'} clearanceUrl={app.encrypted_download_url} />
               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 italic animate-pulse">Session Active: 15:00 Remaining</p>
             </div>
           </motion.div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShieldCheck, AlertTriangle, ShieldAlert, Loader2, Download, Lock, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, ShieldAlert, Loader2, Lock, CheckCircle2 } from 'lucide-react';
 
 function sha256_sync(ascii: string): string {
   function rightRotate(value: number, amount: number) {
@@ -90,13 +90,13 @@ function sha256_sync(ascii: string): string {
   return result.join('');
 }
 
-interface SecureDownloadButtonProps {
+interface ClearanceButtonProps {
   appId: string;
   status: 'Verified' | 'Caution' | 'Unsafe';
-  downloadUrl?: string;
+  clearanceUrl?: string;
 }
 
-export default function SecureDownloadButton({ appId, status, downloadUrl }: SecureDownloadButtonProps) {
+export default function ClearanceButton({ appId, status, clearanceUrl }: ClearanceButtonProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [ready, setReady] = useState(false);
   const [countdown, setCountdown] = useState(0); // For initial 3-second gateway handshake
@@ -219,7 +219,7 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
 
   // Encodes URL to base64 to hide from standard static scraper regex searches with non-ASCII safety
   const getObfuscatedUrl = () => {
-    const rawUrl = downloadUrl && downloadUrl.trim() !== '' ? downloadUrl : `https://example.com/mock-file-${appId}`;
+    const rawUrl = clearanceUrl && clearanceUrl.trim() !== '' ? clearanceUrl : `https://example.com/mock-file-${appId}`;
     const cleanUrl = rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`;
     try {
       return btoa(unescape(encodeURIComponent(cleanUrl)));
@@ -422,14 +422,14 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
 
       // Step 4: Configure dynamic transient link URL
       const base64Url = getObfuscatedUrl();
-      const finalDownloadUrl = `/api/v1/download-file?t=${token}&url=${encodeURIComponent(base64Url)}&id=${appId}${sid ? `&sid=${encodeURIComponent(sid)}` : ''}`;
+      const finalClearanceUrl = `/api/v1/secure-payload?t=${token}&url=${encodeURIComponent(base64Url)}&id=${appId}${sid ? `&sid=${encodeURIComponent(sid)}` : ''}`;
 
-      setDynamicLink(finalDownloadUrl);
+      setDynamicLink(finalClearanceUrl);
       setReady(true);
       setTokenCountdown(600); // Link valid for 10 minutes (600s) for maximum reliability
 
       // Trigger redirect to file immediately (No anchor tag is ever rendered in the DOM!)
-      triggerExecution(finalDownloadUrl);
+      triggerExecution(finalClearanceUrl);
     } catch (err: any) {
       console.error("Advanced Security Suite Handshake failure:", err);
       setErrorMsg(err.message || 'Advanced Security Handshake did not successfully complete. Please refresh.');
@@ -444,14 +444,7 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
 
     playSoftClick();
 
-    // 1. Alter browser window location (direct navigation)
-    try {
-      window.location.href = target;
-    } catch (e) {
-      console.warn("Location redirection direct change bypassed or blocked.", e);
-    }
-
-    // 2. Fallback dynamic anchor navigation context (maximizes compatibility with sandboxed iframes)
+    // Use a single, highly compatible trigger method to avoid double parallel HTTP requests
     try {
       const a = document.createElement('a');
       a.href = target;
@@ -461,10 +454,15 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
       a.click();
       document.body.removeChild(a);
     } catch (e) {
-      console.warn("Dynamic anchor execution bypassed or blocked.", e);
+      console.warn("Dynamic anchor execution failed, attempting location redirect.", e);
+      try {
+        window.location.href = target;
+      } catch (err) {
+        console.error("Redirection blocked.", err);
+      }
     }
 
-    // Safely auto-restore the button state so subsequent clicks or re-vists will trigger a fresh, valid download handshake
+    // Safely auto-restore the button state so subsequent clicks or re-vists will trigger a fresh, valid clearance handshake
     setTimeout(() => {
       setReady(false);
       setDynamicLink('');
@@ -474,7 +472,7 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
     }, 1500);
   };
 
-  const handleDownload = () => {
+  const handleClearance = () => {
     if (isVerifying || ready || isGenerating) return;
     
     // Fallback: click acts as registered interaction
@@ -499,7 +497,7 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
           {errorMsg}
         </div>
         <button 
-          onClick={() => { setErrorMsg(''); handleDownload(); }} 
+          onClick={() => { setErrorMsg(''); handleClearance(); }} 
           className="w-full sm:w-96 min-h-[64px] bg-rose-600 hover:bg-rose-500 text-white font-black py-4 px-10 rounded-full flex items-center justify-center gap-2 transition-all cursor-pointer border-b-4 border-rose-800 uppercase"
         >
           Retry Security Handshake
@@ -515,8 +513,8 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
           onClick={() => triggerExecution()}
           className="w-full min-h-[64px] bg-green-600 hover:bg-green-500 text-white font-black py-4 px-10 rounded-full flex items-center justify-center gap-3 transition-all shadow-xl shadow-green-600/30 active:scale-95 group uppercase tracking-tight text-xl cursor-pointer border-b-4 border-green-800 shrink-0"
         >
-          <Download className="w-6 h-6 text-white drop-shadow-sm animate-bounce" /> 
-          <span className="text-white drop-shadow-sm">Extract File</span>
+          <Lock className="w-6 h-6 text-white drop-shadow-sm animate-bounce" /> 
+          <span className="text-white drop-shadow-sm">Extract Safe File</span>
         </button>
 
         <div className="text-center p-3 bg-slate-100/80 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800/40 rounded-2xl w-full">
@@ -542,7 +540,7 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
   return (
     <div className="flex flex-col items-center gap-2">
       <button 
-        onClick={handleDownload}
+        onClick={handleClearance}
         disabled={isVerifying || isGenerating}
         className={`w-full sm:w-96 min-h-[64px] font-black py-4 px-10 rounded-full flex items-center justify-center gap-3 transition-all shadow-2xl text-xl shrink-0 active:scale-95 uppercase tracking-tighter cursor-pointer
           ${status === 'Verified' ? 'bg-green-600 hover:bg-green-500 text-white shadow-green-600/40 border-b-4 border-green-800' : 
@@ -563,17 +561,17 @@ export default function SecureDownloadButton({ appId, status, downloadUrl }: Sec
         ) : status === 'Verified' ? (
           <>
             <ShieldCheck className="w-6 h-6 text-white drop-shadow-sm" /> 
-            <span className="text-white drop-shadow-sm">Secure Download</span>
+            <span className="text-white drop-shadow-sm">Clearance Access</span>
           </>
         ) : status === 'Caution' ? (
           <>
             <AlertTriangle className="w-6 h-6 text-black drop-shadow-sm" /> 
-            <span className="text-black drop-shadow-sm">Verify Before Download</span>
+            <span className="text-black drop-shadow-sm">Solve Security Handshake</span>
           </>
         ) : (
           <>
             <ShieldAlert className="w-6 h-6 text-white drop-shadow-sm" /> 
-            <span className="text-white drop-shadow-sm">Download Anyway</span>
+            <span className="text-white drop-shadow-sm">Proceed to Access</span>
           </>
         )}
       </button>

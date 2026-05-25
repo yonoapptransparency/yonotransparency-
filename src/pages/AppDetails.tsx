@@ -90,9 +90,9 @@ export default function AppDetails() {
     );
   }
 
-  const defaultDesc = `${app.name} technical specifications, version ${app.version}. Verified security status: ${app.safety_status}. Download ${app.name} safe and secure.`;
+  const defaultDesc = `${app.name} technical specifications, version ${app.version}. Verified security status: ${app.safety_status}. Access security clearance profile for<sup>TM</sup> ${app.name} safe environment.`;
   const desc = app.seo_description || defaultDesc;
-  const title = app.seo_title || `${app.name} - Technical Specifications & Verified Download`;
+  const title = app.seo_title || `${app.name} - Technical Specifications & Security Clearance`;
   const ogImage = app.og_image_url || app.icon_url;
 
   const faqSchema = app.faqs && app.faqs.length > 0 ? {
@@ -266,7 +266,7 @@ export default function AppDetails() {
               className="w-full sm:w-auto min-w-[280px] sm:min-w-[400px] flex justify-center cursor-pointer select-none"
             >
               <Link 
-                to={`/download/${app.slug}`} 
+                to={`/verify/${app.slug}`} 
                 className="w-full bg-red-600 hover:bg-red-700 text-white font-black py-5 px-12 rounded-2xl sm:rounded-3xl flex items-center justify-center gap-3 transition-all text-[12px] sm:text-[14px] uppercase tracking-[0.2em] italic shadow-2xl shadow-red-600/30 relative overflow-hidden group"
               >
                 READ MORE <ArrowRight className="w-5 h-5" />

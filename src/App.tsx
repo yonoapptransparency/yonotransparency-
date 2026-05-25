@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 // Lazy Load Pages for Performance
 const Home = lazy(() => import('./pages/Home'));
 const AppDetails = lazy(() => import('./pages/AppDetails'));
-const DownloadPage = lazy(() => import('./pages/DownloadPage'));
+const GatewayPage = lazy(() => import('./pages/GatewayPage'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const About = lazy(() => import('./pages/About'));
@@ -570,7 +570,7 @@ function AppContent() {
                 <Route path="/" element={<Home />} />
                 <Route path="/new-apps" element={<NewApps />} />
                 <Route path="/app/:slug" element={<AppDetails />} />
-                <Route path="/download/:slug" element={<DownloadPage />} />
+                <Route path="/verify/:slug" element={<GatewayPage />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/privacy" element={<Privacy />} />

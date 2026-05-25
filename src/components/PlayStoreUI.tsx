@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
-import { ShieldCheck, Star, Download, AlertTriangle, ShieldAlert, ArrowRight, Sparkles } from 'lucide-react';
+import { ShieldCheck, Star, AlertTriangle, ShieldAlert, ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import React from 'react';
 
@@ -145,19 +145,19 @@ export const PromotionSection = React.memo(() => {
           <div className="absolute top-4 left-4 bg-red-600 text-white text-[9px] font-black px-3 py-1.5 rounded-xl uppercase tracking-[0.2em] shadow-2xl">Premium Feature</div>
         </div>
 
-        {/* Download App Card */}
+        {/* Secure Access Hub Card */}
         <div className="bg-linear-to-br from-red-600 to-rose-700 rounded-[2.5rem] p-6 flex flex-col justify-between text-white relative overflow-hidden shadow-2xl group min-h-[200px]">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
           
           <div className="relative z-10">
             <h3 className="text-2xl font-black uppercase tracking-tighter mb-2 italic">Join the Hub</h3>
-            <p className="text-white/80 text-xs font-black uppercase tracking-tight mb-6 max-w-[200px] leading-relaxed">Experience lightning fast downloads with our secure mobile portal.</p>
+            <p className="text-white/80 text-xs font-black uppercase tracking-tight mb-6 max-w-[200px] leading-relaxed">Experience swift, direct application audits on our secure mobile portal.</p>
           </div>
 
           <div className="relative z-10 flex items-center gap-4">
             <button className="bg-white text-rose-600 px-6 py-3 rounded-2xl font-black uppercase tracking-wider text-xs shadow-2xl hover:bg-rose-50 transition-all active:scale-95 flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              Download Store
+              <ShieldCheck className="w-4 h-4" />
+              Gain Active Access
             </button>
             <div className="flex -space-x-3">
               {[1, 2, 3, 4].map((i) => (

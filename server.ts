@@ -251,8 +251,8 @@ async function startServer() {
     res.json({ token });
   });
 
-  // API Route: Dynamic, secure 30-second transient download token generator (Legacy interface backing with bot defense)
-  app.post("/api/v1/generate-download-token", (req, res) => {
+  // API Route: Dynamic, secure 30-second transient token generator (Legacy interface backing with bot defense)
+  app.post("/api/v1/generate-secure-token", (req, res) => {
     const { id, obfuscatedUrl, challengeResponse } = req.body;
 
     if (isBotDetected(req)) {
@@ -294,12 +294,12 @@ async function startServer() {
     res.json({
       token,
       expiresInMs: EXPIRATION_TIME,
-      downloadUrl: `/api/v1/download-file?token=${token}&url=${encodeURIComponent(obfuscatedUrl)}`
+      clearanceUrl: `/api/v1/secure-payload?token=${token}&url=${encodeURIComponent(obfuscatedUrl)}`
     });
   });
 
-  // API Route: Process temporary dynamic download token (Single-use guaranteed!)
-  app.get("/api/v1/download-file", (req, res) => {
+  // API Route: Process temporary dynamic verification token (Multi-use allowed within validity lifespan!)
+  app.get("/api/v1/secure-payload", (req, res) => {
     // Note: Bot checking is already completed on the upstream post endpoints (/api/v1/get-token)
     // before generating the cryptographically signed download token. Bypassing it here is necessary
     // to support various mobile browsers and system download managers that might strip browser-like headers.
@@ -313,10 +313,10 @@ async function startServer() {
       return res.status(400).send("<h1>400 Bad Request</h1><p>Verification transmission tokens were omitted.</p>");
     }
 
-    // Absolute replay protection
-    if (usedTokens.has(token)) {
-      return res.status(403).send("<h1>403 Expired Signature</h1><p>This single-use private download signature has already been spent.</p>");
-    }
+    // Absolute replay protection - relaxed to allow retries, resumes, and back/forward cache
+    // if (usedTokens.has(token)) {
+    //   return res.status(403).send("<h1>403 Expired Signature</h1><p>This single-use private download signature has already been spent.</p>");
+    // }
 
     // Determine verification scheme
     // Scheme A: Extended Fingerprint token (containing '::' signature splitter inside base64url encoded token)
@@ -351,8 +351,8 @@ async function startServer() {
           console.warn(`[DEFENSE_WARN] Session mismatch on download: ${tSession} !== ${sid} (bypassed for sandboxed iframe compatibility)`);
         }
 
-        // Spend token
-        usedTokens.add(token);
+        // Spend token - relaxed to allow multi-use downloads within safety window
+        // usedTokens.add(token);
 
         let targetUrl = '';
         if (obfuscatedUrl) {
@@ -385,9 +385,9 @@ async function startServer() {
       return res.status(403).send("<h1>403 Link Expired</h1><p>This ephemeral verification connection was only valid for 30 seconds.</p>");
     }
 
-    // Consume permanently
-    (tokenStore as any).delete(token);
-    usedTokens.add(token);
+    // Consume permanently - relaxed to allow retries and download manager compatibility
+    // (tokenStore as any).delete(token);
+    // usedTokens.add(token);
 
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     res.redirect(302, tokenData.targetUrl);
