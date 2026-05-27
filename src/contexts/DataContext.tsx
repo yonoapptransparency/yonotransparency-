@@ -423,16 +423,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // Memoized actions to prevent re-renders in children
   const saveApps = React.useCallback(async (newApps: AppConfig[]) => {
+    // 1. Snappy optimistic update to local state and local memory first
+    setApps(newApps);
+    localStorage.setItem('yonostore_apps', JSON.stringify(newApps));
+
     try {
       const docRef = doc(db, 'store_data', 'apps');
       const now = new Date().toISOString();
       
-      console.log("Cloud: Pushing Apps update...");
-      await withServerConfirmation(() => setDoc(docRef, { items: newApps, last_updated: now }));
-      
-      setApps(newApps);
-      localStorage.setItem('yonostore_apps', JSON.stringify(newApps));
-      console.log("Cloud: Apps update acknowledged by server.");
+      console.log("Cloud: Pushing Apps update (non-blocking)...");
+      // Fire-and-forget write to Firestore so UI does not hang for server response
+      setDoc(docRef, { items: newApps, last_updated: now })
+        .then(() => console.log("Cloud: Apps update acknowledged by server."))
+        .catch(err => console.error("Cloud: Apps sync failed in background:", err));
 
       if (gitConfig?.autoSync) {
         console.log("GitHub Sync: AutoSync engaged. Triggering compile and commit...");
@@ -447,24 +450,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           message: `Admin Release Auto-Update: Added/Updated applications`
         }).catch(err => console.error("Background auto-sync commit failed:", err));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Save Apps Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/apps');
     }
-  }, [gitConfig, settings, news, blogs, videos, withServerConfirmation]);
+  }, [gitConfig, settings, news, blogs, videos]);
 
   const saveSettings = React.useCallback(async (newSettings: GlobalSettings) => {
+    const now = new Date().toISOString();
+    const settingsWithTime = { ...newSettings, last_updated: now };
+
+    // 1. Snappy optimistic update to local state and local memory first
+    setSettings(settingsWithTime);
+    localStorage.setItem('yonostore_settings', JSON.stringify(settingsWithTime));
+
     try {
-      const now = new Date().toISOString();
-      const settingsWithTime = { ...newSettings, last_updated: now };
-
       const docRef = doc(db, 'store_data', 'settings');
-      console.log("Cloud: Pushing Settings update...");
-      await withServerConfirmation(() => setDoc(docRef, settingsWithTime));
-
-      setSettings(settingsWithTime);
-      localStorage.setItem('yonostore_settings', JSON.stringify(settingsWithTime));
-      console.log("Cloud: Settings update acknowledged by server.");
+      console.log("Cloud: Pushing Settings update (non-blocking)...");
+      // Fire-and-forget write to Firestore so UI does not hang for server response
+      setDoc(docRef, settingsWithTime)
+        .then(() => console.log("Cloud: Settings update acknowledged by server."))
+        .catch(err => console.error("Cloud: Settings sync failed in background:", err));
 
       if (gitConfig?.autoSync) {
         console.log("GitHub Sync: AutoSync engaged for Settings updates...");
@@ -479,21 +485,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           message: `Admin Release Auto-Update: Updated platform configurations`
         }).catch(err => console.error("Background auto-sync commit failed:", err));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Save Settings Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/settings');
     }
-  }, [gitConfig, apps, news, blogs, videos, withServerConfirmation]);
+  }, [gitConfig, apps, news, blogs, videos]);
 
   const saveNews = React.useCallback(async (newNews: NewsItem[]) => {
+    // 1. Snappy optimistic update to local state and local memory first
+    setNews(newNews);
+    localStorage.setItem('yonostore_news', JSON.stringify(newNews));
+
     try {
       const docRef = doc(db, 'store_data', 'news');
-      console.log("Cloud: Pushing News update...");
-      await withServerConfirmation(() => setDoc(docRef, { items: newNews }));
-
-      setNews(newNews);
-      localStorage.setItem('yonostore_news', JSON.stringify(newNews));
-      console.log("Cloud: News update acknowledged by server.");
+      console.log("Cloud: Pushing News update (non-blocking)...");
+      // Fire-and-forget write to Firestore so UI does not hang for server response
+      setDoc(docRef, { items: newNews })
+        .then(() => console.log("Cloud: News update acknowledged by server."))
+        .catch(err => console.error("Cloud: News sync failed in background:", err));
 
       if (gitConfig?.autoSync) {
         console.log("GitHub Sync: AutoSync engaged for News updates...");
@@ -508,21 +517,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           message: `Admin Release Auto-Update: Added/Updated news indexes`
         }).catch(err => console.error("Background auto-sync commit failed:", err));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Save News Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/news');
     }
-  }, [gitConfig, apps, settings, blogs, videos, withServerConfirmation]);
+  }, [gitConfig, apps, settings, blogs, videos]);
 
   const saveBlogs = React.useCallback(async (newBlogs: BlogPost[]) => {
+    // 1. Snappy optimistic update to local state and local memory first
+    setBlogs(newBlogs);
+    localStorage.setItem('yonostore_blogs', JSON.stringify(newBlogs));
+
     try {
       const docRef = doc(db, 'store_data', 'blogs');
-      console.log("Cloud: Pushing Blogs update...");
-      await withServerConfirmation(() => setDoc(docRef, { items: newBlogs }));
-
-      setBlogs(newBlogs);
-      localStorage.setItem('yonostore_blogs', JSON.stringify(newBlogs));
-      console.log("Cloud: Blogs update acknowledged by server.");
+      console.log("Cloud: Pushing Blogs update (non-blocking)...");
+      // Fire-and-forget write to Firestore so UI does not hang for server response
+      setDoc(docRef, { items: newBlogs })
+        .then(() => console.log("Cloud: Blogs update acknowledged by server."))
+        .catch(err => console.error("Cloud: Blogs sync failed in background:", err));
 
       if (gitConfig?.autoSync) {
         console.log("GitHub Sync: AutoSync engaged for Blogs updates...");
@@ -537,21 +549,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           message: `Admin Release Auto-Update: Added/Updated blog posts`
         }).catch(err => console.error("Background auto-sync commit failed:", err));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Save Blogs Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/blogs');
     }
-  }, [gitConfig, apps, settings, news, videos, withServerConfirmation]);
+  }, [gitConfig, apps, settings, news, videos]);
 
   const saveVideos = React.useCallback(async (newVideos: VideoItem[]) => {
+    // 1. Snappy optimistic update to local state and local memory first
+    setVideos(newVideos);
+    localStorage.setItem('yonostore_videos', JSON.stringify(newVideos));
+
     try {
       const docRef = doc(db, 'store_data', 'videos');
-      console.log("Cloud: Pushing Videos update...");
-      await withServerConfirmation(() => setDoc(docRef, { items: newVideos }));
-
-      setVideos(newVideos);
-      localStorage.setItem('yonostore_videos', JSON.stringify(newVideos));
-      console.log("Cloud: Videos update acknowledged by server.");
+      console.log("Cloud: Pushing Videos update (non-blocking)...");
+      // Fire-and-forget write to Firestore so UI does not hang for server response
+      setDoc(docRef, { items: newVideos })
+        .then(() => console.log("Cloud: Videos update acknowledged by server."))
+        .catch(err => console.error("Cloud: Videos sync failed in background:", err));
 
       if (gitConfig?.autoSync) {
         console.log("GitHub Sync: AutoSync engaged for Videos updates...");
@@ -566,11 +581,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           message: `Admin Release Auto-Update: Added/Updated video listings`
         }).catch(err => console.error("Background auto-sync commit failed:", err));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Save Videos Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/videos');
     }
-  }, [gitConfig, apps, settings, news, blogs, withServerConfirmation]);
+  }, [gitConfig, apps, settings, news, blogs]);
 
   const saveGitConfig = React.useCallback(async (newConfig: GitConfig) => {
     try {
@@ -636,7 +651,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
       await Promise.all(docsToFetch.map(async (d) => {
         try {
-          const snap = await withServerConfirmation(() => getDocFromServer(doc(db, 'store_data', d.path)), 15000);
+          // Use standard getDoc instead of getDocFromServer for instant cached fallbacks or clean short 3s check
+          const snap = await withServerConfirmation(() => getDoc(doc(db, 'store_data', d.path)), 3000);
           if (snap.exists()) {
             const data = (d as any).key ? (snap.data() as any)[(d as any).key] : snap.data();
             d.setter(data);
