@@ -1,13 +1,13 @@
 import { DataProvider, useData } from './contexts/DataContext';
-import { useLocation, BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { useLocation, BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Menu, Shield, ShieldCheck, Info, ArrowRight, X, LayoutGrid, Newspaper, Sparkles, Send, MoreHorizontal, Search, Video } from 'lucide-react';
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Lazy Load Pages for Performance
-const Home = lazy(() => import('./pages/Home'));
-const AppDetails = lazy(() => import('./pages/AppDetails'));
+import Home from './pages/Home';
+import AppDetails from './pages/AppDetails';
 const GatewayPage = lazy(() => import('./pages/GatewayPage'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -264,7 +264,7 @@ function Header() {
             </nav>
             
             <div className="mt-auto pt-6 border-t border-black/5 text-center shrink-0">
-              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/admin/login" className="text-xs font-black uppercase tracking-[0.2em] text-red-600 hover:opacity-80 transition-opacity">Admin Portal &copy; 2026</Link>
+              <Link onClick={() => { triggerHaptic(); setMenuOpen(false); }} to="/x9k2m7-admin/login" className="text-xs font-black uppercase tracking-[0.2em] text-red-600 hover:opacity-80 transition-opacity">Admin Portal &copy; 2026</Link>
             </div>
           </motion.div>
         )}
@@ -508,7 +508,7 @@ function AppContent() {
     }
   });
 
-  const isAdminPath = location.pathname.startsWith('/admin');
+  const isAdminPath = location.pathname.startsWith('/x9k2m7-admin');
 
   const triggerHaptic = () => {
     if (window.navigator && window.navigator.vibrate) {
@@ -621,8 +621,12 @@ function AppContent() {
                 <Route path="/videos/:slug" element={<VideoDetailPage />} />
                 <Route path="/blogs" element={<Blogs />} />
                 <Route path="/blog/:slug" element={<BlogDetailPage />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin/*" element={<AdminDashboard />} />
+                <Route path="/admin" element={<Navigate to="/" replace />} />
+                <Route path="/wp-admin" element={<Navigate to="/" replace />} />
+                <Route path="/dashboard" element={<Navigate to="/" replace />} />
+                <Route path="/panel" element={<Navigate to="/" replace />} />
+                <Route path="/x9k2m7-admin/login" element={<AdminLogin />} />
+                <Route path="/x9k2m7-admin/*" element={<AdminDashboard />} />
                 <Route path="*" element={<FallbackRouteMatcher />} />
               </Routes>
             </motion.div>

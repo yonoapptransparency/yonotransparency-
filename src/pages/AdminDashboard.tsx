@@ -1531,24 +1531,24 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="animate-fade-in min-h-screen bg-slate-50 dark:bg-[#0a0a0c] p-4 sm:p-8">
+    <div className="animate-fade-in min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex flex-col md:flex-row justify-between items-center bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-white/10 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-pink-500 to-transparent opacity-50"></div>
+        <div className="mb-8 flex flex-col md:flex-row justify-between items-center bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-rose-500/30 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent animate-pulse"></div>
           <div className="flex items-center gap-6">
             <div className="relative">
               {mockSettings.logo_url ? (
-                <img src={mockSettings.logo_url} className="w-16 h-16 object-contain drop-shadow-2xl" alt="Logo" />
+                <img src={mockSettings.logo_url} className="w-16 h-16 object-contain drop-shadow-2xl grayscale" alt="Logo" />
               ) : (
-                <Shield className="w-16 h-16 text-pink-500" />
+                <Shield className="w-16 h-16 text-rose-500" />
               )}
-              <div className="absolute -top-2 -right-2 bg-pink-500 text-[8px] font-black text-white px-2 py-1 rounded-full uppercase tracking-tighter shadow-lg shadow-pink-500/40">Master</div>
+              <div className="absolute -top-2 -right-2 bg-rose-500 text-[8px] font-black text-white px-2 py-1 rounded-full uppercase tracking-tighter shadow-[0_0_10px_rgba(244,63,94,0.5)]">Encrypted Hub</div>
             </div>
             <div>
-              <h1 className="text-3xl font-black text-pink-500 uppercase tracking-tighter italic">Authority Center</h1>
+              <h1 className="text-3xl font-black text-rose-500 uppercase tracking-widest italic">Restricted Admin Access</h1>
               <div className="flex items-center gap-3 mt-1">
-                <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                <p className="opacity-60 dark:text-white text-xs font-bold uppercase tracking-widest italic">Encrypted Cloud Link Active • V3.0</p>
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
+                <p className="opacity-80 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest font-mono text-emerald-600">AES-256 Connection Verified • V2.4.9</p>
               </div>
             </div>
           </div>

@@ -182,57 +182,35 @@ export interface VideoItem {
   created_at: string;
 }
 
-const savedApps = localStorage.getItem('yonostore_apps');
-export const mockApps: AppConfig[] = savedApps ? (() => {
-  try {
-    const parsed = JSON.parse(savedApps);
-    const defaultApps = ${JSON.stringify(cleanApps, null, 2)};
-    defaultApps.forEach(defApp => {
-      const idx = parsed.findIndex((a: any) => a.id === defApp.id);
-      if (idx === -1) {
-        parsed.push(defApp);
-      } else {
-        // Upgrade cache if compiling default app is newer or modified
-        parsed[idx] = { ...parsed[idx], ...defApp };
-      }
-    });
-    return parsed;
-  } catch (e) {
-    return ${JSON.stringify(cleanApps, null, 2)};
-  }
-})() : ${JSON.stringify(cleanApps, null, 2)};
+export const mockApps: AppConfig[] = ${JSON.stringify(cleanApps, null, 2)};
 
 export const saveMockApps = (apps: AppConfig[]) => {
   localStorage.setItem('yonostore_apps', JSON.stringify(apps));
   mockApps.splice(0, mockApps.length, ...apps);
 };
 
-const savedSettings = localStorage.getItem('yonostore_settings');
-export const mockSettings: GlobalSettings = savedSettings ? JSON.parse(savedSettings) : ${JSON.stringify(cleanSettings, null, 2)};
+export const mockSettings: GlobalSettings = ${JSON.stringify(cleanSettings, null, 2)};
 
 export const saveMockSettings = (settings: GlobalSettings) => {
   localStorage.setItem('yonostore_settings', JSON.stringify(settings));
   Object.assign(mockSettings, settings);
 };
 
-const savedNews = localStorage.getItem('yonostore_news');
-export const mockNews: NewsItem[] = savedNews ? JSON.parse(savedNews) : ${JSON.stringify(cleanNews, null, 2)};
+export const mockNews: NewsItem[] = ${JSON.stringify(cleanNews, null, 2)};
 
 export const saveMockNews = (newsList: NewsItem[]) => {
   localStorage.setItem('yonostore_news', JSON.stringify(newsList));
   mockNews.splice(0, mockNews.length, ...newsList);
 };
 
-const savedBlogs = localStorage.getItem('yonostore_blogs');
-export const mockBlogs: BlogPost[] = savedBlogs ? JSON.parse(savedBlogs) : ${JSON.stringify(cleanBlogs, null, 2)};
+export const mockBlogs: BlogPost[] = ${JSON.stringify(cleanBlogs, null, 2)};
 
 export const saveMockBlogs = (blogs: BlogPost[]) => {
   localStorage.setItem('yonostore_blogs', JSON.stringify(blogs));
   mockBlogs.splice(0, mockBlogs.length, ...blogs);
 };
 
-const savedVideos = localStorage.getItem('yonostore_videos');
-export const mockVideos: VideoItem[] = savedVideos ? JSON.parse(savedVideos) : ${JSON.stringify(cleanVideos, null, 2)};
+export const mockVideos: VideoItem[] = ${JSON.stringify(cleanVideos, null, 2)};
 
 export const saveMockVideos = (videos: VideoItem[]) => {
   localStorage.setItem('yonostore_videos', JSON.stringify(videos));

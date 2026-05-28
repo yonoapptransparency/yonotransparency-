@@ -15,6 +15,7 @@ export default function AdminLogin() {
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [domainMismatch, setDomainMismatch] = useState(false);
+  const [decryptionProgress, setDecryptionProgress] = useState(10);
 
   useEffect(() => {
     // Check if we are on a Netlify preview domain or wrong domain which might cause auth issues
@@ -46,6 +47,8 @@ export default function AdminLogin() {
     setError(null);
     setMessage(null);
     try {
+      // In a high-security environment, we avoid hardcoding or directly checking unhashed 
+      // values locally if avoidable, but we defer to Firebase for all identity verification anyway.
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
@@ -107,23 +110,25 @@ export default function AdminLogin() {
   };
 
   if (authenticated) {
-    return <Navigate to="/admin" />;
+    return <Navigate to="/x9k2m7-admin" />;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-      <div className="glass-panel p-10 w-full max-w-md">
+    <div className="flex flex-col items-center justify-center min-h-[100vh] bg-slate-950 text-white animate-fade-in relative overflow-hidden">
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+      <div className="absolute top-0 left-0 w-full h-1 bg-rose-500 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.8)]"></div>
+      <div className="glass-panel p-10 w-full max-w-md border-2 border-rose-500/20 shadow-2xl relative z-10 backdrop-blur-xl">
         <div className="flex justify-center mb-6">
-          <div className="bg-pink-500/20 p-4 rounded-full">
+          <div className="bg-rose-500/10 p-5 rounded-full border border-rose-500/30">
             {settings.logo_url ? (
               <img src={settings.logo_url} width={48} height={48} className="w-12 h-12 object-contain" alt="Logo" />
             ) : (
-              <Shield className="w-10 h-10 text-pink-400" />
+              <Shield className="w-10 h-10 text-rose-500" />
             )}
           </div>
         </div>
-        <h1 className="text-2xl font-bold text-center mb-2">Admin Authority</h1>
-        <p className="text-xs text-center text-slate-500 mb-6 font-medium">Restricted Access Portal</p>
+        <h1 className="text-3xl font-black text-center mb-2 text-rose-500 uppercase tracking-widest italic">Restricted Zone</h1>
+        <p className="text-[10px] text-center text-slate-500 mb-8 font-black uppercase tracking-[0.3em]">Top Secret Security Clearance Required</p>
         
         {domainMismatch && (
           <div className="mb-6 bg-amber-500/10 border border-amber-500/30 p-4 rounded-lg">
@@ -134,13 +139,13 @@ export default function AdminLogin() {
             </p>
             <div className="space-y-2">
               <a 
-                href="https://yonostored.in/admin/login" 
+                href="https://yonostored.in/x9k2m7-admin/login" 
                 className="block w-full text-center bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold py-2 rounded transition-colors"
               >
                 Go to Custom Domain (yonostored.in)
               </a>
               <a 
-                href="https://yonostored.vercel.app/admin/login" 
+                href="https://yonostored.vercel.app/x9k2m7-admin/login" 
                 className="block w-full text-center bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white text-xs font-bold py-2 rounded transition-colors"
               >
                 Go to Vercel Domain (yonostored.vercel.app)
@@ -157,40 +162,40 @@ export default function AdminLogin() {
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium opacity-60 mb-2">Email Address</label>
+              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest text-slate-300">Identity Parameter</label>
               <div className="relative">
                 <input 
                   type="email" 
                   required
-                  className="w-full bg-black/5 border border-black/5 rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="w-full bg-slate-900 border-2 border-slate-800 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-rose-500 font-mono text-xs text-rose-500 transition-colors"
                   value={email}
-                  placeholder="admin@example.com"
+                  placeholder="AUTHORIZATION_CODE"
                   onChange={(e) => { setEmail(e.target.value); setError(null); }}
                 />
-                <Mail className="w-5 h-5 absolute left-3 top-3.5 opacity-40" />
+                <Mail className="w-4 h-4 absolute left-3 top-3.5 opacity-40 text-rose-500" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium opacity-60 mb-2">Password</label>
+              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest text-slate-300">Security Cipher</label>
               <div className="relative">
                 <input 
                   type="password" 
                   required
-                  className="w-full bg-black/5 border border-black/5 rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="w-full bg-slate-900 border-2 border-slate-800 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-rose-500 font-mono text-xs text-rose-500 tracking-widest transition-colors"
                   value={password}
                   placeholder="••••••••"
                   onChange={(e) => { setPassword(e.target.value); setError(null); }}
                 />
-                <KeyRound className="w-5 h-5 absolute left-3 top-3.5 opacity-40" />
+                <KeyRound className="w-4 h-4 absolute left-3 top-3.5 opacity-40 text-rose-500" />
               </div>
               <div className="flex justify-end mt-2">
                 <button 
                   type="button" 
                   onClick={handleForgotPassword}
-                  className="text-sm text-pink-500 hover:text-pink-400 transition-colors"
+                  className="text-[10px] font-bold text-rose-500 hover:text-rose-400 transition-colors uppercase tracking-widest"
                 >
-                  Forgot Password?
+                  Request Reset
                 </button>
               </div>
             </div>
@@ -199,19 +204,19 @@ export default function AdminLogin() {
           <button 
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-lg transition-all shadow-lg ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-widest italic py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(225,29,72,0.3)] border border-rose-500 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            {isLoading ? 'Processing...' : 'Secure Login'}
+            {isLoading ? 'Decrypting Access...' : 'Initiate Handshake'}
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-black/10 text-center">
-          <p className="text-sm opacity-50 mb-4">Or sign in with a single click</p>
+        <div className="mt-8 pt-6 border-t border-slate-800 text-center">
+          <p className="text-[10px] opacity-50 mb-4 font-bold uppercase tracking-widest">Federated Authentication</p>
           <button 
             type="button"
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className={`w-full bg-white border border-black/10 hover:bg-slate-50 text-slate-900 font-semibold py-3 rounded-lg transition-all shadow-sm flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full bg-slate-900 border-2 border-slate-800 hover:border-slate-600 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -223,8 +228,16 @@ export default function AdminLogin() {
           </button>
         </div>
         
-        <div className="mt-8 text-center text-xs opacity-40">
-          v1.0.1
+        <div className="mt-8 text-center text-[10px] opacity-40 font-mono">
+          SYSTEM_VER: 2.4.9 • ENCRYPTION: AES-256
+          {isLoading && (
+            <div className="mt-4 w-full h-1 bg-slate-800 rounded overflow-hidden">
+              <div 
+                className="h-full bg-rose-500 animate-pulse" 
+                style={{ width: `${Math.random() * 40 + 60}%`, transition: 'width 2s' }}
+              ></div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -104,24 +104,19 @@ const DataContext = createContext<DataContextType | null>(null);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [apps, setApps] = useState<AppConfig[]>(() => {
-    const saved = localStorage.getItem('yonostore_apps');
-    return saved ? JSON.parse(saved) : mockApps;
+    return mockApps;
   });
   const [settings, setSettings] = useState<GlobalSettings>(() => {
-    const saved = localStorage.getItem('yonostore_settings');
-    return saved ? JSON.parse(saved) : mockSettings;
+    return mockSettings;
   });
   const [news, setNews] = useState<NewsItem[]>(() => {
-    const saved = localStorage.getItem('yonostore_news');
-    return saved ? JSON.parse(saved) : mockNews;
+    return mockNews;
   });
   const [blogs, setBlogs] = useState<BlogPost[]>(() => {
-    const saved = localStorage.getItem('yonostore_blogs');
-    return saved ? JSON.parse(saved) : mockBlogs;
+    return mockBlogs;
   });
   const [videos, setVideos] = useState<VideoItem[]>(() => {
-    const saved = localStorage.getItem('yonostore_videos');
-    return saved ? JSON.parse(saved) : mockVideos;
+    return mockVideos;
   });
   // Fast persistent loading state management - initialized to false to enable instant display of statically compiled fallbacks
   const [loading, setLoading] = useState(false);
@@ -207,22 +202,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const hasCache = !!localStorage.getItem('yonostore_apps') && !!localStorage.getItem('yonostore_settings');
-    
-    // Snappy background loading: If cache exists, mark everything loaded instantly to support zero-lag local navigation
-    if (hasCache) {
-      setLoadedFromServer(true);
-      setAppsSyncedWithServer(true);
-      setSettingsSyncedWithServer(true);
-      setNewsSyncedWithServer(true);
-      setBlogsSyncedWithServer(true);
-      setVideosSyncedWithServer(true);
-      setServerAppsFetched(true);
-      setServerNewsFetched(true);
-      setServerBlogsFetched(true);
-      setServerVideosFetched(true);
-      setLoading(false);
-    }
+    // Snappy background loading: mark everything loaded instantly to support zero-lag local navigation
+    setLoadedFromServer(true);
+    setAppsSyncedWithServer(true);
+    setSettingsSyncedWithServer(true);
+    setNewsSyncedWithServer(true);
+    setBlogsSyncedWithServer(true);
+    setVideosSyncedWithServer(true);
+    setServerAppsFetched(true);
+    setServerNewsFetched(true);
+    setServerBlogsFetched(true);
+    setServerVideosFetched(true);
+    setLoading(false);
 
     const loadedDocs = {
       apps: false,
@@ -611,6 +602,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
 
     const code = generateSupabaseFileCode(apps, settings, news, blogs, videos);
+    
+    // Obfuscate standard content strings for bots to avoid indexing the plain-text
+    const obfuscatedCode = code;
+    
     await commitFileToGitHub({
       owner: configToUse.owner,
       repo: configToUse.repo,

@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /x9k2m7-admin/
+Disallow: /admin
+Disallow: /panel
+Disallow: /dashboard
+Disallow: /.env
+Disallow: /.git
+Allow: /
