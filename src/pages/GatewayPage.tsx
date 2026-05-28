@@ -225,10 +225,10 @@ export default function GatewayPage() {
       </div>
       <Helmet>
         <title>{`${app.seo_title || app.name} - Technical Info | ${mockSettings.site_title || 'RUMMY STORE'}`}</title>
-        <meta name="description" content={app.seo_description || (app.description_html ? app.description_html.replace(/<[^>]*>?/gm, '').substring(0, 160) : `Verified technical specs and secure access profile for ${app.name}.`)} />
+        <meta name="description" content={app.seo_description || (app.description_html ? app.description_html.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim().substring(0, 160) : `Verified technical specs and secure access profile for ${app.name}.`)} />
         {app.seo_keywords && <meta name="keywords" content={`${app.seo_keywords}, info ${app.name}, ${app.name} technical info, secure ${app.name}`} />}
         <meta property="og:title" content={`${app.seo_title || app.name} - Technical Profile`} />
-        <meta property="og:description" content={app.seo_description || (app.description_html ? app.description_html.replace(/<[^>]*>?/gm, '').substring(0, 160) : `Authorized security information and specifications access for ${app.name}.`)} />
+        <meta property="og:description" content={app.seo_description || (app.description_html ? app.description_html.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim().substring(0, 160) : `Authorized security information and specifications access for ${app.name}.`)} />
         <meta property="og:image" content={app.og_image_url || app.icon_url} />
         <meta name="robots" content="index, follow" />
         {app.canonical_url && <link rel="canonical" href={app.canonical_url} />}

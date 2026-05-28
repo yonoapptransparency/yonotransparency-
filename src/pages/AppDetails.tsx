@@ -91,7 +91,14 @@ export default function AppDetails() {
   }
 
   const title = `${app.seo_title || app.name} | ${mockSettings.site_title || 'RUMMY STORE'}`;
-  const desc = app.seo_description || (app.description_html ? app.description_html.replace(/<[^>]*>?/gm, '').substring(0, 160) : `${app.name} application specifications`);
+  
+  const stripHtml = (html: string) => {
+    if (!html) return '';
+    const stripped = html.replace(/<[^>]*>?/gm, ' ');
+    return stripped.replace(/\s+/g, ' ').trim();
+  };
+  
+  const desc = app.seo_description || (app.description_html ? stripHtml(app.description_html).substring(0, 160) : `${app.name} application specifications`);
   const ogImage = app.og_image_url || app.icon_url;
 
   const faqSchema = app.faqs && app.faqs.length > 0 ? {

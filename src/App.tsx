@@ -522,18 +522,25 @@ function AppContent() {
     // Dynamically synchronize favicon with firebase database changes live across all selectors!
     if (settings.favicon_url) {
       const targetUrl = settings.favicon_url;
-      const rels = ['icon', 'shortcut icon', 'apple-touch-icon'];
+      const icons = [
+        { rel: 'icon', sizes: '192x192' },
+        { rel: 'icon', sizes: '32x32' },
+        { rel: 'icon', sizes: '16x16' },
+        { rel: 'shortcut icon', sizes: 'any' },
+        { rel: 'apple-touch-icon', sizes: '180x180' }
+      ];
       
-      rels.forEach(rel => {
-        let link: HTMLLinkElement | null = document.querySelector(`link[rel="${rel}"]`) || document.querySelector(`link[rel*="${rel}"]`);
-        if (link) {
-          link.href = targetUrl;
-        } else {
-          const newLink = document.createElement('link');
-          newLink.rel = rel;
-          newLink.href = targetUrl;
-          document.head.appendChild(newLink);
+      // Remove old icons to prevent duplicates
+      document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]').forEach(el => el.remove());
+      
+      icons.forEach(iconDef => {
+        const newLink = document.createElement('link');
+        newLink.rel = iconDef.rel;
+        newLink.href = targetUrl;
+        if (iconDef.sizes && iconDef.sizes !== 'any') {
+          newLink.setAttribute('sizes', iconDef.sizes);
         }
+        document.head.appendChild(newLink);
       });
       
       // Attempt to also update the parent document element if we are within an iframe of the same origin (such as preview environments relative hosting)

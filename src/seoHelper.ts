@@ -112,6 +112,8 @@ export async function injectSeoTags(template: string, urlPath: string): Promise<
     }
   }
 
+  const faviconUrl = settings.favicon_url?.stringValue || '';
+
   // Construct replacement tags
   const tags = `
     <title>${escapeHtml(title)}</title>
@@ -126,10 +128,19 @@ export async function injectSeoTags(template: string, urlPath: string): Promise<
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     ${ogImage ? `<meta name="twitter:image" content="${escapeHtml(ogImage)}" />` : ''}
+    ${faviconUrl ? `
+    <link rel="icon" type="image/x-icon" href="${escapeHtml(faviconUrl)}" />
+    <link rel="icon" type="image/png" sizes="192x192" href="${escapeHtml(faviconUrl)}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="${escapeHtml(faviconUrl)}" />
+    <link rel="icon" type="image/png" sizes="16x16" href="${escapeHtml(faviconUrl)}" />
+    <link rel="shortcut icon" href="${escapeHtml(faviconUrl)}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="${escapeHtml(faviconUrl)}" />
+    ` : ''}
   `;
 
   // Regex to remove any existing <title> and OpenGraph meta tags so we don't have duplicates
   let newTemplate = template.replace(/<title>.*?<\/title>/ims, '');
+  newTemplate = newTemplate.replace(/<link[^>]*rel=["']?(icon|shortcut icon|apple-touch-icon)["']?[^>]*>/gims, '');
   newTemplate = newTemplate.replace(/<meta[^>]*(name|property)=["'](description|keywords|og:title|og:description|og:image|og:type|twitter:.*?)["'][^>]*>/gims, '');
   
   // Insert new tags before </head>
