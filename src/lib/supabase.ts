@@ -564,48 +564,7 @@ export const mockApps: AppConfig[] = [
     "created_at": "2026-05-20T08:02:40.971Z",
     "is_new": false,
     "serial_number": 11,
-    "faqs": [
-      {
-        "answer": "Answer: Club INR is a mobile matchmaking client and casual gaming hub optimized for Indian card game formats, primarily 13-Card Rummy variations like Points, Pool, and Deals Rummy. The platform utilizes automated lobby pairing protocols to connect real online players globally across secure virtual tables where performance relies strictly on skill metrics.",
-        "question": "1. What is Club INR and what system infrastructure does it use? "
-      },
-      {
-        "answer": "Answer: Yes, engaging in skill-based card matching systems for real stakes is legally protected across the vast majority of Indian states. The Supreme Court of India has consistently ruled that Rummy is primarily a \"game of skill\" rather than a game of chance. Consequently, it is classified as a legitimate business and recreational activity under Article 19(1)(g) of the Indian Constitution.",
-        "question": "2. Is utilizing the Club INR interface legally permitted in India?"
-      },
-      {
-        "answer": "Answer: While central legislation validates skill gaming, specific state-level statutes enforce total prohibitions. Due to regional regulatory filters, residents of the following territories are legally barred from participating in real-stake pools or deploying funds on external clients:\nRestricted States: Andhra Pradesh, Arunachal Pradesh, Assam, Nagaland, Odisha, Sikkim, Tamil Nadu, and Telangana",
-        "question": "3. What regional or geographic restrictions apply to Club INR players?"
-      },
-      {
-        "question": "4. What is Yonoinfo and how does it interface with Club INR?",
-        "answer": "Answer: Yonoinfo operates strictly as an autonomous, unaligned informational database and application directory. We do not design software, host gaming lobbies, manage financial transaction portals, or distribute setup packages. Our team provides empirical technical analysis, consumer safety audits, and transparency metrics regarding popular apps for educational reference."
-      },
-      {
-        "answer": "Answer: Digital media landscapes are heavily saturated with sponsored referral marketing and biased endorsements that hide player risks to secure quick signups. Yonoinfo enforces a strict neutrality mandate—explicitly listing platform bugs, potential capital risks, structural changes, and state legal barriers—ensuring consumers can access an objective, balanced truth.",
-        "question": "5. Why does Yonoinfo emphasize \"Website Transparency FAQs\"?"
-      },
-      {
-        "answer": "Answer: No. Yonoinfo maintains an absolute corporate firewall and has zero financial alignments, joint ventures, or commercial ties with the operators or development team of Club INR. Our review profiles are generated through independent end-user benchmarking to guarantee our reliability grades remain 100% uninfluenced by external platforms.",
-        "question": "6. Does Yonoinfo maintain corporate partnerships or financial ties with Club INR?"
-      },
-      {
-        "answer": "Answer: No, Yonoinfo does not provide direct download links, signed APK files, or configuration packages for Club INR. Our network functions solely as a technical reporting hub. Users seeking to engage with the third-party client must navigate to verified distribution networks independently, ensuring our data remains strictly informational.",
-        "question": "7. Does Yonoinfo provide download links or installation packages for Club INR?"
-      },
-      {
-        "answer": "Answer: Based on performance data tracking under standard banking hours, the client's automated withdrawal paths process cashouts via IMPS or verified UPI channels within 5 to 30 minutes. However, network congestion, server maintenance, or banking queue delays can trigger manual verification holds, occasionally extending transaction times up to 24 to 72 hours.",
-        "question": "8. What are the typical transaction processing timelines on Club INR?"
-      },
-      {
-        "answer": "Answer: No, we cannot provide database support. Because Yonoinfo is an entirely separate informational portal, we possess zero administrative rights or server-side access to the Club INR infrastructure. If you experience stuck deposits, pending cashouts, or temporary account freezes, you must contact the application’s native customer service desk directly with your Game UID and bank UTR receipts.",
-        "question": "9. Can the Yonoinfo support team assist with pending withdrawals or frozen profiles?"
-      },
-      {
-        "question": "10. What criteria are required for responsible consumer participation?",
-        "answer": "Answer: Before evaluating any external real-money interactive platform like Club INR, users must fulfill these non-negotiable protection guardrails:\nAge Status: You must be a minimum age of 18 or older to register or play.\nGeographic Compliance: You must reside outside the legally restricted Indian states listed above.\nFiscal Boundaries: Real-money gaming involves clear financial variance. All activities must be viewed strictly as casual recreation, and users should establish strict personal budget limits to prevent capital exposure."
-      }
-    ],
+    "faqs": [],
     "seo_title": "Club INR APK Download (Latest 2026) Official App Setup — Yonoinfo",
     "og_image_url": "https://13eehe59cj.ucarecd.net/3059d25d-1497-4cff-aead-68758187fe0b/-/preview/554x554/",
     "category": "All App, Yono",
