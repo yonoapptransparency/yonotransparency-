@@ -6,3 +6,5 @@ Disallow: /dashboard
 Disallow: /.env
 Disallow: /.git
 Allow: /
+
+Sitemap: /sitemap.xml

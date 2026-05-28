@@ -90,8 +90,8 @@ export default function AppDetails() {
     );
   }
 
-  const title = `${app.name} - Technical Specifications | ${mockSettings.site_title || 'RUMMY STORE'}`;
-  const desc = app.description_html ? app.description_html.replace(/<[^>]*>?/gm, '').substring(0, 160) : `${app.name} secure installation and specifications`;
+  const title = `${app.seo_title || app.name} | ${mockSettings.site_title || 'RUMMY STORE'}`;
+  const desc = app.seo_description || (app.description_html ? app.description_html.replace(/<[^>]*>?/gm, '').substring(0, 160) : `${app.name} application specifications`);
   const ogImage = app.og_image_url || app.icon_url;
 
   const faqSchema = app.faqs && app.faqs.length > 0 ? {

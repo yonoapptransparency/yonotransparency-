@@ -4,6 +4,8 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import crypto from "crypto";
 import compression from "compression";
+import fs from "fs";
+import { injectSeoTags } from "./src/seoHelper";
 
 // Cryptographic secrets for hashing, signature verification, and session identifiers
 const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
@@ -164,6 +166,70 @@ async function startServer() {
 
     return false;
   };
+
+  // API Route: Dynamic Sitemap Generation for SEO
+  app.get('/sitemap.xml', async (req, res) => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const config = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf8'));
+      
+      const appsChunkUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/apps_chunk_0`;
+      const appsRes = await fetch(appsChunkUrl).catch(() => null);
+      const appsData = appsRes && appsRes.ok ? await appsRes.json() : null;
+      
+      let apps = [];
+      if (appsData && appsData.fields && appsData.fields.items && appsData.fields.items.arrayValue && appsData.fields.items.arrayValue.values) {
+        apps = appsData.fields.items.arrayValue.values.map((v: any) => v.mapValue.fields);
+      }
+      
+      const baseUrl = 'https://rummystore-seo.com'; // Dummy origin, or inferred from headers if possible
+      const host = req.headers.host ? `https://${req.headers.host}` : baseUrl;
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      
+      // Static routes
+      xml += `  <url>\n    <loc>${host}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+      xml += `  <url>\n    <loc>${host}/news</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+      xml += `  <url>\n    <loc>${host}/blogs</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+      
+      // Dynamic App Routes
+      const escapeHtmlForSitemap = (unsafe: string) => {
+        return unsafe
+           .replace(/&/g, "&amp;")
+           .replace(/</g, "&lt;")
+           .replace(/>/g, "&gt;")
+           .replace(/"/g, "&quot;")
+           .replace(/'/g, "&#039;");
+      };
+
+      for (const app of apps) {
+        const slug = app.slug?.stringValue;
+        if (slug) {
+          xml += `  <url>\n`;
+          xml += `    <loc>${host}/app/${escapeHtmlForSitemap(slug)}</loc>\n`;
+          xml += `    <changefreq>weekly</changefreq>\n`;
+          xml += `    <priority>0.9</priority>\n`;
+          xml += `  </url>\n`;
+          
+          xml += `  <url>\n`;
+          xml += `    <loc>${host}/gateway/${escapeHtmlForSitemap(slug)}</loc>\n`;
+          xml += `    <changefreq>weekly</changefreq>\n`;
+          xml += `    <priority>0.8</priority>\n`;
+          xml += `  </url>\n`;
+        }
+      }
+      
+      xml += `</urlset>`;
+      
+      res.header('Content-Type', 'application/xml');
+      res.send(xml);
+    } catch (e) {
+      console.error('Sitemap Generation Error:', e);
+      res.status(500).send('Error generating sitemap');
+    }
+  });
 
   // ── ACTIVE HONEYPOT ROADBLOCKS ──
   // Instantly lock or intercept automated scraping scripts attempting to discover hidden pathways
@@ -444,6 +510,22 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
+    
+    // We override index.html serving to inject our SEO tags locally too!
+    app.use('*', async (req, res, next) => {
+      // Allow assets to be handled by Vite
+      if (req.originalUrl.includes('.')) return next();
+      try {
+        let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
+        template = await vite.transformIndexHtml(req.originalUrl, template);
+        template = await injectSeoTags(template, req.originalUrl);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e: any) {
+        vite.ssrFixStacktrace(e);
+        next(e);
+      }
+    });
+
   } else {
     // Production static files with aggressive caching for assets
     const distPath = path.join(process.cwd(), 'dist');
@@ -460,8 +542,16 @@ async function startServer() {
       immutable: true
     }));
     
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    app.get('*', async (req, res) => {
+      const templatePath = path.join(distPath, 'index.html');
+      try {
+        let template = fs.readFileSync(templatePath, 'utf-8');
+        template = await injectSeoTags(template, req.originalUrl);
+        res.status(200).set({ 'Content-Type': 'text/html' }).send(template);
+      } catch (e) {
+        console.error(e);
+        res.sendFile(templatePath);
+      }
     });
   }
 

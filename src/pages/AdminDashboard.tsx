@@ -152,10 +152,13 @@ const AppsTab = React.memo(({ appsList, editingAppId, setEditingAppId, handleDel
             </div>
             
             {/* RESTORED SEO FIELDS */}
-            
+            <div>
+              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">SEO Title</label>
+              <input type="text" name="seo_title" defaultValue={editApp?.seo_title} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" placeholder="Custom SEO Title" />
+            </div>
             <div>
               <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">SEO Description</label>
-              
+              <textarea name="seo_description" defaultValue={editApp?.seo_description} rows={2} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" placeholder="Custom SEO Description (auto-generated from HTML if left blank)"></textarea>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">SEO Keywords (Comma Separated)</label>
@@ -258,7 +261,7 @@ const AppsTab = React.memo(({ appsList, editingAppId, setEditingAppId, handleDel
 
           <div>
             <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Full Application Description (HTML)</label>
-            <textarea name="description_html" defaultValue={editApp?.description_html} rows={8} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 dark:text-white font-mono text-xs"></textarea>
+            <textarea name="description_html" defaultValue={editApp?.description_html} rows={10} placeholder="<h1>Title</h1><p>Description here...</p>" className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 dark:text-white font-mono text-xs"></textarea>
           </div>
 
           <div className="border border-black/10 dark:border-white/10 rounded-xl p-4 bg-black/5 dark:bg-white/5">
@@ -1255,7 +1258,7 @@ export default function AdminDashboard() {
         name,
         slug,
         seo_title: formData.get('seo_title') as string || name,
-        seo_description: formData.get('seo_description') as string || '',
+        seo_description: formData.get('seo_description') as string || (formData.get('description_html') as string)?.replace(/<[^>]*>?/gm, '').substring(0, 160) || '',
         seo_keywords: formData.get('seo_keywords') as string || '',
         og_image_url: formData.get('og_image_url') as string || '',
         canonical_url: formData.get('canonical_url') as string || '',

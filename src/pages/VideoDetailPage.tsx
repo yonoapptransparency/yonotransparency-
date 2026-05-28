@@ -144,6 +144,9 @@ export default function VideoDetailPage() {
         {videoItem.seo_keywords && <meta name="keywords" content={videoItem.seo_keywords} />}
         <meta property="og:title" content={videoItem.title} />
         <meta property="og:description" content={videoItem.description} />
+        <meta property="og:image" content={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`} />
         <meta property="og:type" content="video.other" />
       </Helmet>
       
