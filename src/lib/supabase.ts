@@ -496,32 +496,7 @@ export const mockApps: AppConfig[] = [
     "og_image_url": "https://13eehe59cj.ucarecd.net/0d710f11-2c9d-4312-89de-be65ce21a4fe/-/preview/750x750/",
     "category": "All App, Yono",
     "seo_title": "gogorummy ",
-    "faqs": [
-      {
-        "question": "Q1: Does the app support offline gameplay?",
-        "answer": "Ans: Partially. While some single-player practice modes can run without cellular data, the core multiplayer modes require a continuous internet connection. Furthermore, even \"offline\" modes typically require an initial online connection at launch to complete asset downloads and verify your application build."
-      },
-      {
-        "answer": "​Ans: Legitimate app stores maintain strict security, regional legality, and data privacy thresholds. Apps like Gogo Rummy fail to meet these criteria because they operate outside India's centralized gaming regulations and use unverified payment/data-handling practices. Consequently, they are restricted from official platforms",
-        "question": "Q2: Why is Gogo Rummy not available on the official Google Play Store or Apple App Store?"
-      },
-      {
-        "question": "​Q3: Is downloading a third-party APK file safe for my smartphone?",
-        "answer": "Ans: No, it carries significant risks. Sideloading an APK file requires you to deliberately disable your device's native security protocols (\"Install from Unknown Sources\"). Unverified APK packages are frequently modified to bundle hidden background spyware or keyloggers capable of monitoring your banking OTPs, text messages, and personal files."
-      },
-      {
-        "answer": "Ans: Based on security audits of rogue gaming hubs, these applications demand highly invasive permissions that are entirely unnecessary for a card game. This includes tracking your exact GPS Location, scanning your Personal Contacts, accessing Local Device Storage, and monitoring device identity data.",
-        "question": "​Q4: What device permissions does the app collect?"
-      },
-      {
-        "answer": "Ans: Absolutely not. Under the central Promotion and Regulation of Online Gaming (PROG) Act, all online money games involving real-world stakes, cash entries, or monetary deposits are completely banned across India. Any app claiming to offer real cash payouts is operating entirely illegally.",
-        "question": "Q5: Can I play Gogo Rummy for real money or cash rewards in India?"
-      },
-      {
-        "question": "Q6: My cash withdrawal is frozen or \"pending\" inside the app. How can I recover it?",
-        "answer": "Ans: Recovery is highly unlikely. Because these underground platforms operate outside Indian financial laws, they routinely use dummy accounts or unregulated offshore channels. When a user requests a withdrawal, the system intentionally blocks the transaction or locks the account. Because the application is illicit, players have no legal recourse or protection through Indian Consumer Courts."
-      }
-    ],
+    "faqs": [],
     "version": "1.0",
     "rating": 5,
     "is_featured": false,
