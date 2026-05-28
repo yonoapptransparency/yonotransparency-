@@ -209,6 +209,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const hasCache = !!localStorage.getItem('yonostore_apps') && !!localStorage.getItem('yonostore_settings');
     
+    // Snappy background loading: If cache exists, mark everything loaded instantly to support zero-lag local navigation
+    if (hasCache) {
+      setLoadedFromServer(true);
+      setAppsSyncedWithServer(true);
+      setSettingsSyncedWithServer(true);
+      setNewsSyncedWithServer(true);
+      setBlogsSyncedWithServer(true);
+      setVideosSyncedWithServer(true);
+      setServerAppsFetched(true);
+      setServerNewsFetched(true);
+      setServerBlogsFetched(true);
+      setServerVideosFetched(true);
+      setLoading(false);
+    }
+
     const loadedDocs = {
       apps: false,
       settings: false,
@@ -224,12 +239,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Safety fallback - prevent any hanging sync loops after max 10 seconds
+    // Safety fallback - prevent any hanging sync loops after max 3 seconds
     const timeout = setTimeout(() => {
       setLoading(false);
-    }, 10000);
+    }, 3000);
 
-    // Fast sync fallback for deep links (especially new apps not in cache) - raised to 10 seconds to prevent premature failure states
+    // Fast sync fallback for deep links (especially new apps not in cache) - set to 3 seconds for snappy visual performance
     const syncTimeout = setTimeout(() => {
       setLoadedFromServer(true);
       setAppsSyncedWithServer(true);
@@ -238,13 +253,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setBlogsSyncedWithServer(true);
       setVideosSyncedWithServer(true);
       
-      // Prevent dynamic page loader from hanging when server cold start exceeds 10 seconds
       setServerAppsFetched(true);
       setServerNewsFetched(true);
       setServerBlogsFetched(true);
       setServerVideosFetched(true);
       setLoading(false);
-    }, 10000);
+    }, 3000);
 
     const checkConnection = async () => {
       try {
@@ -295,19 +309,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const connInterval = setInterval(checkConnection, 60000);
 
     const unsubs = [
-      onSnapshot(doc(db, 'store_data', 'apps'), { includeMetadataChanges: true }, (snap) => {
+      onSnapshot(doc(db, 'store_data', 'apps'), (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
-          setApps(data);
+          setApps(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
           localStorage.setItem('yonostore_apps', JSON.stringify(data));
+          
+          setAppsSyncedWithServer(true);
+          setServerAppsFetched(true);
+          setLoadedFromServer(true);
           
           if (!snap.metadata.fromCache) {
             setIsConnected(true);
             setIsLive(true);
             setLastSyncTime(new Date().toLocaleTimeString());
-            setAppsSyncedWithServer(true);
-            setServerAppsFetched(true);
-            setLoadedFromServer(true);
           }
           checkLoaded('apps');
         } else {
@@ -323,16 +338,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setLoadedFromServer(true);
         checkLoaded('apps');
       }),
-      onSnapshot(doc(db, 'store_data', 'settings'), { includeMetadataChanges: true }, (snap) => {
+      onSnapshot(doc(db, 'store_data', 'settings'), (snap) => {
         if (snap.exists()) {
           const data = snap.data() as GlobalSettings;
-          setSettings(data);
+          setSettings(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
           localStorage.setItem('yonostore_settings', JSON.stringify(data));
+          
+          setSettingsSyncedWithServer(true);
+          setLoadedFromServer(true);
+          
           if (!snap.metadata.fromCache) {
             setIsConnected(true);
             setIsLive(true);
-            setSettingsSyncedWithServer(true);
-            setLoadedFromServer(true);
           }
         } else {
           setSettingsSyncedWithServer(true);
@@ -345,16 +362,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setLoadedFromServer(true);
         checkLoaded('settings');
       }),
-      onSnapshot(doc(db, 'store_data', 'news'), { includeMetadataChanges: true }, (snap) => {
+      onSnapshot(doc(db, 'store_data', 'news'), (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
-          setNews(data);
+          setNews(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
           localStorage.setItem('yonostore_news', JSON.stringify(data));
           
-          if (!snap.metadata.fromCache) {
-            setNewsSyncedWithServer(true);
-            setServerNewsFetched(true);
-          }
+          setNewsSyncedWithServer(true);
+          setServerNewsFetched(true);
+          
           checkLoaded('news');
         } else {
           setNewsSyncedWithServer(true);
@@ -367,16 +383,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setServerNewsFetched(true);
         checkLoaded('news');
       }),
-      onSnapshot(doc(db, 'store_data', 'blogs'), { includeMetadataChanges: true }, (snap) => {
+      onSnapshot(doc(db, 'store_data', 'blogs'), (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
-          setBlogs(data);
+          setBlogs(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
           localStorage.setItem('yonostore_blogs', JSON.stringify(data));
           
-          if (!snap.metadata.fromCache) {
-            setBlogsSyncedWithServer(true);
-            setServerBlogsFetched(true);
-          }
+          setBlogsSyncedWithServer(true);
+          setServerBlogsFetched(true);
+          
           checkLoaded('blogs');
         } else {
           setBlogsSyncedWithServer(true);
@@ -389,16 +404,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setServerBlogsFetched(true);
         checkLoaded('blogs');
       }),
-      onSnapshot(doc(db, 'store_data', 'videos'), { includeMetadataChanges: true }, (snap) => {
+      onSnapshot(doc(db, 'store_data', 'videos'), (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
-          setVideos(data);
+          setVideos(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
           localStorage.setItem('yonostore_videos', JSON.stringify(data));
           
-          if (!snap.metadata.fromCache) {
-            setVideosSyncedWithServer(true);
-            setServerVideosFetched(true);
-          }
+          setVideosSyncedWithServer(true);
+          setServerVideosFetched(true);
+          
           checkLoaded('videos');
         } else {
           setVideosSyncedWithServer(true);
@@ -412,7 +426,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         checkLoaded('videos');
       })
     ];
-    
+
     return () => {
       unsubs.forEach(u => u());
       if (timeout) clearTimeout(timeout);
@@ -431,11 +445,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const docRef = doc(db, 'store_data', 'apps');
       const now = new Date().toISOString();
       
-      console.log("Cloud: Pushing Apps update (non-blocking)...");
-      // Fire-and-forget write to Firestore so UI does not hang for server response
-      setDoc(docRef, { items: newApps, last_updated: now })
-        .then(() => console.log("Cloud: Apps update acknowledged by server."))
-        .catch(err => console.error("Cloud: Apps sync failed in background:", err));
+      console.log("Cloud: Pushing Apps update...");
+      await setDoc(docRef, { items: newApps, last_updated: now });
+      console.log("Cloud: Apps update acknowledged by server.");
 
       if (gitConfig?.autoSync) {
         console.log("GitHub Sync: AutoSync engaged. Triggering compile and commit...");
@@ -466,11 +478,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const docRef = doc(db, 'store_data', 'settings');
-      console.log("Cloud: Pushing Settings update (non-blocking)...");
-      // Fire-and-forget write to Firestore so UI does not hang for server response
-      setDoc(docRef, settingsWithTime)
-        .then(() => console.log("Cloud: Settings update acknowledged by server."))
-        .catch(err => console.error("Cloud: Settings sync failed in background:", err));
+      console.log("Cloud: Pushing Settings update...");
+      await setDoc(docRef, settingsWithTime);
+      console.log("Cloud: Settings update acknowledged by server.");
 
       if (gitConfig?.autoSync) {
         console.log("GitHub Sync: AutoSync engaged for Settings updates...");
@@ -498,11 +508,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const docRef = doc(db, 'store_data', 'news');
-      console.log("Cloud: Pushing News update (non-blocking)...");
-      // Fire-and-forget write to Firestore so UI does not hang for server response
-      setDoc(docRef, { items: newNews })
-        .then(() => console.log("Cloud: News update acknowledged by server."))
-        .catch(err => console.error("Cloud: News sync failed in background:", err));
+      console.log("Cloud: Pushing News update...");
+      await setDoc(docRef, { items: newNews });
+      console.log("Cloud: News update acknowledged by server.");
 
       if (gitConfig?.autoSync) {
         console.log("GitHub Sync: AutoSync engaged for News updates...");
@@ -530,11 +538,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const docRef = doc(db, 'store_data', 'blogs');
-      console.log("Cloud: Pushing Blogs update (non-blocking)...");
-      // Fire-and-forget write to Firestore so UI does not hang for server response
-      setDoc(docRef, { items: newBlogs })
-        .then(() => console.log("Cloud: Blogs update acknowledged by server."))
-        .catch(err => console.error("Cloud: Blogs sync failed in background:", err));
+      console.log("Cloud: Pushing Blogs update...");
+      await setDoc(docRef, { items: newBlogs });
+      console.log("Cloud: Blogs update acknowledged by server.");
 
       if (gitConfig?.autoSync) {
         console.log("GitHub Sync: AutoSync engaged for Blogs updates...");
@@ -562,11 +568,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const docRef = doc(db, 'store_data', 'videos');
-      console.log("Cloud: Pushing Videos update (non-blocking)...");
-      // Fire-and-forget write to Firestore so UI does not hang for server response
-      setDoc(docRef, { items: newVideos })
-        .then(() => console.log("Cloud: Videos update acknowledged by server."))
-        .catch(err => console.error("Cloud: Videos sync failed in background:", err));
+      console.log("Cloud: Pushing Videos update...");
+      await setDoc(docRef, { items: newVideos });
+      console.log("Cloud: Videos update acknowledged by server.");
 
       if (gitConfig?.autoSync) {
         console.log("GitHub Sync: AutoSync engaged for Videos updates...");
