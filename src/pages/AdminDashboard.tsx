@@ -431,7 +431,7 @@ const SettingsTab = React.memo(({ mockSettings, handleSaveSettings, saving }: an
       </div>
 
       <div className="space-y-6">
-        <h3 className="font-black text-pink-500 border-b border-pink-500/10 pb-2 uppercase tracking-widest text-xs italic">Transparency Portal & Disclaimers</h3>
+        <h3 className="font-black text-pink-500 border-b border-pink-500/10 pb-2 uppercase tracking-widest text-xs italic">RUMMY STORE & Disclaimers</h3>
         <div className="grid gap-6">
           <div>
             <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Portal Main Heading</label>

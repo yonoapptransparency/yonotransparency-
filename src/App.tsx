@@ -28,7 +28,6 @@ const FallbackRouteMatcher = lazy(() => import('./components/FallbackRouteMatche
 import Ticker from './components/Ticker';
 import SupportWidget from './components/SupportWidget';
 import GlobalSearch from './components/GlobalSearch';
-import { AgeVerificationGate } from './components/AgeVerificationGate';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -487,26 +486,7 @@ function LoadingScreen() {
 function AppContent() {
   const { settings } = useData();
   const location = useLocation();
-  const [isAgeVerified, setIsAgeVerified] = useState(() => {
-    try {
-      if (typeof window !== 'undefined' && navigator.userAgent) {
-        const botUserAgents = [
-          'googlebot', 'bingbot', 'yandex', 'baidu', 'duckduck', 'yahoo',
-          'lighthouse', 'chrome-lighthouse', 'gptbot', 'chatgpt', 'claudebot', 
-          'anthropic', 'google-extended', 'gemini', 'perplexity', 'cohere', 
-          'facebookexternalhit', 'twitterbot', 'linkedinbot', 'bot', 'crawl',
-          'spider', 'slurp', 'archiver'
-        ];
-        const ua = navigator.userAgent.toLowerCase();
-        if (botUserAgents.some(bot => ua.includes(bot))) {
-          return true;
-        }
-      }
-      return localStorage.getItem('rummystore_age_verified') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [isAgeVerified, setIsAgeVerified] = useState(true);
 
   const isAdminPath = location.pathname.startsWith('/x9k2m7-admin');
 
@@ -578,15 +558,11 @@ function AppContent() {
   }, [settings, location.pathname]);
 
   useEffect(() => {
-    if (!isAgeVerified && !isAdminPath) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = '';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isAgeVerified, isAdminPath]);
+  }, [isAdminPath]);
 
   return (
     <div className="flex flex-col min-h-screen selection:bg-red-600/20">
@@ -637,10 +613,6 @@ function AppContent() {
       {memoizedFooter}
       {memoizedBottomNav}
       <BackToTop />
-
-      {!isAgeVerified && !isAdminPath && (
-        <AgeVerificationGate onVerify={() => setIsAgeVerified(true)} />
-      )}
     </div>
   );
 }

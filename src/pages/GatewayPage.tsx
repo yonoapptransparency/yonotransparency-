@@ -225,10 +225,10 @@ export default function GatewayPage() {
       </div>
       <Helmet>
         <title>{`${app.name} - Technical Info & Secure Clearance`}</title>
-        <meta name="description" content={`Verified technical specs and secure access profile for ${app.name}. Checked by Transparency Portal.`} />
+        <meta name="description" content={`Verified technical specs and secure access profile for ${app.name}. Checked by RUMMY STORE.`} />
         {app.seo_keywords && <meta name="keywords" content={`${app.seo_keywords}, info ${app.name}, ${app.name} technical info, secure ${app.name}`} />}
         <meta property="og:title" content={`Secure Access Profile: ${app.name}`} />
-        <meta property="og:description" content={`Authorized security information and specifications access for ${app.name}. Verified by Transparency Portal.`} />
+        <meta property="og:description" content={`Authorized security information and specifications access for ${app.name}. Verified by RUMMY STORE.`} />
         <meta property="og:image" content={app.og_image_url || app.icon_url} />
         <meta name="robots" content="index, follow" />
         {app.canonical_url && <link rel="canonical" href={app.canonical_url} />}

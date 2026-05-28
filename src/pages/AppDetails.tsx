@@ -177,7 +177,7 @@ export default function AppDetails() {
         <title>{title}</title>
         <meta name="description" content={desc} />
         {app.seo_keywords && <meta name="keywords" content={app.seo_keywords} />}
-        <meta name="author" content="Transparency Portal" />
+        <meta name="author" content="RUMMY STORE" />
         <meta name="robots" content="index, follow" />
         {app.target_region && <meta name="geo.region" content={app.target_region} />}
         {app.target_region && <meta name="coverage" content={app.target_region} />}

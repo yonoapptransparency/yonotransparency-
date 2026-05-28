@@ -93,7 +93,7 @@ export default function Home() {
         <title>{mockSettings.site_title}</title>
         <meta name="description" content={mockSettings.meta_description} />
         {mockSettings.seo_keywords && <meta name="keywords" content={mockSettings.seo_keywords} />}
-        <meta name="author" content="Transparency Portal" />
+        <meta name="author" content="RUMMY STORE" />
         <meta name="robots" content="index, follow" />
         
         <meta property="og:type" content="website" />
