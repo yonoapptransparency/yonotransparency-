@@ -999,6 +999,21 @@ export default function AdminDashboard() {
   const [user, setUser] = useState<any>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isAdminUser, setIsAdminUser] = useState<boolean | null>(null);
+  const [confirmConfig, setConfirmConfig] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void | Promise<void>;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Yes, Delete',
+    cancelText: 'Cancel',
+    onConfirm: () => {}
+  });
 
   // Use a ref to initialize state exactly once on first load
   // This shields active typed text fields from being silently discarded by background snapshots
@@ -1152,23 +1167,30 @@ export default function AdminDashboard() {
     }
   };
 
-  const removeCategory = async (catToRemove: string) => {
-    if (window.confirm(`Are you sure you want to remove the category "${catToRemove}"? Apps using this category won't be deleted, but this tab will be removed.`)) {
-      const updatedList = categoriesList.filter(c => c !== catToRemove);
-      setCategoriesList(updatedList);
-      setSaving(true);
-      try {
-        await saveMockSettings({
-          ...mockSettings,
-          categories: updatedList
-        });
-        triggerHaptic();
-      } catch (err: any) {
-        alert('Cloud Sync Failed: ' + (err.message || err));
-      } finally {
-        setSaving(false);
+  const removeCategory = (catToRemove: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Remove Category',
+      message: `Are you sure you want to remove the category "${catToRemove}"? Apps using this category won't be deleted, but this tab will be removed.`,
+      confirmText: 'Remove Category',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        const updatedList = categoriesList.filter(c => c !== catToRemove);
+        setCategoriesList(updatedList);
+        setSaving(true);
+        try {
+          await saveMockSettings({
+            ...mockSettings,
+            categories: updatedList
+          });
+          triggerHaptic();
+        } catch (err: any) {
+          alert('Cloud Sync Failed: ' + (err.message || err));
+        } finally {
+          setSaving(false);
+        }
       }
-    }
+    });
   };
 
   const handleSaveSettings = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -1290,16 +1312,23 @@ export default function AdminDashboard() {
     }
   };
   
-  const handleDeleteApp = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this app?")) {
-      try {
-        const updatedApps = appsList.filter(a => a.id !== id);
-        await saveMockApps(updatedApps);
-        setAppsList(updatedApps);
-      } catch (err: any) {
-        alert('Error deleting app: ' + err.message);
+  const handleDeleteApp = (id: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Application',
+      message: 'Are you sure you want to delete this app? This will permanently wipe it from the cloud catalog.',
+      confirmText: 'Delete App',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        try {
+          const updatedApps = appsList.filter(a => a.id !== id);
+          await saveMockApps(updatedApps);
+          setAppsList(updatedApps);
+        } catch (err: any) {
+          alert('Error deleting app: ' + err.message);
+        }
       }
-    }
+    });
   };
 
   const handleSaveNews = async () => {
@@ -1335,7 +1364,16 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteBanner = (id: string) => {
-    setBanners(banners.filter(b => b.id !== id));
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Remove Banner',
+      message: 'Are you sure you want to remove this advertising banner? You will need to click "Sync Banners" at the bottom to publish this deletion.',
+      confirmText: 'Remove Banner',
+      cancelText: 'Cancel',
+      onConfirm: () => {
+        setBanners(banners.filter(b => b.id !== id));
+      }
+    });
   };
 
   const handleAddNews = () => {
@@ -1360,7 +1398,16 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteNews = (id: string) => {
-    setNewsList(newsList.filter(n => n.id !== id));
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Remove News Item',
+      message: 'Are you sure you want to remove this news item? You will need to click "Save News System" below to publish this deletion.',
+      confirmText: 'Remove News',
+      cancelText: 'Cancel',
+      onConfirm: () => {
+        setNewsList(newsList.filter(n => n.id !== id));
+      }
+    });
   };
 
   const handleSaveBlogs = async () => {
@@ -1399,7 +1446,16 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteBlog = (id: string) => {
-    setBlogs(blogs.filter(b => b.id !== id));
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Remove Blog Post',
+      message: 'Are you sure you want to remove this blog post? You will need to click "Save Blogs" below to publish this deletion.',
+      confirmText: 'Remove Post',
+      cancelText: 'Cancel',
+      onConfirm: () => {
+        setBlogs(blogs.filter(b => b.id !== id));
+      }
+    });
   };
 
   const handleVideosChange = (id: string, field: string, value: string) => {
@@ -1422,7 +1478,16 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteVideo = (id: string) => {
-    setVideosList(videosList.filter(v => v.id !== id));
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Remove Video Listing',
+      message: 'Are you sure you want to remove this video listing? You will need to click "Save Videos" below to publish this deletion.',
+      confirmText: 'Remove Video',
+      cancelText: 'Cancel',
+      onConfirm: () => {
+        setVideosList(videosList.filter(v => v.id !== id));
+      }
+    });
   };
 
   const handleSaveVideos = async () => {
@@ -1729,6 +1794,49 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Custom Confirm Dialog Modal */}
+      {confirmConfig.isOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in animate-duration-150">
+          <div className="bg-white dark:bg-slate-900 border-4 border-pink-500 rounded-[2.5rem] p-8 max-w-md w-full shadow-[0_0_50px_rgba(236,72,153,0.3)] text-center transform scale-100 transition-all">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-pink-500/10 dark:bg-pink-500/20 rounded-full flex items-center justify-center border-2 border-pink-500/20 text-pink-500">
+                <Trash2 className="w-8 h-8 animate-bounce" />
+              </div>
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase italic tracking-tighter">
+              {confirmConfig.title || 'Are you sure?'}
+            </h3>
+            <p className="text-slate-600 dark:text-slate-300 font-bold text-sm mb-8 leading-relaxed">
+              {confirmConfig.message}
+            </p>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                className="flex-1 min-h-[50px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-black uppercase text-[11px] tracking-widest italic rounded-2xl border-2 border-black/10 dark:border-white/10 transition-all active:scale-95"
+              >
+                {confirmConfig.cancelText || 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await confirmConfig.onConfirm();
+                  } catch (e: any) {
+                    console.error("Confirmation execution failed:", e);
+                  } finally {
+                    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+                  }
+                }}
+                className="flex-1 min-h-[50px] bg-pink-500 hover:bg-pink-600 text-white font-black uppercase text-[11px] tracking-widest italic rounded-2xl shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 transition-all active:scale-95"
+              >
+                {confirmConfig.confirmText || 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -360,6 +360,7 @@ function SyncStatus() {
   const { isConnected, refreshAll, lastSyncTime, testCloudConnection, isLive } = useData();
   const [syncing, setSyncing] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   
   const handleForceSync = async () => {
     if (syncing) return;
@@ -387,7 +388,10 @@ function SyncStatus() {
   };
 
   const handleClearCache = () => {
-    if (window.confirm("Hard Reset: This will clear local memory and reload. Continue?")) {
+    if (!confirmClear) {
+      setConfirmClear(true);
+      setTimeout(() => setConfirmClear(false), 4000);
+    } else {
       localStorage.clear();
       window.location.reload();
     }
@@ -419,9 +423,9 @@ function SyncStatus() {
         </button>
         <button 
           onClick={handleClearCache}
-          className="text-[9px] text-slate-500 hover:text-slate-700 underline decoration-slate-500/20"
+          className={`text-[9px] font-black uppercase tracking-widest transition-all ${confirmClear ? 'text-rose-500 scale-105' : 'text-slate-500 hover:text-slate-700 underline decoration-slate-500/20'}`}
         >
-          Reset Cache
+          {confirmClear ? 'Tap to Confirm Reset' : 'Reset Cache'}
         </button>
       </div>
     </div>
