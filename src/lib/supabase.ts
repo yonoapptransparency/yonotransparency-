@@ -141,7 +141,7 @@ export interface VideoItem {
   created_at: string;
 }
 
-const savedApps = typeof window !== 'undefined' ? localStorage.getItem('yonostore_apps') : null;
+const savedApps = typeof window !== 'undefined' ? localStorage.getItem('rummystore_apps') : null;
 export const mockApps: AppConfig[] = savedApps ? (() => {
   try { return JSON.parse(savedApps); } catch { return []; }
 })() : [
@@ -218,11 +218,11 @@ export const mockApps: AppConfig[] = savedApps ? (() => {
 ];
 
 export const saveMockApps = (apps: AppConfig[]) => {
-  localStorage.setItem('yonostore_apps', JSON.stringify(apps));
+  localStorage.setItem('rummystore_apps', JSON.stringify(apps));
   mockApps.splice(0, mockApps.length, ...apps);
 };
 
-const savedSettings = typeof window !== 'undefined' ? localStorage.getItem('yonostore_settings') : null;
+const savedSettings = typeof window !== 'undefined' ? localStorage.getItem('rummystore_settings') : null;
 export const mockSettings: GlobalSettings = savedSettings ? ((): GlobalSettings => {
   try { return JSON.parse(savedSettings); } catch { return {} as GlobalSettings; }
 })() : {
@@ -259,11 +259,11 @@ export const mockSettings: GlobalSettings = savedSettings ? ((): GlobalSettings 
 };
 
 export const saveMockSettings = (settings: GlobalSettings) => {
-  localStorage.setItem('yonostore_settings', JSON.stringify(settings));
+  localStorage.setItem('rummystore_settings', JSON.stringify(settings));
   Object.assign(mockSettings, settings);
 };
 
-const savedNews = typeof window !== 'undefined' ? localStorage.getItem('yonostore_news') : null;
+const savedNews = typeof window !== 'undefined' ? localStorage.getItem('rummystore_news') : null;
 export const mockNews: NewsItem[] = savedNews ? (() => {
   try { return JSON.parse(savedNews); } catch { return []; }
 })() : [
@@ -284,11 +284,11 @@ export const mockNews: NewsItem[] = savedNews ? (() => {
 ];
 
 export const saveMockNews = (newsList: NewsItem[]) => {
-  localStorage.setItem('yonostore_news', JSON.stringify(newsList));
+  localStorage.setItem('rummystore_news', JSON.stringify(newsList));
   mockNews.splice(0, mockNews.length, ...newsList);
 };
 
-const savedBlogs = typeof window !== 'undefined' ? localStorage.getItem('yonostore_blogs') : null;
+const savedBlogs = typeof window !== 'undefined' ? localStorage.getItem('rummystore_blogs') : null;
 export const mockBlogs: BlogPost[] = savedBlogs ? (() => {
   try { return JSON.parse(savedBlogs); } catch { return []; }
 })() : [
@@ -307,11 +307,11 @@ export const mockBlogs: BlogPost[] = savedBlogs ? (() => {
 ];
 
 export const saveMockBlogs = (blogs: BlogPost[]) => {
-  localStorage.setItem('yonostore_blogs', JSON.stringify(blogs));
+  localStorage.setItem('rummystore_blogs', JSON.stringify(blogs));
   mockBlogs.splice(0, mockBlogs.length, ...blogs);
 };
 
-const savedVideos = typeof window !== 'undefined' ? localStorage.getItem('yonostore_videos') : null;
+const savedVideos = typeof window !== 'undefined' ? localStorage.getItem('rummystore_videos') : null;
 export const mockVideos: VideoItem[] = savedVideos ? (() => {
   try { return JSON.parse(savedVideos); } catch { return []; }
 })() : [
@@ -328,6 +328,6 @@ export const mockVideos: VideoItem[] = savedVideos ? (() => {
 ];
 
 export const saveMockVideos = (videos: VideoItem[]) => {
-  localStorage.setItem('yonostore_videos', JSON.stringify(videos));
+  localStorage.setItem('rummystore_videos', JSON.stringify(videos));
   mockVideos.splice(0, mockVideos.length, ...videos);
 };

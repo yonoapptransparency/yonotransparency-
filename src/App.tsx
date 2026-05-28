@@ -502,7 +502,7 @@ function AppContent() {
           return true;
         }
       }
-      return localStorage.getItem('yonostore_age_verified') === 'true';
+      return localStorage.getItem('rummystore_age_verified') === 'true';
     } catch {
       return false;
     }

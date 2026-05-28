@@ -333,7 +333,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (fetchedData) {
           const data = loadedApps;
           setApps(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
-          localStorage.setItem('yonostore_apps', JSON.stringify(data));
+          localStorage.setItem('rummystore_apps', JSON.stringify(data));
           
           setAppsSyncedWithServer(true);
           setServerAppsFetched(true);
@@ -362,7 +362,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (snap.exists()) {
           const data = snap.data() as GlobalSettings;
           setSettings(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
-          localStorage.setItem('yonostore_settings', JSON.stringify(data));
+          localStorage.setItem('rummystore_settings', JSON.stringify(data));
           
           setSettingsSyncedWithServer(true);
           setLoadedFromServer(true);
@@ -386,7 +386,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (snap.exists()) {
           const data = snap.data().items || [];
           setNews(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
-          localStorage.setItem('yonostore_news', JSON.stringify(data));
+          localStorage.setItem('rummystore_news', JSON.stringify(data));
           
           setNewsSyncedWithServer(true);
           setServerNewsFetched(true);
@@ -407,7 +407,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (snap.exists()) {
           const data = snap.data().items || [];
           setBlogs(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
-          localStorage.setItem('yonostore_blogs', JSON.stringify(data));
+          localStorage.setItem('rummystore_blogs', JSON.stringify(data));
           
           setBlogsSyncedWithServer(true);
           setServerBlogsFetched(true);
@@ -428,7 +428,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (snap.exists()) {
           const data = snap.data().items || [];
           setVideos(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
-          localStorage.setItem('yonostore_videos', JSON.stringify(data));
+          localStorage.setItem('rummystore_videos', JSON.stringify(data));
           
           setVideosSyncedWithServer(true);
           setServerVideosFetched(true);
@@ -459,7 +459,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const saveApps = React.useCallback(async (newApps: AppConfig[]) => {
     // 1. Snappy optimistic update to local state and local memory first
     setApps(newApps);
-    localStorage.setItem('yonostore_apps', JSON.stringify(newApps));
+    localStorage.setItem('rummystore_apps', JSON.stringify(newApps));
 
     try {
       console.log("Cloud: Pushing Apps update in chunks...");
@@ -502,7 +502,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     // 1. Snappy optimistic update to local state and local memory first
     setSettings(settingsWithTime);
-    localStorage.setItem('yonostore_settings', JSON.stringify(settingsWithTime));
+    localStorage.setItem('rummystore_settings', JSON.stringify(settingsWithTime));
 
     try {
       const docRef = doc(db, 'store_data', 'settings');
@@ -532,7 +532,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const saveNews = React.useCallback(async (newNews: NewsItem[]) => {
     // 1. Snappy optimistic update to local state and local memory first
     setNews(newNews);
-    localStorage.setItem('yonostore_news', JSON.stringify(newNews));
+    localStorage.setItem('rummystore_news', JSON.stringify(newNews));
 
     try {
       const docRef = doc(db, 'store_data', 'news');
@@ -562,7 +562,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const saveBlogs = React.useCallback(async (newBlogs: BlogPost[]) => {
     // 1. Snappy optimistic update to local state and local memory first
     setBlogs(newBlogs);
-    localStorage.setItem('yonostore_blogs', JSON.stringify(newBlogs));
+    localStorage.setItem('rummystore_blogs', JSON.stringify(newBlogs));
 
     try {
       const docRef = doc(db, 'store_data', 'blogs');
@@ -592,7 +592,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const saveVideos = React.useCallback(async (newVideos: VideoItem[]) => {
     // 1. Snappy optimistic update to local state and local memory first
     setVideos(newVideos);
-    localStorage.setItem('yonostore_videos', JSON.stringify(newVideos));
+    localStorage.setItem('rummystore_videos', JSON.stringify(newVideos));
 
     try {
       const docRef = doc(db, 'store_data', 'videos');
@@ -703,14 +703,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                 }
               }
               setApps(allApps);
-              localStorage.setItem('yonostore_apps', JSON.stringify(allApps));
+              localStorage.setItem('rummystore_apps', JSON.stringify(allApps));
             } else {
               // Fallback to old document
               const oldSnap = await withServerConfirmation(() => getDoc(doc(db, 'store_data', 'apps')), 3000);
               if (oldSnap.exists() && oldSnap.data().items) {
                 const data = oldSnap.data().items;
                 setApps(data);
-                localStorage.setItem('yonostore_apps', JSON.stringify(data));
+                localStorage.setItem('rummystore_apps', JSON.stringify(data));
               }
             }
           } else {
@@ -719,7 +719,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             if (snap.exists()) {
               const data = (d as any).key ? (snap.data() as any)[(d as any).key] : snap.data();
               d.setter(data);
-              localStorage.setItem(`yonostore_${d.path}`, JSON.stringify(data));
+              localStorage.setItem(`rummystore_${d.path}`, JSON.stringify(data));
             }
           }
         } catch (fetchErr) {

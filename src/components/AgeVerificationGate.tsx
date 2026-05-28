@@ -31,7 +31,7 @@ export const AgeVerificationGate: React.FC<AgeVerificationGateProps> = ({ onVeri
 
   const handleVerify = () => {
     try {
-      localStorage.setItem('yonostore_age_verified', 'true');
+      localStorage.setItem('rummystore_age_verified', 'true');
     } catch (e) {
       console.error('Failed to save age verification state:', e);
     }
