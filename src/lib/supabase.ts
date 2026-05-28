@@ -175,10 +175,10 @@ export const mockApps: AppConfig[] = [
     "name": "YONO RUMMY"
   },
   {
-    "red_box_msg": "This is a real-money gaming app. Financial risk is involved. We are an independent review site and are not responsible for any financial loss.\"",
+    "red_box_msg": ".",
     "seo_description": "Spin Crush Special is a platform focused on transparent gameplay insights, user reviews, platform analysis, and responsible gaming awareness. Explore skill-based gaming experiences, interface performance, user feedback, gameplay features, and detailed platform insights designed to help users make informed decisions with confidence.",
     "icon_url": "https://res.cloudinary.com/dq34n0ncz/image/upload/f_auto,q_auto/1000119573_wzwse4",
-    "yellow_box_msg": "Game responsibly. Your security and your budget are under your control. Use this app only for entertainment, never as a source of income.",
+    "yellow_box_msg": "J",
     "version": "1.0",
     "file_size": "45",
     "is_new": false,
@@ -187,7 +187,7 @@ export const mockApps: AppConfig[] = [
     "og_image_url": "https://res.cloudinary.com/dq34n0ncz/image/upload/f_auto,q_auto/1000119573_wzwse4",
     "seo_keywords": "spin crush special, spin crush review, spin crush game, spin crush platform, spin crush analysis, spin crush user reviews, skill based gaming, gameplay insights, responsible gaming, gaming transparency, spin crush experience, platform analysis, card gaming platform, user experience, mobile gaming insights, online gaming india, gaming awareness, transparent reviews",
     "screenshots": [],
-    "custom_admin_box_heading": "Spin Crush is a mobile gaming application that is part of the broader \"Yono Games\" ecosystem (which includes related apps like Yono Rummy, Yono Slots, and Yono VIP). It is primarily designed for Android devices and offers a collection of casual, puzzle, and casino-style \"spin\" games.",
+    "custom_admin_box_heading": "H",
     "safety_status": "Unsafe",
     "target_region": "India, South Asia",
     "category": "All App, Yono",
@@ -198,7 +198,7 @@ export const mockApps: AppConfig[] = [
     "custom_admin_box_html": "",
     "created_at": "2026-05-19T12:43:59.040Z",
     "slug": "spin-crush-",
-    "idea_box_msg": "Tip: Use our rating system to compare app performance and stability before you decide to download",
+    "idea_box_msg": "Y",
     "id": "q82dbbwh4",
     "rating": 5,
     "faqs": [
