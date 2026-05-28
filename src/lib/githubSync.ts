@@ -32,27 +32,11 @@ export function generateSupabaseFileCode(
   blogs: any[],
   videos: any[]
 ): string {
-  // Optimize payload size by stripping massive HTML blobs from the static JS bundle
-  const cleanApps = JSON.parse(JSON.stringify(apps)).map((a: any) => ({
-    ...a,
-    description_html: '', // Load dynamically from Firebase to save bundle size
-    custom_admin_box_html: '',
-    screenshots: a.screenshots ? a.screenshots.slice(0, 1) : [], // only keep the first screenshot for SEO
-  }));
+  // Let us clean up and default any potential circular refs or undef values by round-tripping
+  const cleanApps = JSON.parse(JSON.stringify(apps));
   const cleanSettings = JSON.parse(JSON.stringify(settings));
-  cleanSettings.about_content = '';
-  cleanSettings.contact_content = '';
-  cleanSettings.privacy_content = '';
-  cleanSettings.terms_content = '';
-  cleanSettings.responsibility_content = '';
-  const cleanNews = JSON.parse(JSON.stringify(news)).map((n: any) => ({
-    ...n,
-    content: '' 
-  }));
-  const cleanBlogs = JSON.parse(JSON.stringify(blogs)).map((b: any) => ({
-    ...b,
-    content: ''
-  }));
+  const cleanNews = JSON.parse(JSON.stringify(news));
+  const cleanBlogs = JSON.parse(JSON.stringify(blogs));
   const cleanVideos = JSON.parse(JSON.stringify(videos));
 
   return `import { createClient } from '@supabase/supabase-js';

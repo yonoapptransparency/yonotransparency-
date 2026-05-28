@@ -527,7 +527,7 @@ function AppContent() {
 
   useEffect(() => {
     // Simplify metadata update for better performance feel
-    document.title = settings.site_title || 'YonoStore';
+    document.title = settings.site_title || 'RUMMY STORE';
     
     const setMeta = (selector: string, content: string) => {
       const el = document.querySelector(selector);

@@ -51,7 +51,7 @@ export default function VideosPage() {
       </div>
 
       <Helmet>
-        <title>Video Transmissions - {mockSettings.site_title || 'YonoStore'}</title>
+        <title>Video Transmissions - {mockSettings.site_title || 'RUMMY STORE'}</title>
         <meta name="description" content="Watch high-quality video walkthroughs, tutorials, and security analysis of our verified applications." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={window.location.origin + "/videos"} />

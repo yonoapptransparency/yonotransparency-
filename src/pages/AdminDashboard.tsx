@@ -552,7 +552,7 @@ const GithubSyncTab = React.memo(({ gitConfig, saveGitConfig, pushAllToGitHub, g
         token: token.trim(),
         autoSync
       });
-      setSyncStatus({ success: true, message: 'Success! Committed to GitHub successfully. Vercel deployment has been triggered.' });
+      setSyncStatus({ success: true, message: 'Success! Committed to GitHub successfully. A deployment has been automatically triggered.' });
     } catch (err: any) {
       console.error(err);
       setSyncStatus({ success: false, message: 'GitHub Sync Failed: ' + (err.message || 'Unknown network error. Check repository permissions.') });
@@ -682,7 +682,7 @@ const GithubSyncTab = React.memo(({ gitConfig, saveGitConfig, pushAllToGitHub, g
               Due to serverless constraints, free web-servers can experience <strong>cold starts</strong>, resulting in blank pages or infinite loading loops for new visitors.
             </p>
             <p className="border-l-4 border-pink-500 pl-3 italic text-pink-500 text-[10px]">
-              This engine solves that! By syncing updates back to GitHub, Vercel compiles all database rows (apps, settings, news, blogs, and videos) statically into the code.
+              This engine solves that! By syncing updates back to GitHub, your hosting provider compiles all database rows (apps, settings, news, blogs, and videos) statically into the code.
             </p>
             <p>
               The static compiled code loads instantly (under 100ms) with zero database waiting period!

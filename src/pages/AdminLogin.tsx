@@ -18,14 +18,13 @@ export default function AdminLogin() {
   const [decryptionProgress, setDecryptionProgress] = useState(10);
 
   useEffect(() => {
-    // Check if we are on a Netlify preview domain or wrong domain which might cause auth issues
     const host = window.location.hostname;
-    const isMainDomain = host === 'yonostored.netlify.app' || host === 'yonostored.in' || host === 'www.yonostored.in' || host.endsWith('.yonostored.in') || host === 'localhost' || host === '127.0.0.1' || host.includes('vercel.app');
+    const isMainDomain = host === 'localhost' || host === '127.0.0.1' || !host.includes('run.app');
     
     // Check if we are on an AI Studio preview domain
     const isAiStudio = host.includes('run.app');
 
-    if ((!isMainDomain && !isAiStudio) || (host.includes('--') && host.includes('netlify.app'))) {
+    if (!isMainDomain && !isAiStudio) {
       setDomainMismatch(true);
     }
 
@@ -135,22 +134,8 @@ export default function AdminLogin() {
             <p className="text-xs text-amber-500 font-bold mb-2">AUTH DOMAIN NOTICE</p>
             <p className="text-xs opacity-60 mb-3">
               You are currently on <strong>{window.location.hostname}</strong>. 
-              Firebase might reject login from this URL unless you've added it to "Authorized Domains".
+              Firebase might reject login from this URL unless you've added it to "Authorized Domains" in your Firebase console. Please access this admin panel from your primary authorized domain.
             </p>
-            <div className="space-y-2">
-              <a 
-                href="https://yonostored.in/x9k2m7-admin/login" 
-                className="block w-full text-center bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold py-2 rounded transition-colors"
-              >
-                Go to Custom Domain (yonostored.in)
-              </a>
-              <a 
-                href="https://yonostored.vercel.app/x9k2m7-admin/login" 
-                className="block w-full text-center bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white text-xs font-bold py-2 rounded transition-colors"
-              >
-                Go to Vercel Domain (yonostored.vercel.app)
-              </a>
-            </div>
           </div>
         )}
 
