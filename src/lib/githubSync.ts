@@ -305,8 +305,9 @@ export async function commitFileToGitHub({
 
   try {
     const res = await fetch(
-      `https://api.github.com/repos/${cleanOwner}/${cleanRepo}/contents/${cleanPath}?ref=${cleanBranch}&_nocache=${Date.now()}`,
+      `https://api.github.com/repos/${cleanOwner}/${cleanRepo}/contents/${cleanPath}?ref=${cleanBranch}`,
       {
+        cache: 'no-store',
         headers: {
           'Authorization': authHeader,
           'Accept': 'application/vnd.github.v3+json',
