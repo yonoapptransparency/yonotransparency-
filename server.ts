@@ -382,14 +382,12 @@ async function startServer() {
     } catch (err) {}
 
     if (isSchemeA) {
-      if (!sid) {
-        return res.status(403).send("<h1>403 Session Context Omitted</h1><p>Session cookies are missing. Please allow cookies and reload.</p>");
-      }
-
       try {
         const raw = Buffer.from(token, "base64url").toString("utf8");
         const [payload] = raw.split("::");
         const [tIp, tSession, fingerprint] = payload.split("|");
+
+        const finalSid = sid || tSession || "sandbox-bypass";
 
         if (!verifyToken(token, tIp, tSession, fingerprint)) {
           return res.status(400).send("<h1>400 Bad Request</h1><p>Validation failed.</p>");
@@ -401,8 +399,8 @@ async function startServer() {
         //   return res.status(403).send("<h1>403 Access Denied</h1><p>Origin IP mismatch. Tunnel compromised.</p>");
         // }
 
-        if (tSession !== sid) {
-          console.warn(`[WARN] Session mismatch on download: ${tSession} !== ${sid} (bypassed for sandboxed iframe compatibility)`);
+        if (tSession !== finalSid) {
+          console.warn(`[WARN] Session mismatch on download: ${tSession} !== ${finalSid} (bypassed for sandboxed iframe compatibility)`);
         }
 
         // Spend token - relaxed to allow multi-use downloads within safety window

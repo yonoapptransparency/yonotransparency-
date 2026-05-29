@@ -319,7 +319,7 @@ export default function GatewayPage() {
 
       {/* Strict Section Order 1: Admin Alert Boxes */}
       <div className="space-y-4 mb-20 max-w-4xl mx-auto px-4">
-        {app.red_box_msg && (
+        {app.red_box_msg && app.red_box_msg.trim() !== '.' && app.red_box_msg.trim() !== '' && (
           <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 p-6 rounded-[24px]">
             <h3 className="font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-2 mb-2 text-sm tracking-wide">
               <ShieldAlert className="w-4 h-4" /> Warning
@@ -327,7 +327,7 @@ export default function GatewayPage() {
             <p className="text-rose-700 dark:text-rose-300 font-medium text-base leading-relaxed">{app.red_box_msg}</p>
           </div>
         )}
-        {app.yellow_box_msg && (
+        {app.yellow_box_msg && app.yellow_box_msg.trim() !== '.' && app.yellow_box_msg.trim() !== '' && (
           <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 p-6 rounded-[24px]">
             <h3 className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-2 mb-2 text-sm tracking-wide">
               <AlertTriangle className="w-4 h-4" /> Notice
@@ -335,7 +335,7 @@ export default function GatewayPage() {
             <p className="text-amber-700 dark:text-amber-300 font-medium text-base leading-relaxed">{app.yellow_box_msg}</p>
           </div>
         )}
-        {app.idea_box_msg && (
+        {app.idea_box_msg && app.idea_box_msg.trim() !== '.' && app.idea_box_msg.trim() !== '' && (
           <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 p-6 rounded-[24px]">
             <h3 className="font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2 mb-2 text-sm tracking-wide">
               <Sparkles className="w-4 h-4" /> Tip

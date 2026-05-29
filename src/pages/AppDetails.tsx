@@ -297,7 +297,7 @@ export default function AppDetails() {
       {/* RESTORED SAFETY & INFO BOXES */}
       <div className="px-1 space-y-3 mb-8 max-w-3xl mx-auto">
 
-        {app.red_box_msg && (
+        {app.red_box_msg && app.red_box_msg.trim() !== '.' && app.red_box_msg.trim() !== '' && (
           <div className="bg-rose-50/50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 p-4 rounded-2xl flex items-start gap-4 shadow-sm group">
             <div className="p-2 bg-rose-100 dark:bg-rose-500/20 rounded-xl text-rose-600 shrink-0">
               <ShieldAlert className="w-5 h-5" />
@@ -308,7 +308,7 @@ export default function AppDetails() {
           </div>
         )}
         
-        {app.yellow_box_msg && (
+        {app.yellow_box_msg && app.yellow_box_msg.trim() !== '.' && app.yellow_box_msg.trim() !== '' && (
           <div className="bg-orange-50/50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 p-4 rounded-2xl flex items-start gap-4 shadow-sm group">
              <div className="p-2 bg-orange-100 dark:bg-orange-500/20 rounded-xl text-orange-600 shrink-0">
               <Info className="w-5 h-5" />
@@ -319,7 +319,7 @@ export default function AppDetails() {
           </div>
         )}
 
-        {app.idea_box_msg && (
+        {app.idea_box_msg && app.idea_box_msg.trim() !== '.' && app.idea_box_msg.trim() !== '' && (
           <div className="bg-blue-50/50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 p-4 rounded-2xl flex items-start gap-4 shadow-sm group">
              <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-xl text-blue-600 shrink-0">
               <Sparkles className="w-5 h-5" />
