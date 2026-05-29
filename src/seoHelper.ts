@@ -68,8 +68,7 @@ async function fetchStoreData() {
   const isApiKeyEmptyOrPlaceholder = 
     !config.apiKey || 
     config.apiKey.trim() === "" || 
-    config.apiKey.includes("YOUR_API_KEY") ||
-    config.apiKey === "AIzaSyBey9sUbeWlrcXS2kl4ewOzkTy4arg03Ok";
+    config.apiKey.includes("YOUR_API_KEY");
 
   if (isApiKeyEmptyOrPlaceholder) {
     const mockData = {
@@ -593,8 +592,7 @@ function getSafeFirebaseConfig(): any {
     const isApiKeyEmptyOrPlaceholder = 
       !config.apiKey || 
       config.apiKey.trim() === "" || 
-      config.apiKey.includes("YOUR_API_KEY") ||
-      config.apiKey === "AIzaSyBey9sUbeWlrcXS2kl4ewOzkTy4arg03Ok";
+      config.apiKey.includes("YOUR_API_KEY");
     
     if (isApiKeyEmptyOrPlaceholder) {
       // Use clean, anonymous placeholders so absolutely zero project-identifying domains (such as gen-lang-client-*) are ever leaked
