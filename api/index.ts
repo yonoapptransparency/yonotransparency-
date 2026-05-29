@@ -8,7 +8,8 @@ const app = express();
 // Initialize middlewares
 app.use(compression());
 app.use(cookieParser());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Cryptographic secrets for hashing, signature verification, and session identifiers
 const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
@@ -404,6 +405,192 @@ app.get(["/api/v1/secure-fetch", "/api/v1/fetch-file"], (req, res) => {
   // Disable caching to safeguard download requests
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.redirect(302, targetUrl);
+});
+
+// API Route: Secure Server-Side GitHub Synchronization Proxy (Bypasses CORS/sandboxing restrictions)
+app.post("/api/github-sync/commit", async (req, res) => {
+  try {
+    const { owner, repo, token, branch, path: filePath, content, message } = req.body || {};
+    
+    if (!owner || !repo || !token || !filePath || !content) {
+      return res.status(400).json({ message: "Missing required parameters (owner, repo, token, path, content)" });
+    }
+
+    const cleanBranch = branch ? branch.trim() : 'main';
+    const cleanPath = filePath.replace(/^\/+/g, ''); // strip leading slashes
+    const cleanOwner = owner.trim();
+    const cleanToken = token.trim();
+    let cleanRepo = repo.trim();
+
+    const authHeader = cleanToken.toLowerCase().startsWith('ghp_') 
+      ? `token ${cleanToken}` 
+      : `Bearer ${cleanToken}`;
+
+    // 1. Repository casing alignment
+    try {
+      const resolveRes = await fetch(
+        `https://api.github.com/users/${cleanOwner}/repos?per_page=100`,
+        {
+          headers: {
+            'Authorization': authHeader,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'node-fetch'
+          }
+        }
+      );
+      if (resolveRes.ok) {
+        const repos = await resolveRes.json() as any[];
+        if (Array.isArray(repos)) {
+          const matching = repos.find(r => r.name?.toLowerCase() === cleanRepo.toLowerCase());
+          if (matching && matching.name !== cleanRepo) {
+            console.log(`GitHub Sync Server: Correcting repository casing alignment from "${cleanRepo}" to "${matching.name}"`);
+            cleanRepo = matching.name;
+          }
+        }
+      } else {
+        // Try Org repos endpoint as fallback
+        const orgResolveRes = await fetch(
+          `https://api.github.com/orgs/${cleanOwner}/repos?per_page=100`,
+          {
+            headers: {
+              'Authorization': authHeader,
+              'Accept': 'application/vnd.github.v3+json',
+              'User-Agent': 'node-fetch'
+            }
+          }
+        );
+        if (orgResolveRes.ok) {
+          const repos = await orgResolveRes.json() as any[];
+          if (Array.isArray(repos)) {
+            const matching = repos.find(r => r.name?.toLowerCase() === cleanRepo.toLowerCase());
+            if (matching && matching.name !== cleanRepo) {
+              console.log(`GitHub Sync Server: Correcting Organization repository casing alignment from "${cleanRepo}" to "${matching.name}"`);
+              cleanRepo = matching.name;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("GitHub Repo casing alignment query not completed:", e);
+    }
+
+    console.log(`GitHub Sync Server: Fetching SHA of ${cleanPath} on repo ${cleanOwner}/${cleanRepo} [branch: ${cleanBranch}]...`);
+
+    let sha: string | undefined = undefined;
+    let getErrorContext = "";
+
+    try {
+      // Attempt 1: Fetch from target branch (cache-busted & Search-encoded)
+      const fetchRes = await fetch(
+        `https://api.github.com/repos/${cleanOwner}/${cleanRepo}/contents/${cleanPath}?ref=${encodeURIComponent(cleanBranch)}&_t=${Date.now()}`,
+        {
+          headers: {
+            'Authorization': authHeader,
+            'Accept': 'application/vnd.github.v3+json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'User-Agent': 'node-fetch'
+          }
+        }
+      );
+
+      if (fetchRes.ok) {
+        const data = await fetchRes.json() as any;
+        if (data && !Array.isArray(data) && data.sha) {
+          sha = data.sha;
+          console.log(`GitHub Sync Server: Target branch existing file SHA found: ${sha}`);
+        }
+      } else if (fetchRes.status === 404) {
+        console.log(`GitHub Sync Server: File not found on branch "${cleanBranch}". Attempting default branch fallback...`);
+        // Attempt 2: Fallback to default branch lookup
+        const fallbackRes = await fetch(
+          `https://api.github.com/repos/${cleanOwner}/${cleanRepo}/contents/${cleanPath}?_t=${Date.now()}`,
+          {
+            headers: {
+              'Authorization': authHeader,
+              'Accept': 'application/vnd.github.v3+json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'User-Agent': 'node-fetch'
+            }
+          }
+        );
+
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json() as any;
+          if (fallbackData && !Array.isArray(fallbackData) && fallbackData.sha) {
+            sha = fallbackData.sha;
+            console.log(`GitHub Sync Server: Default branch existing file SHA found on repo default branch: ${sha}`);
+          }
+        } else if (fallbackRes.status !== 404) {
+          const errJSON = await fallbackRes.json().catch(() => ({})) as any;
+          getErrorContext = `Default branch lookup failed with status ${fallbackRes.status}: ${errJSON.message || 'Unknown error'}`;
+        }
+      } else {
+        const errJSON = await fetchRes.json().catch(() => ({})) as any;
+        getErrorContext = `Target branch lookup failed with status ${fetchRes.status}: ${errJSON.message || 'Unknown error'}`;
+      }
+    } catch (e: any) {
+      console.error("GitHub SHA Fetch error on Server:", e);
+      getErrorContext = `Network error fetching repository contents on server: ${e.message || e}`;
+    }
+
+    if (getErrorContext && !sha) {
+      return res.status(400).json({ 
+        message: `GitHub Sync connection aborted. ${getErrorContext}\n\nPlease check your Repository config and Token permissions.` 
+      });
+    }
+
+    const encodedContent = Buffer.from(content, 'utf8').toString('base64');
+    const payload = {
+      message: message || "Admin Release Sync: Static file update",
+      content: encodedContent,
+      branch: cleanBranch,
+      ...(sha ? { sha } : {})
+    };
+
+    console.log(`GitHub Sync Server: Initiating commit for ${cleanPath}...`);
+
+    const saveRes = await fetch(
+      `https://api.github.com/repos/${cleanOwner}/${cleanRepo}/contents/${cleanPath}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'node-fetch'
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if (!saveRes.ok) {
+      const errText = await saveRes.text();
+      let errMsg = errText;
+      try {
+        const errJSON = JSON.parse(errText);
+        errMsg = errJSON.message || errText;
+      } catch (_) {}
+
+      let enhancedTip = "";
+      if (errMsg.toLowerCase().includes("not found")) {
+        enhancedTip = "\n\n💡 Try these checks:\n1. Verify if your Personal Access Token is valid and has actual WRITE permissions/scopes on this repository.\n- Fine-Grained Token: Repository Permissions -> 'Contents' -> set to 'Read and write'\n- Classic Token: Ensure 'repo' checkbox is fully checked.\n2. Verify the repository name is exact: '" + cleanRepo + "' (casing-correct).\n3. Verify if your token has access to this organization or account.";
+      } else if (errMsg.toLowerCase().includes("credentials") || saveRes.status === 401) {
+        enhancedTip = "\n\n💡 Token is invalid or expired. Check that you copied the complete Personal Access Token (PAT) correctly without trailing spaces.";
+      }
+
+      return res.status(saveRes.status).json({ message: errMsg + enhancedTip });
+    }
+
+    const result = await saveRes.json() as any;
+    console.log("GitHub Sync Server: Commit verified and published successfully!", result.commit?.sha);
+    return res.json(result);
+
+  } catch (err: any) {
+    console.error("Server GitHub commit handler error:", err);
+    return res.status(500).json({ message: `Internal server error during GitHub sync: ${err.message || err}` });
+  }
 });
 
 // For any other api path, return a fallback 404
