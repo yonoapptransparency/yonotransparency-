@@ -1024,7 +1024,15 @@ export const saveMockApps = (apps: AppConfig[]) => {
 };
 
 export const mockSettings: GlobalSettings = {
-  "banners": [],
+  "banners": [
+    {
+      "id": "u8ipx0oae",
+      "title": "New Banner",
+      "subtitle": "Subtitle text",
+      "image": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80",
+      "link": "/"
+    }
+  ],
   "ethics_heading": "ETHNICS",
   "responsibility_content": ".",
   "about_content": "Hello ",
@@ -1042,7 +1050,7 @@ export const mockSettings: GlobalSettings = {
   ],
   "favicon_url": "https://y4q7avawns.ucarecd.net/b391a2fa-42f7-4b3a-a0d5-605cb22aead4/-/preview/1000x1000/",
   "helpline_whatsapp": "+1234567890",
-  "last_updated": "2026-05-29T08:59:40.802Z",
+  "last_updated": "2026-05-29T09:02:06.372Z",
   "logo_url": "https://y4q7avawns.ucarecd.net/b391a2fa-42f7-4b3a-a0d5-605cb22aead4/-/preview/1000x1000/",
   "secure_index_subtitle": " Transparent App Marketplace & TRUST",
   "terms_content": ".",
