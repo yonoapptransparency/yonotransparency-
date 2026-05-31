@@ -1,4 +1,4 @@
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useData } from '../contexts/DataContext';
 import { ShieldCheck, ShieldAlert, ArrowRight, ArrowLeft, Star, Sparkles, Info, FileText, Share2, Check } from 'lucide-react';
@@ -15,8 +15,20 @@ export default function AppDetails() {
   const slug = routeSlug || decodedSplat.replace(/^\/|\/$/g, '').split('/')[0];
   const app = mockApps.find(a => a.slug?.toLowerCase() === slug?.toLowerCase());
   
+  const navigate = useNavigate();
   const [triedRefresh, setTriedRefresh] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Dynamic array decoding to completely hide "/info/" from static regex scraper bots sniffing JS bundles
+  const handleMoreDetails = () => {
+    if (!app || !app.slug) return;
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(10);
+    }
+    const parts = ['i', 'n', 'f', 'o'];
+    const p = '/' + parts.join('') + '/';
+    navigate(`${p}${app.slug}`);
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -345,12 +357,12 @@ export default function AppDetails() {
                 whileTap={{ scale: 0.98 }}
                 className="w-full sm:w-auto min-w-[130px] sm:min-w-[150px]"
               >
-                <Link 
-                  to={`/info/${app.slug}`} 
+                <button 
+                  onClick={handleMoreDetails} 
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm shadow-md"
                 >
                   More <ArrowRight className="w-4 h-4" />
-                </Link>
+                </button>
               </motion.div>
  
               <motion.div
