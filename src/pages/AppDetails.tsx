@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AppListItem } from '../components/PlayStoreUI';
 import { motion, AnimatePresence } from 'framer-motion';
 import UserReviews from '../components/UserReviews';
+import PlayStoreRatingSection from '../components/PlayStoreRatingSection';
 
 export default function AppDetails() {
   const { apps: mockApps, settings: mockSettings, loading, appsSyncedWithServer, serverAppsFetched, refreshAll } = useData();
@@ -18,6 +19,7 @@ export default function AppDetails() {
   const navigate = useNavigate();
   const [triedRefresh, setTriedRefresh] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [reviewsRefreshKey, setReviewsRefreshKey] = useState(0);
 
   // Dynamic array decoding to completely hide "/info/" from static regex scraper bots sniffing JS bundles
   const handleMoreDetails = () => {
@@ -378,6 +380,8 @@ export default function AppDetails() {
                 </button>
               </motion.div>
             </div>
+
+            <PlayStoreRatingSection appId={app.id} appTitle={app.name} onReviewSubmitted={() => setReviewsRefreshKey(prev => prev + 1)} />
           </div>
         </div>
 
@@ -470,7 +474,7 @@ export default function AppDetails() {
       </div>
 
       <div className="px-1 mb-8">
-        <UserReviews appId={app.id} appTitle={app.name} overallRating={app.rating} />
+        <UserReviews key={reviewsRefreshKey} appId={app.id} appTitle={app.name} overallRating={app.rating} />
       </div>
       
       {app.faqs && app.faqs.length > 0 && (

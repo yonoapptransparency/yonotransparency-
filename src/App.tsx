@@ -32,6 +32,7 @@ import { getAdminPath } from './lib/utils';
 import Ticker from './components/Ticker';
 import SupportWidget from './components/SupportWidget';
 import GlobalSearch from './components/GlobalSearch';
+import StarRatingFeedback from './components/StarRatingFeedback';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -303,6 +304,9 @@ function Footer() {
         <p className="text-[15px] mb-8 max-w-xl text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium px-2">
           {settings.meta_description}
         </p>
+        <div id="footer-feedback-section" className="w-full mb-12 px-2">
+          <StarRatingFeedback />
+        </div>
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-[13px] font-medium mb-16 text-zinc-600 dark:text-zinc-400 px-2">
           <Link to="/" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Home</Link>
           <Link to="/about" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">About</Link>

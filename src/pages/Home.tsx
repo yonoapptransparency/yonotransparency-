@@ -184,8 +184,9 @@ export default function Home() {
                           activeTabLower === 'all' || 
                           activeTabLower === 'home' || 
                           activeTabLower === 'apps';
-        return isHomeTab && (
-          <div className="px-2">
+        const hasNewApps = loading ? true : filteredApps.some(app => app.is_new);
+        return isHomeTab && hasNewApps && (
+          <div className="px-2 animate-fade-in">
             <h2 className="text-xl font-bold mb-4 mt-6 text-zinc-900 dark:text-zinc-100 flex items-center px-2">
               Verified New Additions
             </h2>
