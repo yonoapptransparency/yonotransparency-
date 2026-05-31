@@ -221,7 +221,7 @@ export default function GatewayPage() {
   };
 
   return (
-    <div className="animate-fade-in select-none pb-20 max-w-[1550px] mx-auto px-3 sm:px-6 md:px-10">
+    <div className="animate-fade-in select-none pb-20 max-w-[1550px] mx-auto">
       <div className="mb-6 pt-6">
         <Link 
           to={`/${app.slug}`} 
@@ -357,10 +357,10 @@ export default function GatewayPage() {
       </div>
 
       {/* Strict Section Order 2: Massive Description */}
-      <div className="py-16 mb-20 w-full px-4 border-t border-black/5 dark:border-white/5">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-10 tracking-tight text-zinc-900 dark:text-zinc-100">Technical Details</h2>
+      <div className="py-16 mb-20 w-auto -mx-3 sm:-mx-6 md:-mx-10 px-3 sm:px-6 md:px-10 border-t border-black/5 dark:border-white/5">
+        <h2 className="text-3xl sm:text-4xl font-bold mb-10 tracking-tight text-zinc-900 dark:text-zinc-100 px-1 sm:px-0">Technical Details</h2>
         <div 
-          className="prose prose-zinc dark:prose-invert max-w-none prose-p:leading-relaxed prose-a:text-blue-500"
+          className="w-full text-base text-zinc-700 dark:text-zinc-300 [&_strong]:font-semibold [&_p]:mb-4 [&_p]:leading-relaxed [&_a]:text-blue-500 [&_a]:hover:underline [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-4 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
           dangerouslySetInnerHTML={{ __html: app.description_html || '<p>App details and technical specifications.</p>' }}
         />
       </div>

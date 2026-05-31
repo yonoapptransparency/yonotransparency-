@@ -227,7 +227,7 @@ export default function AppDetails() {
   };
 
   return (
-    <div className="animate-fade-in max-w-[1550px] mx-auto select-none px-3 sm:px-6 md:px-10">
+    <div className="animate-fade-in max-w-[1550px] mx-auto select-none">
       <AnimatePresence>
         {shareToast && (
           <motion.div
@@ -422,27 +422,27 @@ export default function AppDetails() {
         )}
       </div>
 
-      <div className="px-1 mb-8 space-y-12">
+      <div className="w-full mb-8 space-y-12">
         {app.custom_admin_box_html && (
-           <div className="py-8 border-b border-black/5 dark:border-white/5 relative overflow-hidden">
+           <div className="py-8 border-b border-black/5 dark:border-white/5 relative overflow-hidden w-auto -mx-3 sm:-mx-6 md:-mx-10 transition-all duration-300">
              {app.custom_admin_box_heading && (
-               <h2 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
+               <h2 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100 px-3 sm:px-6 md:px-10">
                   {app.custom_admin_box_heading}
                </h2>
              )}
              <div 
-               className="prose prose-zinc dark:prose-invert max-w-none text-base text-zinc-600 dark:text-zinc-400"
+               className="w-full text-zinc-800 dark:text-zinc-200"
                dangerouslySetInnerHTML={{ __html: app.custom_admin_box_html }}
              />
            </div>
         )}
 
-        <div className="py-8">
-           <h2 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
+        <div className="py-8 -mx-3 sm:-mx-6 md:-mx-10 px-3 sm:px-6 md:px-10">
+           <h2 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100 px-1 sm:px-0">
              About this app
-          </h2>
+           </h2>
           <div 
-             className="prose prose-zinc dark:prose-invert max-w-none text-base text-zinc-600 dark:text-zinc-400"
+             className="w-full text-base text-zinc-700 dark:text-zinc-300 [&_strong]:font-semibold [&_p]:mb-4 [&_p]:leading-relaxed [&_a]:text-blue-500 [&_a]:hover:underline [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-4 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
             dangerouslySetInnerHTML={{ __html: app.description_html || '<p>No details available.</p>' }}
           />
           

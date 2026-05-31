@@ -1,6 +1,6 @@
 {
-  "name": "RUMMY STORE",
-  "description": "RUMMY STORE - Virtual Coins & E-Sports Store",
+  "name": "RummyApp Online",
+  "description": "Step into the world of Rummy — compete, challenge friends, and rise to the top on RummyApp Online!",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
