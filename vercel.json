@@ -1,27 +1,14 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build"
-    },
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
+  "functions": {
+    "api/**/*.ts": {
+      "includeFiles": "{src/**,firebase-applet-config.json}"
     }
-  ],
+  },
   "rewrites": [
-    {
-      "source": "/sitemap.xml",
-      "destination": "/api/index.ts"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.ts"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/v1/secure-fetch", "destination": "/api/index.ts" },
+    { "source": "/api/(.*)", "destination": "/api/index.ts" },
+    { "source": "/sitemap.xml", "destination": "/api/index.ts" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
