@@ -160,16 +160,70 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
   });
-  const [appsSyncedWithServer, setAppsSyncedWithServer] = useState(false);
-  const [settingsSyncedWithServer, setSettingsSyncedWithServer] = useState(false);
-  const [newsSyncedWithServer, setNewsSyncedWithServer] = useState(false);
-  const [blogsSyncedWithServer, setBlogsSyncedWithServer] = useState(false);
-  const [videosSyncedWithServer, setVideosSyncedWithServer] = useState(false);
+  const [appsSyncedWithServer, setAppsSyncedWithServer] = useState(() => {
+    try {
+      return !!secureStorage.getItem('rummystore_apps');
+    } catch {
+      return false;
+    }
+  });
+  const [settingsSyncedWithServer, setSettingsSyncedWithServer] = useState(() => {
+    try {
+      return !!secureStorage.getItem('rummystore_settings');
+    } catch {
+      return false;
+    }
+  });
+  const [newsSyncedWithServer, setNewsSyncedWithServer] = useState(() => {
+    try {
+      return !!secureStorage.getItem('rummystore_news');
+    } catch {
+      return false;
+    }
+  });
+  const [blogsSyncedWithServer, setBlogsSyncedWithServer] = useState(() => {
+    try {
+      return !!secureStorage.getItem('rummystore_blogs');
+    } catch {
+      return false;
+    }
+  });
+  const [videosSyncedWithServer, setVideosSyncedWithServer] = useState(() => {
+    try {
+      return !!secureStorage.getItem('rummystore_videos');
+    } catch {
+      return false;
+    }
+  });
 
-  const [serverAppsFetched, setServerAppsFetched] = useState(false);
-  const [serverNewsFetched, setServerNewsFetched] = useState(false);
-  const [serverBlogsFetched, setServerBlogsFetched] = useState(false);
-  const [serverVideosFetched, setServerVideosFetched] = useState(false);
+  const [serverAppsFetched, setServerAppsFetched] = useState(() => {
+    try {
+      return !!secureStorage.getItem('rummystore_apps');
+    } catch {
+      return false;
+    }
+  });
+  const [serverNewsFetched, setServerNewsFetched] = useState(() => {
+    try {
+      return !!secureStorage.getItem('rummystore_news');
+    } catch {
+      return false;
+    }
+  });
+  const [serverBlogsFetched, setServerBlogsFetched] = useState(() => {
+    try {
+      return !!secureStorage.getItem('rummystore_blogs');
+    } catch {
+      return false;
+    }
+  });
+  const [serverVideosFetched, setServerVideosFetched] = useState(() => {
+    try {
+      return !!secureStorage.getItem('rummystore_videos');
+    } catch {
+      return false;
+    }
+  });
   
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [isLive, setIsLive] = useState(false);
@@ -236,23 +290,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    try {
-      if (secureStorage.getItem('rummystore_apps')) {
-        // Snappy background loading: if we have cache, assume synced initially to avoid blocking UI components
-        setAppsSyncedWithServer(true);
-        setSettingsSyncedWithServer(true);
-        setNewsSyncedWithServer(true);
-        setBlogsSyncedWithServer(true);
-        setVideosSyncedWithServer(true);
-        setServerAppsFetched(true);
-        setServerNewsFetched(true);
-        setServerBlogsFetched(true);
-        setServerVideosFetched(true);
-      }
-    } catch (e) {
-      console.warn("Rapid initialization skipped", e);
-    }
-
     const loadedDocs = {
       apps: false,
       settings: false,
@@ -392,7 +429,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         
         if (fetchedData) {
           const data = loadedApps;
-          setApps(data);
+          setApps(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
           secureStorage.setItem('rummystore_apps', JSON.stringify(data));
           
           setAppsSyncedWithServer(true);
@@ -421,7 +458,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       onSnapshot(doc(db, 'store_data', 'settings'), (snap) => {
         if (snap.exists()) {
           const data = snap.data() as GlobalSettings;
-          setSettings(data);
+          setSettings(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
           secureStorage.setItem('rummystore_settings', JSON.stringify(data));
           
           setSettingsSyncedWithServer(true);
@@ -445,7 +482,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       onSnapshot(doc(db, 'store_data', 'news'), (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
-          setNews(data);
+          setNews(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
           secureStorage.setItem('rummystore_news', JSON.stringify(data));
           
           setNewsSyncedWithServer(true);
@@ -466,7 +503,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       onSnapshot(doc(db, 'store_data', 'blogs'), (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
-          setBlogs(data);
+          setBlogs(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
           secureStorage.setItem('rummystore_blogs', JSON.stringify(data));
           
           setBlogsSyncedWithServer(true);
@@ -487,7 +524,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       onSnapshot(doc(db, 'store_data', 'videos'), (snap) => {
         if (snap.exists()) {
           const data = snap.data().items || [];
-          setVideos(data);
+          setVideos(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
           secureStorage.setItem('rummystore_videos', JSON.stringify(data));
           
           setVideosSyncedWithServer(true);

@@ -583,7 +583,7 @@ app.get(["/api/v1/secure-fetch", "/api/v1/fetch-file"], (req, res) => {
       }
       
       const email = user.email?.toLowerCase() || '';
-      console.log("verifyAdminToken checking email:", email, user.localId, user.emailVerified);
+      // console.log("verifyAdminToken checking email:", email, user.localId, user.emailVerified);
       
       // Admin access check via firestore (strictly requires verified email to prevent hijack/spoofing attempts)
       let isDbAdmin = false;
