@@ -15,6 +15,25 @@ app.use(cookieParser());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+function getRawFirebaseConfig(): any {
+  try {
+    const possiblePaths = [
+      path.join(__dirname, 'firebase-applet-config.json'),
+      path.join(__dirname, '../firebase-applet-config.json'),
+      path.join(__dirname, '../../firebase-applet-config.json'),
+      path.join(process.cwd(), 'firebase-applet-config.json')
+    ];
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        return JSON.parse(fs.readFileSync(p, 'utf8'));
+      }
+    }
+  } catch (err) {
+    console.error("Error reading firebase config search in api/index.ts:", err);
+  }
+  return null;
+}
+
 // Cryptographic secrets for hashing, signature verification, and session identifiers
 const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
 
@@ -354,7 +373,10 @@ app.get(["/api/v1/secure-payload", "/api/v1/file-payload"], async (req, res) => 
       if (!targetUrl && appId) {
         try {
           const AES_SECRET = process.env.AES_SECRET || 'RUMMY_APP_SECRET_2026';
-          const config = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf8'));
+          const config = getRawFirebaseConfig();
+          if (!config) {
+            throw new Error("Missing Firebase configuration.");
+          }
           
           try {
             const urlResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/secure_links`);
@@ -538,7 +560,10 @@ app.get(["/api/v1/secure-fetch", "/api/v1/fetch-file"], (req, res) => {
     }
 
     try {
-      const config = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf8'));
+      const config = getRawFirebaseConfig();
+      if (!config) {
+        return res.status(500).json({ error: 'Internal Server Error: Missing app configuration.' });
+      }
       
       const lookupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${config.apiKey}`, {
         method: "POST",
@@ -657,7 +682,10 @@ app.get(["/api/v1/secure-fetch", "/api/v1/fetch-file"], (req, res) => {
   // Database fix endpoint - run once to fix broken secure links
   app.get("/api/v1/admin/fix-db-links", async (req, res) => {
      try {
-       const config = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf8'));
+       const config = getRawFirebaseConfig();
+       if (!config) {
+         return res.status(500).json({ error: 'Missing configuration.' });
+       }
        
        const chunkResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/apps_chunk_0`);
        const chunkData = await chunkResponse.json();

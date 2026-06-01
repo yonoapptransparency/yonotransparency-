@@ -8,6 +8,25 @@ let lastFetchTime = 0;
 const CACHE_TTL = 120000; // 2 minutes cache to prevent extreme blocking on each pageload
 let isFetchingStoreData = false;
 
+function getRawFirebaseConfig(): any {
+  try {
+    const possiblePaths = [
+      path.join(__dirname, 'firebase-applet-config.json'),
+      path.join(__dirname, '../firebase-applet-config.json'),
+      path.join(__dirname, '../../firebase-applet-config.json'),
+      path.join(process.cwd(), 'firebase-applet-config.json')
+    ];
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        return JSON.parse(fs.readFileSync(p, 'utf8'));
+      }
+    }
+  } catch (err) {
+    console.error("Error reading firebase config search:", err);
+  }
+  return null;
+}
+
 function parseFirestoreValue(value: any): any {
   if (!value) return null;
   if ('stringValue' in value) return value.stringValue;
@@ -60,12 +79,8 @@ export async function fetchStoreData() {
       isFetchingStoreData = true;
       // Fetch updated data in background, allowing this function to return the cached data immediately
       (async () => {
-        let config;
-        try {
-          config = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf8'));
-        } catch (e) {
-          return;
-        }
+        const config = getRawFirebaseConfig();
+        if (!config) return;
 
         const isApiKeyEmptyOrPlaceholder = 
           !config.apiKey || 
@@ -158,12 +173,19 @@ export async function fetchStoreData() {
     return cachedData;
   }
 
-  let config;
-  try {
-    config = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf8'));
-  } catch (e) {
-    console.error('No firebase config found for SEO rendering.');
-    return null;
+  const config = getRawFirebaseConfig();
+  if (!config) {
+    console.warn('No firebase config found for SEO rendering, using static mock fallback.');
+    const mockData = {
+      apps: mockApps,
+      settings: mockSettings,
+      news: mockNews,
+      blogs: mockBlogs,
+      videos: mockVideos
+    };
+    cachedData = mockData;
+    lastFetchTime = now;
+    return mockData;
   }
 
   const isApiKeyEmptyOrPlaceholder = 
@@ -718,11 +740,10 @@ function renderResponsibility(settings: any) {
 
 function getSafeFirebaseConfig(): any {
   try {
-    const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
-    if (!fs.existsSync(configPath)) {
+    const config = getRawFirebaseConfig();
+    if (!config) {
       return null;
     }
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     
     // Check if the API key is empty/absent/placeholder or matches the empty system default api key
     const isApiKeyEmptyOrPlaceholder = 
