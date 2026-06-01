@@ -11,7 +11,7 @@
     },
     {
       "source": "/sitemap.xml",
-      "destination": "/api/index.ts"
+      "destination": "/api/sitemap"
     },
     {
       "source": "/(.*)",

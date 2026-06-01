@@ -276,7 +276,17 @@ export async function fetchStoreData() {
     return cachedData;
   } catch (error) {
     console.error('Failed to fetch store data for SEO:', error);
-    return cachedData;
+    const mockFallback = {
+      apps: mockApps,
+      settings: mockSettings,
+      news: mockNews,
+      blogs: mockBlogs,
+      videos: mockVideos
+    };
+    if (!cachedData) {
+      cachedData = mockFallback;
+    }
+    return cachedData || mockFallback;
   } finally {
     isFetchingStoreData = false;
   }
