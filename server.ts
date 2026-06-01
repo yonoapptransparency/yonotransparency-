@@ -452,15 +452,15 @@ async function startServer() {
       }
       
       const email = user.email?.toLowerCase() || '';
-      console.log("verifyAdminToken checking email:", email, user.localId);
+      console.log("verifyAdminToken checking email:", email, user.localId, user.emailVerified);
       
-      // Admin access check via firestore
+      // Admin access check via firestore (strictly requires verified email to prevent hijack/spoofing attempts)
       let isDbAdmin = false;
-      if (email === 'defentechscholar@gmail.com') {
+      if (email === 'defentechscholar@gmail.com' && user.emailVerified === true) {
         isDbAdmin = true;
         console.log("verifyAdminToken: isDbAdmin via hardcoded email!");
       }
-      if (!isDbAdmin) {
+      if (!isDbAdmin && user.emailVerified === true) {
         try {
           const dbCheckRes = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/admins/${user.localId}`);
           if (dbCheckRes.ok) {

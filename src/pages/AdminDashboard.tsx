@@ -950,8 +950,8 @@ export default function AdminDashboard() {
           console.warn("Backend verification failed or not found (static site mode). Proceeding to fallback check.");
         }
 
-        // Static Site Offline/Client-side Fallback
-        if (!adminVerified) {
+        // Static Site Offline/Client-side Fallback (strictly requires verified email to prevent hijack/spoofing attempts)
+        if (!adminVerified && currentUser.emailVerified) {
            if (currentUser.email?.toLowerCase() === 'defentechscholar@gmail.com') {
                adminVerified = true;
            } else {

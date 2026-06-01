@@ -2,12 +2,37 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // ID checking helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidAdminId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-@.]+$');
+    }
+
     // Helper to verify if user is authorized as an admin (via database index lookup or owner fallback)
+    // Checks that the email is verified to prevent unverified email spoofing attacks
     function isAdmin() {
       return request.auth != null && 
+             request.auth.token.email_verified == true &&
              (request.auth.token.email == 'defentechscholar@gmail.com' ||
               exists(/databases/$(database)/documents/admins/$(request.auth.uid)) || 
               exists(/databases/$(database)/documents/admins/$(request.auth.token.email)));
+    }
+
+    // Comprehensive payload validation for reviews
+    function isValidReview(data) {
+      return data.keys().hasAll(['app_id', 'username', 'rating', 'comment', 'created_at', 'helpful_count', 'is_approved', 'source']) &&
+             data.keys().size() == 8 &&
+             data.app_id is string && data.app_id.size() <= 128 &&
+             data.username is string && data.username.size() <= 200 &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             data.comment is string && data.comment.size() <= 2000 &&
+             data.created_at is string && data.created_at.size() <= 64 &&
+             data.helpful_count is int &&
+             data.is_approved is bool &&
+             data.source is string && data.source.size() <= 128;
     }
 
     // Default deny
@@ -18,34 +43,34 @@ service cloud.firestore {
     // Allow public reading of non-sensitive store data and encrypted secure links
     // Restrict sensitive vault maps and git config strictly to authorized administrators
     match /store_data/{docId} {
-      allow read: if (docId != 'sec_vault' && docId != 'sec_git_config') || isAdmin();
-      allow write: if isAdmin();
+      allow read: if isValidId(docId) && ((docId != 'sec_vault' && docId != 'sec_git_config') || isAdmin());
+      allow write: if isValidId(docId) && isAdmin();
     }
     
     // Support for metadata or other collections if they exist
     match /sec_git/{docId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isValidId(docId) && isAdmin();
     }
 
     match /apps/{appId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isValidId(appId) && isAdmin();
     }
 
     match /reviews/{reviewId} {
       allow read: if true;
-      allow create: if true;
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reported', 'report_count']) || isAdmin();
-      allow delete: if isAdmin();
+      allow create: if isValidId(reviewId) && isValidReview(request.resource.data);
+      allow update: if isValidId(reviewId) && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reported', 'report_count']) || isAdmin());
+      allow delete: if isValidId(reviewId) && isAdmin();
     }
     
     match /admins/{docId} {
-      allow read: if request.auth != null && (request.auth.uid == docId || request.auth.token.email == docId || isAdmin());
-      allow write: if isAdmin();
+      allow read: if request.auth != null && (request.auth.uid == docId || (request.auth.token.email_verified == true && request.auth.token.email == docId) || isAdmin());
+      allow write: if isValidAdminId(docId) && isAdmin();
     }
     
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && isValidId(userId) && request.auth.uid == userId;
     }
   }
 }

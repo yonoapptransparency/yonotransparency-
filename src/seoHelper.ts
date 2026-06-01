@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { mockApps, mockSettings, mockNews, mockBlogs, mockVideos } from './lib/staticData';
 import { getAdminPath } from './lib/utils';
-import firebaseConfig from '../firebase-applet-config.json';
 
 let cachedData: any = null;
 let lastFetchTime = 0;
@@ -10,7 +10,31 @@ const CACHE_TTL = 120000; // 2 minutes cache to prevent extreme blocking on each
 let isFetchingStoreData = false;
 
 function getRawFirebaseConfig(): any {
-  return firebaseConfig;
+  try {
+    const possiblePaths = [
+      path.join(process.cwd(), 'firebase-applet-config.json'),
+      path.join(process.cwd(), 'api/firebase-applet-config.json'),
+    ];
+    
+    try {
+      const filename = fileURLToPath(import.meta.url);
+      const dirname = path.dirname(filename);
+      possiblePaths.push(path.join(dirname, 'firebase-applet-config.json'));
+      possiblePaths.push(path.join(dirname, '../firebase-applet-config.json'));
+      possiblePaths.push(path.join(dirname, '../../firebase-applet-config.json'));
+    } catch (e) {
+      // ignore
+    }
+
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        return JSON.parse(fs.readFileSync(p, 'utf8'));
+      }
+    }
+  } catch (err) {
+    console.error("Error reading firebase config in seoHelper:", err);
+  }
+  return null;
 }
 
 function parseFirestoreValue(value: any): any {
