@@ -899,17 +899,15 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
   // Insert new tags and configuration before head close
   newTemplate = newTemplate.replace('</head>', `${configScript}${tags}</head>`);
 
-  // Dynamically inject fully pre-rendered body content inside <div id="root"> for crawlers and indexers.
-  // When the React client mounts, it will cleanly overwrite the markup with interactive components.
-  // UPDATE: Disabled pre-rendering body injection to prevent visual flashes of mismatched SSR HTML before client-side hydration.
-  /*
+  // Dynamically inject fully pre-rendered body content inside an off-screen div for crawlers and indexers.
+  // This avoids visual flashes of mismatched SSR HTML before client-side hydration.
   try {
     const preRenderedBody = await getPagePreRender(urlPath, data);
-    newTemplate = newTemplate.replace(/<div\s+id=["']root["'][^>]*>.*?<\/div>/ims, `<div id="root">${preRenderedBody}</div>`);
+    const seoDiv = `<div id="seo-prerender" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">${preRenderedBody}</div>`;
+    newTemplate = newTemplate.replace('</body>', `${seoDiv}\n  </body>`);
   } catch (renderErr) {
     console.error("Static pre-rendering body injection failed:", renderErr);
   }
-  */
   
   return newTemplate;
 }
