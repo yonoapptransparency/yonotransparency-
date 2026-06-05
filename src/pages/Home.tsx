@@ -411,6 +411,35 @@ export default function Home() {
           <p className="text-lg">No results found for "{searchTerm}"</p>
         </div>
       )}
+
+      {/* Deeply Integrated Secure CTA */}
+      <div className="mt-12 mb-6 w-full animate-fade-in relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-800 dark:from-zinc-800 dark:to-zinc-900 shadow-2xl border border-white/10 p-1">
+        <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay"></div>
+        <div className="relative bg-zinc-900/40 dark:bg-black/20 backdrop-blur-md rounded-[28px] p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 z-10 border border-white/5">
+          <div className="flex-1 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-bold uppercase tracking-widest mb-4">
+              <ShieldCheck className="w-4 h-4" />
+              <span>Verified Secure</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-3 tracking-tight">
+              Ready to Upgrade Your Experience?
+            </h2>
+            <p className="text-zinc-400 text-sm sm:text-base font-medium max-w-xl mx-auto md:mx-0 leading-relaxed">
+              Join thousands of users exploring our securely curated, privacy-first application universe. All downloads are protected with advanced verification handshakes.
+            </p>
+          </div>
+          
+          <div className="shrink-0 w-full md:w-auto flex flex-col sm:flex-row gap-3">
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold transition-all shadow-lg shadow-blue-900/20 active:scale-95 flex items-center justify-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              Explore Now
+            </button>
+            <Link to="/about" className="w-full sm:w-auto px-8 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-white/10 rounded-2xl font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+              Learn More
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

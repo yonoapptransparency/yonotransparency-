@@ -2,6 +2,12 @@ import { DataProvider, useData } from './contexts/DataContext';
 import { useLocation, BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Menu, Shield, ShieldCheck, Info, ArrowRight, X, LayoutGrid, Newspaper, Sparkles, Send, MoreHorizontal, Search, Video } from 'lucide-react';
+import Home from './pages/Home';
+import AppDetails from './pages/AppDetails';
+import GatewayPage from './pages/GatewayPage';
+import NewApps from './pages/NewApps';
+import NewsPage from './pages/NewsPage';
+import VideosPage from './pages/VideosPage';
 import React, { useState, useEffect, useMemo, Suspense, lazy, ComponentType, LazyExoticComponent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -132,20 +138,14 @@ if (initialPath === '/' || initialPath === '') {
   preloadComponent('AppDetails', loaders.AppDetails).catch(() => {});
 }
 
-const Home = getPreloadedComponent('Home', loaders.Home, LoadingScreen);
-const AppDetails = getPreloadedComponent('AppDetails', loaders.AppDetails, LoadingScreen);
-const GatewayPage = lazyRetry(loaders.GatewayPage);
 const About = lazyRetry(loaders.About);
 const Contact = lazyRetry(loaders.Contact);
 const Privacy = lazyRetry(loaders.Privacy);
 const Terms = lazyRetry(loaders.Terms);
 const Responsibility = lazyRetry(loaders.Responsibility);
-const NewApps = lazyRetry(loaders.NewApps);
-const NewsPage = lazyRetry(loaders.NewsPage);
 const NewsDetailPage = lazyRetry(loaders.NewsDetailPage);
 const Blogs = lazyRetry(loaders.Blogs);
 const BlogDetailPage = lazyRetry(loaders.BlogDetailPage);
-const VideosPage = lazyRetry(loaders.VideosPage);
 const VideoDetailPage = lazyRetry(loaders.VideoDetailPage);
 const AdminLogin = lazyRetry(loaders.AdminLogin);
 const AdminDashboard = lazyRetry(loaders.AdminDashboard);
