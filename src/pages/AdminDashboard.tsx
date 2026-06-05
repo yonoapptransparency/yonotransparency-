@@ -3,7 +3,8 @@ import { Link, Navigate } from 'react-router-dom';
 import { getAdminPath } from '../lib/utils';
 import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, Shield, LogOut, Save, Upload, Type, Link as LinkIcon, ToggleLeft, Layers, Newspaper, Plus, Trash2, Video as VideoIcon, Github, GitBranch, RefreshCw } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
-import { auth, db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
+import { AppConfig, GlobalSettings, NewsItem, BlogPost, VideoItem } from '../lib/staticData';
 
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -1526,7 +1527,7 @@ export default function AdminDashboard() {
       description_html: '<p>Read our latest blog post.</p>',
       thumbnail_url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80',
       publish_date: new Date().toISOString(),
-      read_time_minutes: 5,
+      read_time: '5 min',
       tags: [],
       content: 'Write something amazing...',
       author: 'Admin Team',
