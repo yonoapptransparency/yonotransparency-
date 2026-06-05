@@ -109,7 +109,7 @@ export async function fetchStoreData() {
 
   if (isFetchingStoreData) {
      // If a fetch is already in flight, return the best data we have to avoid blocking duplicate requests
-     return cachedData || { apps: [], settings: {}, news: [], blogs: [], videos: [] };
+     return cachedData || { apps: mockApps, settings: mockSettings, news: mockNews, blogs: mockBlogs, videos: mockVideos };
   }
 
   try {
@@ -191,17 +191,17 @@ export async function fetchStoreData() {
     return cachedData;
   } catch (error) {
     console.error('Failed to fetch store data for SEO:', error);
-    const nullFallback = {
-      apps: [],
-      settings: {},
-      news: [],
-      blogs: [],
-      videos: []
+    const mockFallback = {
+      apps: mockApps,
+      settings: mockSettings,
+      news: mockNews,
+      blogs: mockBlogs,
+      videos: mockVideos
     };
     if (!cachedData) {
-      cachedData = nullFallback;
+      cachedData = mockFallback;
     }
-    return cachedData || nullFallback;
+    return cachedData || mockFallback;
   } finally {
     isFetchingStoreData = false;
   }
@@ -694,7 +694,7 @@ function getSafeFirebaseConfig(): any {
   }
 }
 
-export async function injectSeoTags(template: string, urlPath: string, hostUrl?: string): Promise<string> {
+export async function injectSeoTags(template: string, urlPath: string, hostUrl?: string, userAgent: string = ''): Promise<string> {
   let data = await fetchStoreData();
   if (!data || !data.settings) return template;
 
@@ -899,12 +899,20 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
   // Insert new tags and configuration before head close
   newTemplate = newTemplate.replace('</head>', `${configScript}${tags}</head>`);
 
-  // Dynamically inject fully pre-rendered body content inside an off-screen div for crawlers and indexers.
-  // This avoids visual flashes of mismatched SSR HTML before client-side hydration.
+  // Dynamically inject fully pre-rendered body content directly into <div id="root"> ONLY for crawlers and indexers.
+  // This avoids visual flashes of mismatched SSR HTML before client-side hydration for normal users.
   try {
+    const isBot = /bot|google|baidu|bing|msn|duckduckbot|teoma|slurp|yandex|craw|spider|gpt|claude/i.test(userAgent);
     const preRenderedBody = await getPagePreRender(urlPath, data);
-    const seoDiv = `<div id="seo-prerender" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">${preRenderedBody}</div>`;
-    newTemplate = newTemplate.replace('</body>', `${seoDiv}\n  </body>`);
+    
+    if (isBot) {
+      newTemplate = newTemplate.replace(/<div\s+id=["']root["'][^>]*>.*?<\/div>/ims, `<div id="root">${preRenderedBody}</div>`);
+    } else {
+      // For real human browsers, we inject it into the hidden SEO div so that it's there but doesn't cause a visual flash 
+      // over the root, and then we remove it immediately when JS takes over.
+      const seoDiv = `<div id="seo-prerender" class="ssr-seo-content">${preRenderedBody}</div>`;
+      newTemplate = newTemplate.replace('</body>', `${seoDiv}\n  </body>`);
+    }
   } catch (renderErr) {
     console.error("Static pre-rendering body injection failed:", renderErr);
   }

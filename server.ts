@@ -1169,7 +1169,8 @@ const rateLimitMap = new Map<string, number[]>();
         const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
         const host = req.headers["x-forwarded-host"] || req.get("host") || "localhost:3000";
         const hostUrl = `${String(protocol).split(',')[0].trim()}://${String(host).split(',')[0].trim()}`;
-        template = await injectSeoTags(template, req.originalUrl, hostUrl);
+        const userAgent = req.headers['user-agent'] || '';
+        template = await injectSeoTags(template, req.originalUrl, hostUrl, userAgent);
         res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
       } catch (e: any) {
         vite.ssrFixStacktrace(e);
@@ -1202,7 +1203,8 @@ const rateLimitMap = new Map<string, number[]>();
         const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
         const host = req.headers["x-forwarded-host"] || req.get("host") || "localhost:3000";
         const hostUrl = `${String(protocol).split(',')[0].trim()}://${String(host).split(',')[0].trim()}`;
-        template = await injectSeoTags(template, req.originalUrl, hostUrl);
+        const userAgent = req.headers['user-agent'] || '';
+        template = await injectSeoTags(template, req.originalUrl, hostUrl, userAgent);
         res.status(200).set({ 
           'Content-Type': 'text/html',
           'Cache-Control': 'no-cache, no-store, must-revalidate',

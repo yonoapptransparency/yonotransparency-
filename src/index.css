@@ -319,5 +319,9 @@ a {
   }
 }
 
-
-
+/* Hide the SSR pre-rendered content from interactive human users via CSS.
+   Simple HTML scraper bots do not download or process external CSS, so they will see this content natively.
+   Advanced bots (Googlebot) will execute JS, hydrate React into #root, and read the page correctly anyway. */
+.ssr-seo-content {
+  display: none !important;
+}
