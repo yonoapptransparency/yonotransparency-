@@ -8,6 +8,7 @@ import { AppConfig, GlobalSettings, NewsItem, BlogPost, VideoItem } from '../lib
 
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { generateStaticDataFileCode } from '../lib/githubSync';
 
 function FaqEditor({ initialFaqs }: { initialFaqs: {question: string, answer: string}[] }) {
   const [faqs, setFaqs] = React.useState(initialFaqs || []);
@@ -372,9 +373,11 @@ const BannersTab = React.memo(({ banners, handleAddBanner, handleRemoveBanner, h
   </div>
 ));
 
-const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig }: any) => {
+const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, generatePreview }: any) => {
   const [logs, setLogs] = React.useState<string[]>([]);
   const [syncing, setSyncing] = React.useState(false);
+  const [showPreview, setShowPreview] = React.useState(false);
+  const [previewContent, setPreviewContent] = React.useState<string>("");
 
   const handleManualSync = async () => {
     setSyncing(true);
@@ -391,6 +394,18 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig }: any
     }
   };
 
+  const handleTogglePreview = () => {
+    if (!showPreview) {
+      try {
+        const payload = generatePreview();
+        setPreviewContent(payload);
+      } catch (err) {
+        setPreviewContent(`Error generating preview: ${err}`);
+      }
+    }
+    setShowPreview(!showPreview);
+  };
+
   return (
     <div className="animate-fade-in space-y-8">
       <h2 className="text-2xl font-black mb-8 border-b-4 border-pink-500/20 pb-4 dark:text-white uppercase italic tracking-tighter flex items-center gap-2">
@@ -403,7 +418,7 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig }: any
            <ShieldAlert className="w-5 h-5" /> Security Notice
         </h3>
         <p className="text-sm font-bold text-rose-700/80 mb-2">
-          Secure links are included to ensure files work when pushed to the public repo.
+          The more_information_url (your private download links) are specifically blocked from being sent to GitHub to keep them 100% private and secure.
         </p>
       </div>
 
@@ -423,14 +438,32 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig }: any
           )}
         </div>
 
-        <button 
-          onClick={handleManualSync} 
-          disabled={syncing || !gitConfig?.token} 
-          className="w-full min-h-[60px] bg-indigo-600 disabled:bg-indigo-600/50 hover:bg-indigo-700 text-white font-black rounded-xl uppercase tracking-widest italic shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 active:scale-95"
-        >
-          {syncing ? <RefreshCw className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
-          {syncing ? 'Synchronizing Repository...' : 'Trigger Full Static Build Sync'}
-        </button>
+        <div className="flex gap-4">
+          <button 
+            onClick={handleManualSync} 
+            disabled={syncing || !gitConfig?.token} 
+            className="flex-1 min-h-[60px] bg-indigo-600 disabled:bg-indigo-600/50 hover:bg-indigo-700 text-white font-black rounded-xl uppercase tracking-widest italic shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 active:scale-95"
+          >
+            {syncing ? <RefreshCw className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
+            {syncing ? 'Synchronizing Repository...' : 'Trigger Full Static Build Sync'}
+          </button>
+          <button 
+            onClick={handleTogglePreview} 
+            className="flex-none px-6 min-h-[60px] bg-slate-800 hover:bg-slate-700 text-white font-black rounded-xl uppercase tracking-widest italic shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95"
+          >
+            <FileText className="w-6 h-6" />
+            {showPreview ? 'Hide Payload' : 'Preview Payload'}
+          </button>
+        </div>
+
+        {showPreview && (
+          <div className="mt-6">
+            <h3 className="font-black text-slate-800 dark:text-white border-b border-black/10 dark:border-white/10 pb-2 uppercase tracking-widest text-xs italic">Generated Payload (staticData.ts)</h3>
+            <div className="bg-slate-950 border-2 border-slate-800 rounded-xl p-4 h-[400px] overflow-y-auto font-mono text-xs text-slate-300 shadow-inner whitespace-pre-wrap">
+              {previewContent}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1889,7 +1922,7 @@ export default function AdminDashboard() {
                 </div>
               )}
               {activeTab === 'github' && (
-                <GithubTab pushAllToGitHub={pushAllToGitHub} gitConfig={gitConfig} />
+                <GithubTab pushAllToGitHub={pushAllToGitHub} gitConfig={gitConfig} generatePreview={() => generateStaticDataFileCode(appsList, mockSettings, newsList, blogs, videosList)} />
               )}
               {activeTab === 'settings' && (
                 <SettingsTab key={mockSettings.site_title || 'settings'} mockSettings={mockSettings} handleSaveSettings={handleSaveSettings} saving={saving} />
