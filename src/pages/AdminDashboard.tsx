@@ -1966,7 +1966,7 @@ export default function AdminDashboard() {
                 </div>
               )}
               {activeTab === 'github' && (
-                <GithubTab pushAllToGitHub={pushAllToGitHub} gitConfig={gitConfig} generatePreview={() => generateStaticDataFileCode(appsList, mockSettings, newsList, blogs, videosList)} />
+                <GithubTab pushAllToGitHub={pushAllToGitHub} gitConfig={gitConfig} saveGitConfig={saveGitConfig} generatePreview={() => generateStaticDataFileCode(appsList, mockSettings, newsList, blogs, videosList)} />
               )}
               {activeTab === 'settings' && (
                 <SettingsTab key={mockSettings.site_title || 'settings'} mockSettings={mockSettings} handleSaveSettings={handleSaveSettings} saving={saving} />
