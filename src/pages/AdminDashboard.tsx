@@ -213,14 +213,27 @@ const AppsTab = React.memo(({ appsList, editingAppId, setEditingAppId, handleDel
             </div>
           </div>
 
-          <div className="flex items-center gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-pink-500/30">
-            <div className="flex-1">
-              <div className="font-semibold text-pink-500">New App Tag</div>
-              <div className="text-sm opacity-60 dark:text-white/60">Display "New" or "Major Update" badge.</div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex items-center gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-pink-500/30">
+              <div className="flex-1">
+                <div className="font-semibold text-pink-500">New App Tag</div>
+                <div className="text-sm opacity-60 dark:text-white/60">Display "New" or "Major Update" badge.</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" name="is_new" defaultChecked={editApp ? editApp.is_new : true} className="w-5 h-5 accent-pink-500" />
+                <span className="text-sm font-bold dark:text-white">Show Tag</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <input type="checkbox" name="is_new" defaultChecked={editApp ? editApp.is_new : true} className="w-5 h-5 accent-pink-500" />
-              <span className="text-sm font-bold dark:text-white">Show Tag</span>
+
+            <div className="flex items-center gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-amber-500/30">
+              <div className="flex-1">
+                <div className="font-semibold text-amber-500">Coming Soon Phase</div>
+                <div className="text-sm opacity-60 dark:text-white/60">Hide download links on the frontend for this app.</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" name="is_coming_soon" defaultChecked={editApp ? editApp.is_coming_soon : false} className="w-5 h-5 accent-amber-500" />
+                <span className="text-sm font-bold dark:text-white">Enable</span>
+              </div>
             </div>
           </div>
 
@@ -1439,6 +1452,7 @@ export default function AdminDashboard() {
         safety_status: (formData.get('safety_status') as 'Verified' | 'Caution' | 'Unsafe') || 'Verified',
         serial_number: parseInt(formData.get('serial_number') as string) || appsList.length + 1,
         is_featured: false,
+        is_coming_soon: formData.get('is_coming_soon') === 'on',
         is_new: formData.get('is_new') === 'on',
         release_notes: formData.get('release_notes') as string,
         rating: parseFloat(formData.get('rating') as string) || 5.0,

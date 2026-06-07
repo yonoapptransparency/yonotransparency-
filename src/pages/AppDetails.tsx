@@ -179,6 +179,27 @@ export default function AppDetails() {
     );
   }
 
+  if (app.is_coming_soon) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-center px-4 max-w-md mx-auto animate-fade-in select-none">
+        <div className="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-[24px] flex items-center justify-center mb-6 border border-amber-500/20 shadow-[0_8px_30px_-12px_rgba(245,158,11,0.3)] relative overflow-hidden group">
+          <div className="absolute inset-0 bg-amber-500/10 blur-xl group-hover:bg-amber-500/20 transition-colors duration-500" />
+          <Info className="w-10 h-10 relative z-10" />
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 mb-3 tracking-tight">Coming Soon</h1>
+        <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 leading-relaxed mb-10 max-w-sm">
+          The requested application "<strong className="text-zinc-800 dark:text-zinc-200 font-semibold">{app.name}</strong>" is currently in active development and will be available soon.
+        </p>
+        <Link 
+          to="/" 
+          className="flex items-center justify-center gap-2 px-8 py-3.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 rounded-2xl font-bold transition-all shadow-md active:scale-95 text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" /> Return to Store
+        </Link>
+      </div>
+    );
+  }
+
   const title = app.seo_title || app.name;
   
   const stripHtml = (html: string) => {
@@ -423,12 +444,21 @@ export default function AppDetails() {
                 whileTap={{ scale: 0.98 }}
                 className="w-full sm:w-auto min-w-[130px] sm:min-w-[150px]"
               >
-                <button 
-                  onClick={handleMoreDetails} 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm shadow-md"
-                >
-                  More <ArrowRight className="w-4 h-4" />
-                </button>
+                {app.is_coming_soon ? (
+                  <button 
+                    disabled
+                    className="w-full bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20 font-bold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed text-sm shadow-sm"
+                  >
+                    Coming Soon
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleMoreDetails} 
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm shadow-md"
+                  >
+                    Download <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
               </motion.div>
  
               <motion.div

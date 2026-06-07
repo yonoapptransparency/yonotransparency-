@@ -122,6 +122,7 @@ export interface AppConfig {
   canonical_url?: string;
   target_region?: string;
   category: string;
+  is_coming_soon?: boolean;
   version: string;
   file_size: string;
   developer: string;

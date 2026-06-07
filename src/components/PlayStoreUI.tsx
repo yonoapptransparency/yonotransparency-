@@ -331,7 +331,7 @@ export const AppListItem = React.memo(({ app, index }: { app: any; index?: numbe
         
         <div className="shrink-0 pr-1">
           <div className="bg-black/5 dark:bg-white/10 text-zinc-900 dark:text-zinc-100 px-4 py-1 text-[11px] font-bold rounded-full transition-all duration-300 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-zinc-900 shadow-sm border border-transparent group-hover:border-black/5 dark:group-hover:border-white/5">
-            MORE
+            {app.is_coming_soon ? 'SOON' : 'MORE'}
           </div>
         </div>
         
@@ -398,7 +398,7 @@ export const TopChartItem = React.memo(({ rank, app }: TopChartItemProps) => {
         
         <div className="shrink-0 pr-1">
           <div className="bg-black/5 dark:bg-white/10 text-zinc-900 dark:text-zinc-100 px-4 py-1 text-[11px] font-bold rounded-full transition-all duration-300 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-zinc-900 shadow-sm border border-transparent group-hover:border-black/5 dark:group-hover:border-white/5">
-            MORE
+            {app.is_coming_soon ? 'SOON' : 'MORE'}
           </div>
         </div>
         
