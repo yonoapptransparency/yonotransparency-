@@ -70,7 +70,10 @@ export default function NewsPage() {
               <Link to={`/news/${item.slug}`} className="text-2xl sm:text-3xl font-bold mb-3 text-zinc-900 leading-tight hover:text-blue-600 transition-colors">
                 {item.title}
               </Link>
-              <p className="text-base text-zinc-500 mb-6 line-clamp-3 leading-relaxed">{item.description}</p>
+              <div 
+                className="text-base text-zinc-500 mb-6 line-clamp-3 leading-relaxed prose prose-sm prose-zinc" 
+                dangerouslySetInnerHTML={{ __html: item.description || '' }} 
+              />
               
               <Link to={`/news/${item.slug}`} className="inline-flex items-center gap-2 text-blue-600 font-semibold text-sm group-hover:gap-3 transition-all">
                 Read More <ArrowRight className="w-4 h-4" />
