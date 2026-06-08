@@ -103,6 +103,7 @@ export default function ClearanceButton({ appId, status }: ClearanceButtonProps)
   const [dynamicLink, setDynamicLink] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
 
   // Kinetic behavioral tracking variables
   const mouseMovedRef = useRef(false);
@@ -191,6 +192,20 @@ export default function ClearanceButton({ appId, status }: ClearanceButtonProps)
       if (interval) clearInterval(interval);
     };
   }, [ready, tokenCountdown]);
+
+  // Smooth UI timer for fingerprint verification progress
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isGenerating) {
+      setElapsedMs(0);
+      interval = setInterval(() => {
+        setElapsedMs(prev => prev + 50);
+      }, 50);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isGenerating]);
 
   // Initial 3-second gateway handshake countdown
   useEffect(() => {
@@ -363,8 +378,11 @@ export default function ClearanceButton({ appId, status }: ClearanceButtonProps)
       const { nonce, difficulty, sid } = await challengeResponse.json();
 
       // Actively solve Proof of Work to prevent automated bot/scraper downloads
-      const fingerprint = await getFingerprint();
-      const solution = await solveVerification(nonce, difficulty);
+      const [fingerprint, solution] = await Promise.all([
+        getFingerprint(),
+        solveVerification(nonce, difficulty),
+        new Promise(resolve => setTimeout(resolve, 3000)) // Force minimum 3s timer for smooth UX interaction
+      ]);
 
       // Step 3: Server validation handshake exchange
       const tokenResponse = await fetch('/api/v1/process-file', {
@@ -506,13 +524,23 @@ export default function ClearanceButton({ appId, status }: ClearanceButtonProps)
         {isGenerating ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin text-current" /> 
-            <span className="text-current">Please wait...</span>
+            <span className="text-current">Loading...</span>
           </>
         ) : (
           <span className="text-current">More</span>
         )}
       </button>
 
+      {isGenerating && (
+        <div className="w-full sm:w-80 mt-3 flex justify-center px-4">
+          <div className="w-full h-1 bg-red-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-red-600 transition-all duration-[50ms] ease-linear rounded-full"
+              style={{ width: `${Math.min((elapsedMs / 3000) * 100, 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );
