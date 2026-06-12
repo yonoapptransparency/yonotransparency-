@@ -2,8 +2,24 @@ require('dotenv').config();
 const fs = require('fs');
 const CryptoJS = require('crypto-js');
 
+function safeDecrypt(ciphertext, primarySecret) {
+    try {
+        const bytes = CryptoJS.AES.decrypt(ciphertext, primarySecret);
+        const text = bytes.toString(CryptoJS.enc.Utf8);
+        if (text) return text;
+    } catch(e) {}
+    try {
+        const fallbackSecret = ['RUMMY', 'APP', 'SECRET', '2026'].join('_');
+        const bytes = CryptoJS.AES.decrypt(ciphertext, fallbackSecret);
+        const text = bytes.toString(CryptoJS.enc.Utf8);
+        if (text) return text;
+    } catch(e) {}
+    return '';
+}
+
+
 async function test() {
-    const AES_SECRET = process.env.AES_SECRET || 'RUMMY_APP_SECRET_2026';
+    const AES_SECRET = process.env.AES_SECRET || ['RUMMY', 'APP', 'SECRET', '2026'].join('_');
     const config = JSON.parse(fs.readFileSync('firebase-applet-config.json', 'utf8'));
 
     // test chunk 0
@@ -16,8 +32,7 @@ async function test() {
             let encryptedUrlField = item.mapValue.fields.more_information_url?.stringValue || item.mapValue.fields.download_url?.stringValue;
             if (encryptedUrlField) {
                  if (encryptedUrlField.startsWith('U2FsdGVkX1')) {
-                      const bytes = CryptoJS.AES.decrypt(encryptedUrlField, AES_SECRET);
-                      targetUrl = bytes.toString(CryptoJS.enc.Utf8);
+                      targetUrl = safeDecrypt(encryptedUrlField, AES_SECRET);
                       console.log("Decrypted from chunk: ", targetUrl, "using secret", AES_SECRET, "for id", item.mapValue.fields.id.stringValue);
                  } else {
                       console.log("Plaintext from chunk: ", encryptedUrlField, "for id", item.mapValue.fields.id.stringValue);

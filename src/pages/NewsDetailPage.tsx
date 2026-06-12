@@ -115,7 +115,7 @@ export default function NewsDetailPage() {
         <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 rounded-2xl flex items-center justify-center mb-6">
           <ShieldAlert className="w-8 h-8" />
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-锌-100 mb-2">News Not Found</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">News Not Found</h1>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-3 leading-relaxed mb-8">
           The requested article "<span className="font-mono font-medium text-zinc-800 dark:text-zinc-200">{slug}</span>" could not be located.
         </p>

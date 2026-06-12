@@ -131,7 +131,7 @@ export default function BlogDetailPage() {
         animate={{ opacity: 1 }}
       >
         <header className="mb-12">
-            <h1 className="text-3xl sm:text-5xl font-bold mb-8 text-zinc-900 dark:text-锌-100 tracking-tight leading-[1.1]">
+            <h1 className="text-3xl sm:text-5xl font-bold mb-8 text-zinc-900 dark:text-zinc-100 tracking-tight leading-[1.1]">
                 {blog.title}
             </h1>
             

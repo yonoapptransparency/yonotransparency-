@@ -300,7 +300,7 @@ export default function GatewayPage() {
                 {app.icon_url ? <img src={app.icon_url} alt="" className="w-full h-full object-cover"/> : null}
               </div>
               <div className="flex flex-col justify-center">
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 text-zinc-900 dark:text-锌-100">{app.name}</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 text-zinc-900 dark:text-zinc-100">{app.name}</h2>
                 <div className="flex flex-wrap justify-center sm:justify-start items-center gap-x-3 gap-y-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
                   <span>ID: {app.serial_number}</span>
                   <span className="hidden sm:inline">•</span>
