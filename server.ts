@@ -789,7 +789,7 @@ async function startServer() {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
     try {
-      const AES_SECRET = process.env.AES_SECRET; if (!AES_SECRET) throw new Error('AES_SECRET is required');
+      const AES_SECRET = process.env.AES_SECRET || 'RUMMY_APP_SECRET_2026';
       const ciphertext = CryptoJS.AES.encrypt(url, AES_SECRET).toString();
       res.json({ encrypted: ciphertext });
     } catch (err) {
@@ -804,7 +804,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Valid links array payload is required.' });
     }
     try {
-      const AES_SECRET = process.env.AES_SECRET; if (!AES_SECRET) throw new Error('AES_SECRET is required');
+      const AES_SECRET = process.env.AES_SECRET || 'RUMMY_APP_SECRET_2026';
       
       // Double encrypt: Encrypt the URL individually first
       const processedItems = items.map((item: any) => {
@@ -833,7 +833,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Encrypted payload ciphertext is required.' });
     }
     try {
-      const AES_SECRET = process.env.AES_SECRET; if (!AES_SECRET) throw new Error('AES_SECRET is required');
+      const AES_SECRET = process.env.AES_SECRET || 'RUMMY_APP_SECRET_2026';
       const decryptedText = safeDecrypt(encryptedData, AES_SECRET);
       if (!decryptedText) {
         throw new Error("Empty decrypted block.");
@@ -877,7 +877,7 @@ async function startServer() {
            apps = apps.concat(chunk1Data.fields.items.arrayValue.values.map(v => v.mapValue.fields.id.stringValue));
        }
        
-       const AES_SECRET = process.env.AES_SECRET; if (!AES_SECRET) throw new Error('AES_SECRET is required');
+       const AES_SECRET = process.env.AES_SECRET || 'RUMMY_APP_SECRET_2026';
        const sampleUrls = apps.map(id => ({ id, url: `https://example.com/demo/${id}` }));
        const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(sampleUrls), AES_SECRET).toString();
        
@@ -1056,7 +1056,7 @@ const rateLimitMap = new Map<string, number[]>();
 
         let targetUrl = '';
         try {
-          const AES_SECRET = process.env.AES_SECRET; if (!AES_SECRET) throw new Error('AES_SECRET is required');
+          const AES_SECRET = process.env.AES_SECRET || 'RUMMY_APP_SECRET_2026';
           const config = getRawFirebaseConfig();
           
           try {
