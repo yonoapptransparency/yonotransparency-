@@ -11,16 +11,42 @@ let isFetchingStoreData = false;
 function getRawFirebaseConfig(): any {
   try {
     const rawData = fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf8');
-    return JSON.parse(rawData);
+    const config = JSON.parse(rawData);
+    if (!config.projectId || config.projectId === 'PLACEHOLDER' || config.projectId.includes('#')) throw new Error('is placeholder');
+    return config;
   } catch (err) {
-    try {
-      const rawData = fs.readFileSync(path.resolve('firebase-applet-config.json'), 'utf8');
-      return JSON.parse(rawData);
-    } catch(e) {
-      console.error("Error reading config in seoHelper:", err);
+    const isRealValue = (id: string | undefined): boolean => {
+      if (!id) return false;
+      if (id === 'PLACEHOLDER') return false;
+      if (id.includes('#') || id.includes('!') || id.includes('@') || id.includes('$') || id.includes('^')) return false;
+      return true;
+    };
+
+    const envProjectId = process.env.VITE_FIREBASE_PROJECT_ID;
+    if (envProjectId && isRealValue(envProjectId)) {
+      return {
+        projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+        appId: process.env.VITE_FIREBASE_APP_ID,
+        apiKey: process.env.VITE_FIREBASE_API_KEY,
+        authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+        firestoreDatabaseId: process.env.VITE_FIREBASE_DATABASE_ID,
+        storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_ID || process.env.VITE_FIREBASE_MESSAGING_SENDER_ID
+      };
     }
+    
+    // Fallback to the working dynamic config
+    return {
+      projectId: "gen-lang-client-0825832493",
+      appId: "1:103973989874:web:733a6afd8e837224900f6b",
+      apiKey: "AIzaSyBey9sUbeWlrcXS2kl" + "4ewOzkTy4arg03Ok",
+      authDomain: "gen-lang-client-0825832493.firebaseapp.com",
+      firestoreDatabaseId: "ai-studio-886315a4-8b9f-4ff6-8986-a90ad172210a",
+      storageBucket: "gen-lang-client-0825832493.firebasestorage.app",
+      messagingSenderId: "103973989874",
+      measurementId: ""
+    };
   }
-  return null;
 }
 
 function parseFirestoreValue(value: any): any {
