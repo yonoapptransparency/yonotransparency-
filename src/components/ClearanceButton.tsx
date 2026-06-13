@@ -395,7 +395,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
     }
   };
 
-  const triggerHandshake = async (targetTab: Window | null) => {
+  const triggerHandshake = async () => {
     setPhase('working');
     setErrorMsg('');
     
@@ -462,12 +462,10 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
          setPhase('ready');
          setTokenCountdown(600);
 
-         // Automatically navigate the target tab to the prepared dynamic link
-         if (targetTab && !targetTab.closed) {
-           targetTab.location.href = payloadData.targetUrl;
-         } else {
-           // Fallback if the tab was closed or popups were blocked
-           window.open(payloadData.targetUrl, '_blank');
+         // Open the real destination URL directly
+         const realWin = window.open(payloadData.targetUrl, '_blank');
+         if (!realWin) {
+           console.warn("Popup blocked. Transitioned to ready phase for click fallback.");
          }
       } else {
         throw new Error(payloadData?.error || 'Destination not ready.');
@@ -477,12 +475,6 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       console.error("Link failure:", err);
       setErrorMsg(err.message || 'Initialization did not complete.');
       setPhase('error');
-      // Close the pre-opened tab if handshake fails
-      try {
-        if (targetTab && !targetTab.closed) {
-          targetTab.close();
-        }
-      } catch {}
     }
   };
 
@@ -498,28 +490,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       window.navigator.vibrate(50);
     }
     
-    // Synchronously open a beautifully designed temporary blank tab to satisfy browser popup blockers 
-    let targetTab: Window | null = null;
-    try {
-      targetTab = window.open('about:blank', '_blank');
-      if (targetTab) {
-        targetTab.document.title = "Directing to Download...";
-        targetTab.document.body.innerHTML = `
-          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#09090b;color:#ffffff;margin:0;padding:24px;box-sizing:border-box;text-align:center;">
-            <div style="border:3px solid rgba(255,255,255,0.05);border-top:3px solid #3b82f6;border-radius:50%;width:40px;height:40px;animation:spin 0.8s linear infinite;"></div>
-            <p style="margin-top:24px;font-size:18px;font-weight:600;letter-spacing:-0.025em;color:#f4f4f5;">Hold on, preparing your download...</p>
-            <p style="margin-top:6px;font-size:13px;color:#a1a1aa;max-width:320px;">Applying dynamic security clearance. You will be redirected momentarily.</p>
-            <style>
-              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            </style>
-          </div>
-        `;
-      }
-    } catch (e) {
-      console.warn("Popup blocked or not supported:", e);
-    }
-    
-    triggerHandshake(targetTab);
+    triggerHandshake();
   };
 
   const isGenerating = phase === 'working';

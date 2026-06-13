@@ -86,7 +86,45 @@ const BAD_UA = [
   /rogerbot/i, /exabot/i, /blexbot/i, /ia_archiver/i,
   /archive\.org/i, /facebookexternalhit/i, /twitterbot/i,
   /linkedinbot/i, /slackbot/i, /whatsappbot/i, /telegrambot/i,
+  /zgrab/i, /masscan/i, /nmap/i, /nuclei/i, /sqlmap/i,
+  /nikto/i, /dirbuster/i, /gobuster/i, /wfuzz/i,
 ];
+
+// Set CF_TURNSTILE_SECRET in your environment to enable Cloudflare Turnstile
+const CF_TURNSTILE_SECRET = process.env.CF_TURNSTILE_SECRET || '';
+
+async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
+  if (!CF_TURNSTILE_SECRET || !token) return true;
+  try {
+    const params = new URLSearchParams({
+      secret: CF_TURNSTILE_SECRET,
+      response: token,
+      remoteip: ip
+    });
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: params,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+    const data: any = await res.json();
+    if (!data.success) {
+      console.warn('[CF_TURNSTILE] Failed:', data['error-codes']);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn('[CF_TURNSTILE] Error:', e);
+    return true; // fail-open on network issues to avoid blocking real users
+  }
+}
+
+// ── FINGERPRINT ENTROPY CHECK ──
+function isFingerprintValid(fp: string): boolean {
+  if (!fp || typeof fp !== 'string') return false;
+  if (fp.length < 8) return false;
+  if (/^(.)\1+$/.test(fp)) return false; // all-same-char = bot placeholder
+  return true;
+}
 
 // Rolling IP request auditing: max 120 dynamic handshake attempts inside a 1-minute window to avoid blocking retry taps
 const WINDOW = 60 * 1000;
@@ -122,6 +160,7 @@ function getIp(req: express.Request): string {
 interface NonceEntry {
   sessionId: string;
   expiresAt: number;
+  issuedAt?: number;
 }
 const nonceStore = new Map<string, NonceEntry>();
 
@@ -220,84 +259,107 @@ const isBotDetected = (req: express.Request): boolean => {
 });
 
 // API Route: Allocate secure multi-use session seed & ephemeral Proof-of-Work nonce
-app.get(["/api/v1/get-challenge", "/api/v1/init-file"], (req, res) => {
-  if (isBotDetected(req)) {
-    return res.status(403).json({ error: "Access Denied: High-risk client signature detected." });
-  }
+app.get(["/api/v1/_chal", "/api/v1/get-challenge", "/api/v1/init-file"], (req, res) => {
+  const ip = getIp(req);
+  if (rateLimit(ip)) return res.status(429).json({ error: "Too many requests. Please wait." });
+  if (isBotDetected(req)) return res.status(403).json({ error: "Access denied." });
 
   const sid = ensureSession(req, res);
   const nonce = crypto.randomBytes(20).toString("hex");
+  const issuedAt = Date.now();
 
   // Save temporary session nonce valid for exactly 2 minutes
   nonceStore.set(nonce, {
     sessionId: sid,
-    expiresAt: Date.now() + 120 * 1000
+    expiresAt: issuedAt + 120 * 1000,
+    issuedAt
   });
 
-  res.json({
-    nonce,
-    difficulty: "00",
-    sid // Pass sid back so client has a backup if browser sandbox blocks third-party cookie sync
-  });
+  // Random jitter (50–150ms) to frustrate timing attacks
+  const jitter = Math.floor(Math.random() * 100) + 50;
+  setTimeout(() => {
+    res.json({
+      nonce,
+      difficulty: "0000", // 4 zeros = ~65,536 avg attempts — hard for bots, ~250ms for real browsers
+      sid
+    });
+  }, jitter);
 });
 
 // API Route: Verify Proof-of-Work solver submission, score kinetics, and issue dynamic JWT-style token
-app.post(["/api/v1/get-token", "/api/v1/process-file"], (req, res) => {
-  if (isBotDetected(req)) {
-    return res.status(403).json({ error: "Access Denied: Heavy automation patterns flagged." });
-  }
+app.post(["/api/v1/_proc", "/api/v1/get-token", "/api/v1/process-file"], async (req, res) => {
+  const ip = getIp(req);
+  if (rateLimit(ip)) return res.status(429).json({ error: "Too many requests. Please wait." });
+  if (isBotDetected(req)) return res.status(403).json({ error: "Access denied." });
 
   const sid = req.body?.sid || req.cookies?.__sid;
   if (!sid) {
-    return res.status(403).json({ error: "Access Denied: Browser session context expired. Please reload webpage." });
+    return res.status(403).json({ error: "Session expired. Please reload." });
   }
 
-  const { nonce, solution, fingerprint, score, moved, touch } = req.body || {};
+  const { nonce, solution, fingerprint, score, moved, touch, cfToken } = req.body || {};
   if (!nonce || !solution || !fingerprint) {
-    return res.status(400).json({ error: "Access Denied: Security payload transcription error." });
+    return res.status(400).json({ error: "Invalid request." });
+  }
+
+  if (!isFingerprintValid(fingerprint)) {
+    console.warn(`[DEFENSE] Bad fingerprint from ${ip}`);
+    return res.status(403).json({ error: "Access denied." });
   }
 
   const entry = nonceStore.get(nonce);
   if (!entry) {
-    return res.status(403).json({ error: "Access Denied: Cryptographic challenge has already expired or is invalid." });
+    return res.status(403).json({ error: "Challenge expired. Please try again." });
   }
 
   if (entry.sessionId !== sid) {
-    return res.status(403).json({ error: "Access Denied: Handshake domain context cross-contamination." });
+    nonceStore.delete(nonce);
+    return res.status(403).json({ error: "Session mismatch." });
   }
 
   if (entry.expiresAt < Date.now()) {
     nonceStore.delete(nonce);
-    return res.status(403).json({ error: "Access Denied: Verification timed out. Please try again." });
+    return res.status(403).json({ error: "Challenge timed out." });
+  }
+
+  // Timing check: < 150ms = impossible for real browser = bot
+  const solveMs = Date.now() - (entry.issuedAt || (entry.expiresAt - 120 * 1000));
+  if (solveMs < 150) {
+    nonceStore.delete(nonce);
+    console.warn(`[DEFENSE] Solve too fast (${solveMs}ms) from ${ip}`);
+    return res.status(403).json({ error: "Access denied." });
   }
 
   // Invalidate challenge immediately to secure single-use constraint
   nonceStore.delete(nonce);
 
   // Gracefully log kinetic human indicators but don't block mobile touch, pointer events or standard browser clicks
-  console.log(`[INFO_KINETIC] Human gestures analyzed: score=${score}, moved=${moved}, touch=${touch}`);
+  console.log(`[ACCESS_INFO] Human gestures analyzed: score=${score}, moved=${moved}, touch=${touch}`);
 
   // Enforce kinetic behavior scores to filter out automated scrapers and headless download bots
-  if (typeof score !== 'number' || score < 50) {
-    console.warn(`[DEFENSE_WARN] Bot score constraint triggered on IP ${getIp(req)}: score=${score}`);
-    return res.status(403).json({ error: "Access Denied: High-risk automated request profile detected." });
+  if (typeof score !== 'number' || score < 40) {
+    console.warn(`[DEFENSE] Low score (${score}) from ${ip}`);
+    return res.status(403).json({ error: "Access denied: security check failed." });
   }
 
   // Server-side SHA-256 Proof-of-Work check
   const attempt = nonce + solution;
   const hash = crypto.createHash("sha256").update(attempt).digest("hex");
-  if (!hash.startsWith("00")) {
-    console.warn(`[DEFENSE_WARN] Mathematical verification failure on IP ${getIp(req)}: proof=${hash}`);
-    return res.status(403).json({ error: "Access Denied: Proof-of-Work solver sequence check failed." });
+  if (!hash.startsWith("0000")) {
+    console.warn(`[DEFENSE] PoW fail from ${ip}: ${hash}`);
+    return res.status(403).json({ error: "Access denied: verification failed." });
   }
 
-  // Referrer validation - Bypassed for back/forward navigation and iframe sandboxing compatibility
-  const ref = (req.headers["referer"] || req.headers["referrer"] || "") as string;
-  if (!ref) {
-    console.warn("[DEFENSE_INFO] Referer header was omitted. (Bypassed for compatibility)");
+  // Cloudflare Turnstile
+  if (CF_TURNSTILE_SECRET) {
+    const cfPassed = await verifyTurnstile(cfToken || '', ip);
+    if (!cfPassed) {
+      console.warn(`[CF] Rejected ${ip}`);
+      return res.status(403).json({ error: "Access denied: bot protection triggered." });
+    }
   }
 
-  const ip = getIp(req);
+  console.log(`[ACCESS] GRANTED ip=${ip} score=${score} solveMs=${solveMs} moved=${moved} touch=${touch}`);
   const token = generateToken(ip, sid, fingerprint);
 
   res.json({ token });
