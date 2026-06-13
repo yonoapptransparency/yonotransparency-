@@ -442,12 +442,12 @@ async function startServer() {
       if (news.length === 0) robots += `Disallow: /news\n`;
       if (videos.length === 0) robots += `Disallow: /videos\n`;
       
-      robots += `\nSitemap: https://yourapp.online/sitemap.xml\n`;
+      robots += `\nSitemap: https://rummyapp.online/sitemap.xml\n`;
       res.set('Content-Type', 'text/plain');
       res.send(robots);
     } catch (err) {
       res.set('Content-Type', 'text/plain');
-      res.send(`User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://yourapp.online/sitemap.xml\n`);
+      res.send(`User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://rummyapp.online/sitemap.xml\n`);
     }
   });
 
@@ -460,7 +460,7 @@ async function startServer() {
       }
       const { apps = [], news = [], blogs = [], videos = [] } = data;
       
-      const baseUrl = 'https://yourapp.online'; // Canonical production domain fallback
+      const baseUrl = 'https://rummyapp.online'; // Canonical production domain fallback
       const host = req.headers.host ? `https://${req.headers.host}` : baseUrl;
 
       let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;

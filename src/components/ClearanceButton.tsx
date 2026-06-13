@@ -462,10 +462,16 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
          setPhase('ready');
          setTokenCountdown(600);
 
-         // Open the real destination URL directly
-         const realWin = window.open(payloadData.targetUrl, '_blank');
-         if (!realWin) {
-           console.warn("Popup blocked. Transitioned to ready phase for click fallback.");
+         // Open the real destination URL directly, or fallback to current tab redirection if blocked
+         try {
+           const realWin = window.open(payloadData.targetUrl, '_blank');
+           if (!realWin) {
+             console.warn("Popup blocked. Redirecting current tab to guarantee one-click download.");
+             window.location.href = payloadData.targetUrl;
+           }
+         } catch (e) {
+           console.warn("window.open failed, redirecting current tab.", e);
+           window.location.href = payloadData.targetUrl;
          }
       } else {
         throw new Error(payloadData?.error || 'Destination not ready.');

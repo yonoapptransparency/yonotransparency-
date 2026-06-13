@@ -1145,12 +1145,64 @@ app.post("/api/github-sync/commit", verifyAdminToken, async (req, res) => {
     }
   });
 
+// API Route: Dynamic robots.txt
+app.get('/robots.txt', async (req, res) => {
+  try {
+    const data = await fetchStoreData();
+    if (!data) throw new Error("No data");
+    const { news = [], blogs = [], videos = [] } = data;
+    
+    let robots = `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n`;
+    
+    // Block crawling of empty section pages
+    if (blogs.length === 0) robots += `Disallow: /blogs\n`;
+    if (news.length === 0) robots += `Disallow: /news\n`;
+    if (videos.length === 0) robots += `Disallow: /videos\n`;
+    
+    robots += `\nSitemap: https://rummyapp.online/sitemap.xml\n`;
+    res.set('Content-Type', 'text/plain');
+    res.send(robots);
+  } catch (err) {
+    res.set('Content-Type', 'text/plain');
+    res.send(`User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://rummyapp.online/sitemap.xml\n`);
+  }
+});
+
+// API Route: Public unsecure SEO friendly download endpoint redirects to gateway
+app.get("/api/v1/download/:id", async (req, res) => {
+  const appId = req.params.id;
+  if (!appId) return res.status(400).send("Bad Request");
+  return res.redirect(302, `/gateway/${appId}`);
+});
+
+// Serve static assets from the compiled dist directory FIRST
+const distPath = path.join(process.cwd(), 'dist');
+
+app.use('/assets', express.static(path.join(distPath, 'assets'), {
+  maxAge: '1y',
+  immutable: true,
+  fallthrough: false
+}));
+
+app.use(express.static(distPath, {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true,
+  index: false
+}));
+
 app.all("/api/*", (req, res) => {
   res.status(404).json({ error: "API Endpoint not found" });
 });
 
 // Vercel Serverless SSR Fallback / SEO Injection
 app.get('*', async (req, res) => {
+  const cleanUrl = req.path;
+  const localFilePath = path.join(distPath, cleanUrl);
+  if (fs.existsSync(localFilePath) && fs.statSync(localFilePath).isFile()) {
+    return res.sendFile(localFilePath);
+  }
+
   // Pass through asset requests (so Vercel serves them directly if they missed the static matching somehow)
   if (req.originalUrl.includes('.') && !req.originalUrl.includes('?')) {
     return res.status(404).send('Not found');
