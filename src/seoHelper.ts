@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { mockApps, mockSettings, mockNews, mockBlogs, mockVideos } from './lib/staticData.js';
-import { getAdminPath } from './lib/utils.js';
+import { mockApps, mockSettings, mockNews, mockBlogs, mockVideos } from './lib/staticData';
+import { getAdminPath } from './lib/utils';
 
 let cachedData: any = null;
 let lastFetchTime = 0;

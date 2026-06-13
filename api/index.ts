@@ -23,7 +23,7 @@ function safeDecrypt(ciphertext: string, primarySecret: string) {
     return '';
 }
 
-import { fetchStoreData, getField, injectSeoTags } from "../src/seoHelper.js";
+import { fetchStoreData, getField, injectSeoTags } from "../src/seoHelper";
 
 const app = express();
 
