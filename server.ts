@@ -45,17 +45,7 @@ function getRawFirebaseConfig(): any {
       };
     }
     
-    // Fallback to the working dynamic config
-    return {
-      projectId: "gen-lang-client-0825832493",
-      appId: "1:103973989874:web:733a6afd8e837224900f6b",
-      apiKey: "AIzaSyBey9sUbeWlrcXS2kl" + "4ewOzkTy4arg03Ok",
-      authDomain: "gen-lang-client-0825832493.firebaseapp.com",
-      firestoreDatabaseId: "ai-studio-886315a4-8b9f-4ff6-8986-a90ad172210a",
-      storageBucket: "gen-lang-client-0825832493.firebasestorage.app",
-      messagingSenderId: "103973989874",
-      measurementId: ""
-    };
+    throw new Error('Firebase configuration is missing. Please set environment variables or create firebase-applet-config.json.');
   }
 }
 
@@ -113,7 +103,7 @@ async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
     }
     return true;
   } catch (e) {
-    console.warn('[CF_TURNSTILE] Error:', e);
+    console.error('[CF_TURNSTILE] FAIL-OPEN EVENT: Network error verifying token. IP:', ip, e);
     return true; // fail-open on network issues to avoid blocking real users
   }
 }
@@ -358,7 +348,7 @@ async function startServer() {
     // Modern frame protection (Content Security Policy)
     res.setHeader(
       "Content-Security-Policy",
-      "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; " +
+      "default-src 'self' 'unsafe-inline' data: blob: https:; " +
       "img-src 'self' data: blob: https:; " +
       "connect-src 'self' https: wss:; " +
       "frame-ancestors 'self' https://*.google.com https://*.studio https://*.run.app http://localhost:*;"
@@ -381,11 +371,6 @@ async function startServer() {
       res.status(403).send("Forbidden.");
     });
   });
-
-  // Tracking filter bypassed
-  const isInvalidClient = (req: express.Request): boolean => {
-    return false;
-  };
 
   // API Routes: Dynamic Favicon and Apple-Touch-Icon router for Worldwide SEO & AI crawlers
   app.get([
@@ -964,44 +949,32 @@ async function startServer() {
   });
 
   // Database fix endpoint - run once to fix broken secure links
-  app.get("/api/v1/admin/fix-db-links", verifyAdminToken, async (req, res) => {
-     try {
-       const config = getRawFirebaseConfig();
-       
-       const chunkResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/apps_chunk_0`);
-       const chunkData = await chunkResponse.json();
-       let apps = [];
-       if (!chunkData.error && chunkData.fields?.items?.arrayValue?.values) {
-           apps = chunkData.fields.items.arrayValue.values.map(v => v.mapValue.fields.id.stringValue);
-       }
-       const chunk1Response = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/apps_chunk_1`);
-       const chunk1Data = await chunk1Response.json();
-       if (!chunk1Data.error && chunk1Data.fields?.items?.arrayValue?.values) {
-           apps = apps.concat(chunk1Data.fields.items.arrayValue.values.map(v => v.mapValue.fields.id.stringValue));
-       }
-       
-       const AES_SECRET = process.env.AES_SECRET || '';
-       const sampleUrls = apps.map(id => ({ id, url: `https://example.com/demo/${id}` }));
-       const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(sampleUrls), AES_SECRET).toString();
-       
-       const idToken = req.query.token as string;
-       const response = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/secure_links`, {
-          method: 'PATCH',
-          headers: {
-             'Authorization': `Bearer ${idToken}`,
-             'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-             fields: {
-                encryptedData: { stringValue: ciphertext }
-             }
-          })
-       });
-       const data = await response.json();
-       res.json(data);
-     } catch (e: any) {
-       res.json({ error: e.message });
-     }
+  app.get("/api/v1/debug-seo", async (req, res) => {
+    try {
+      const { fetchStoreData } = require('./src/seoHelper');
+      const data = await fetchStoreData();
+      res.json({
+         hasData: !!data,
+         hasSettings: !!data?.settings,
+         settingsKeys: Object.keys(data?.settings || {})
+      });
+    } catch(e) {
+      res.json({ error: e.message });
+    }
+  });
+
+  app.get("/api/v1/debug-index", async (req, res) => {
+    try {
+      let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
+      
+      const vite = req.app.get('vite');
+      // If we don't have vite on req.app, let's just use what's in scope but vite is not exported. 
+      // Actually we are inside startServer() where vite is in scope
+      // return a simple object
+      res.json({ debug: true });
+    } catch(e) {
+      res.json({ error: e.message });
+    }
   });
 
   // ── ROADBLOCKS ──
@@ -1012,81 +985,6 @@ async function startServer() {
   });
 
 const rateLimitMap = new Map<string, number[]>();
-
-  app.get("/api/v1/debug-target", async (req, res) => {
-    let targetUrls = [];
-    const appId = req.query.id as string;
-    try {
-      const AES_SECRET = process.env.AES_SECRET || '';
-      const config = getRawFirebaseConfig();
-      const urlResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/sec_public_links?key=${config.apiKey}`);
-      let secureData = await urlResponse.json();
-      targetUrls.push({step: "sec_public_links", error: secureData.error});
-      
-      if (secureData.error || (!secureData.fields?.encryptedData && !secureData.fields?.items)) {
-          const slResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/secure_links?key=${config.apiKey}`);
-          const slData = await slResponse.json();
-          targetUrls.push({step: "secure_links", error: slData.error});
-          if (!slData.error) {
-              secureData = slData;
-          }
-      }
-
-      if (secureData.error || (!secureData.fields?.encryptedData && !secureData.fields?.items)) {
-          const vaultRes = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/sec_vault?key=${config.apiKey}`);
-          const vaultData = await vaultRes.json();
-          targetUrls.push({step: "sec_vault", error: vaultData.error});
-          if (!vaultData.error) {
-              secureData = vaultData;
-          }
-      }
-      
-      let targetUrl = '';
-      if (!secureData.error) {
-        const fields = secureData.fields;
-        if (fields?.encryptedData?.stringValue) {
-          const decryptedText = safeDecrypt(fields.encryptedData.stringValue, AES_SECRET);
-          targetUrls.push({step: "decrypted", success: !!decryptedText});
-          if (decryptedText) {
-            const linksArray = JSON.parse(decryptedText);
-            const linkObj = linksArray.find((v: any) => v.id === appId);
-            targetUrls.push({step: "linksArray", size: linksArray.length, allIds: linksArray.map(m=>m.id), foundObj: !!linkObj });
-            if (linkObj && linkObj.url) {
-              targetUrl = linkObj.url.startsWith('U2FsdGVkX1') ? safeDecrypt(linkObj.url, AES_SECRET) : linkObj.url;
-              targetUrls.push({step: "found_in_vault", targetUrl});
-            }
-          }
-        }
-      }
-      
-      if (!targetUrl || !targetUrl.startsWith('http')) {
-        const metaResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/apps_meta`);
-        const metaData = await metaResponse.json();
-        let numChunks = 1;
-        if (!metaData.error && metaData.fields?.numChunks?.integerValue) {
-            numChunks = parseInt(metaData.fields.numChunks.integerValue, 10);
-        }
-        for (let i = 0; i < numChunks; i++) {
-            const chunkResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/apps_chunk_${i}`);
-            const chunkData = await chunkResponse.json();
-            if (!chunkData.error && chunkData.fields?.items?.arrayValue?.values) {
-                const item = chunkData.fields.items.arrayValue.values.find((v: any) => v.mapValue.fields.id.stringValue === appId);
-                if (item && item.mapValue.fields) {
-                    const encryptedUrlField = item.mapValue.fields.more_information_url?.stringValue || item.mapValue.fields.download_url?.stringValue;
-                    if (encryptedUrlField) {
-                        targetUrl = encryptedUrlField.startsWith('U2FsdGVkX1') ? safeDecrypt(encryptedUrlField, AES_SECRET) : encryptedUrlField;
-                        targetUrls.push({step: "found_in_chunk", chunk: i, targetUrl, field: encryptedUrlField});
-                        break;
-                    }
-                }
-            }
-        }
-      }
-      return res.json({ targetUrl, process: targetUrls });
-    } catch(e) {
-      return res.json({ error: e.message });
-    }
-  });
 
   // API Route: Allocate seed & ephemeral nonce
   app.get(["/api/v1/_chal", "/api/v1/get-challenge", "/api/v1/init-file"], (req, res) => {
@@ -1517,7 +1415,7 @@ const rateLimitMap = new Map<string, number[]>();
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
-      appType: "spa",
+      appType: "custom",
     });
     app.use(vite.middlewares);
     
@@ -1533,6 +1431,7 @@ const rateLimitMap = new Map<string, number[]>();
         const hostUrl = `${String(protocol).split(',')[0].trim()}://${String(host).split(',')[0].trim()}`;
         const userAgent = req.headers['user-agent'] || '';
         template = await injectSeoTags(template, req.originalUrl, hostUrl, userAgent);
+        fs.writeFileSync(path.resolve(process.cwd(), 'debug-inject.log'), "Injected length: " + template.length + " has_initial: " + template.includes("__INITIAL_DATA__"));
         res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
       } catch (e: any) {
         vite.ssrFixStacktrace(e);

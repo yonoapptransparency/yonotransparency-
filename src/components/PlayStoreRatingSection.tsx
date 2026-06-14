@@ -108,7 +108,7 @@ export default function PlayStoreRatingSection({ appId, appTitle, onReviewSubmit
           comment: cleanComment,
           created_at: newReview.created_at,
           helpful_count: 0,
-          is_approved: true,
+          is_approved: false,
           source: 'community'
         });
       }

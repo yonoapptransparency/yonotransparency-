@@ -21,8 +21,6 @@ declare global {
 }
 
 // We rely on either the injected config (for SSR/dynamic routes) or the statically bundled config (for dumb static hosting)
-const fallbackKey = "AIzaSyBey9sUbeWlrcXS2kl" + "4ewOzkTy4arg03Ok";
-
 const isRealValue = (id: string | undefined): boolean => {
   if (!id) return false;
   if (id === 'PLACEHOLDER') return false;
@@ -31,19 +29,19 @@ const isRealValue = (id: string | undefined): boolean => {
   return true;
 };
 
-const getClientConfigValue = (envVal: string | undefined, configVal: string | undefined, fallbackVal: string) => {
+const getClientConfigValue = (envVal: string | undefined, configVal: string | undefined) => {
   if (isRealValue(envVal)) return envVal!;
   if (configVal && configVal !== 'PLACEHOLDER' && !configVal.includes('#')) return configVal;
-  return fallbackVal;
+  return undefined;
 };
 
-const resolvedProjectId = getClientConfigValue(import.meta.env.VITE_FIREBASE_PROJECT_ID, appletConfig.projectId, 'gen-lang-client-0825832493');
-const resolvedAppId = getClientConfigValue(import.meta.env.VITE_FIREBASE_APP_ID, appletConfig.appId, '1:103973989874:web:733a6afd8e837224900f6b');
-const resolvedApiKey = getClientConfigValue(import.meta.env.VITE_FIREBASE_API_KEY, appletConfig.apiKey, "AIzaSyBey9sUbeWlrcXS2kl" + "4ewOzkTy4arg03Ok");
-const resolvedAuthDomain = getClientConfigValue(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN, appletConfig.authDomain, 'gen-lang-client-0825832493.firebaseapp.com');
-const resolvedDatabaseId = getClientConfigValue(import.meta.env.VITE_FIREBASE_DATABASE_ID, appletConfig.firestoreDatabaseId, 'ai-studio-886315a4-8b9f-4ff6-8986-a90ad172210a');
-const resolvedStorageBucket = getClientConfigValue(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET, appletConfig.storageBucket, 'gen-lang-client-0825832493.firebasestorage.app');
-const resolvedMessagingId = getClientConfigValue(import.meta.env.VITE_FIREBASE_MESSAGING_ID, appletConfig.messagingSenderId, '103973989874');
+const resolvedProjectId = getClientConfigValue(import.meta.env.VITE_FIREBASE_PROJECT_ID, appletConfig.projectId);
+const resolvedAppId = getClientConfigValue(import.meta.env.VITE_FIREBASE_APP_ID, appletConfig.appId);
+const resolvedApiKey = getClientConfigValue(import.meta.env.VITE_FIREBASE_API_KEY, appletConfig.apiKey);
+const resolvedAuthDomain = getClientConfigValue(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN, appletConfig.authDomain);
+const resolvedDatabaseId = getClientConfigValue(import.meta.env.VITE_FIREBASE_DATABASE_ID, appletConfig.firestoreDatabaseId);
+const resolvedStorageBucket = getClientConfigValue(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET, appletConfig.storageBucket);
+const resolvedMessagingId = getClientConfigValue(import.meta.env.VITE_FIREBASE_MESSAGING_ID, appletConfig.messagingSenderId);
 
 // We first try to read from window.__FIREBASE_CONFIG__ (the dynamic SEO/SSR configuration injected by server.ts), 
 // but ensure its fields are non-mocked/real. If it's absent or mocked, fallback to the resolved non-mock values.

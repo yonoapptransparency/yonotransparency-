@@ -505,17 +505,6 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       setPhase('ready');
       setTokenCountdown(600);
 
-      // Open in new tab — if popup is blocked, show the Download button as fallback
-      try {
-        const win = window.open(finalUrl, '_blank');
-        if (!win) {
-          // Popup blocked — user can click the Download button shown in 'ready' phase
-          console.info('Popup blocked. Download button shown as fallback.');
-        }
-      } catch (e) {
-        console.warn('window.open failed.', e);
-      }
-
     } catch (err: any) {
       console.error('Clearance handshake failed:', err);
       setErrorMsg(err.message || 'Initialization did not complete. Please retry.');

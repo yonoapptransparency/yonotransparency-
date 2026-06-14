@@ -444,6 +444,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (snap.metadata.fromCache && (typeof window !== 'undefined' && (window as any).__INITIAL_DATA__)) return;
         let loadedApps: any[] = [];
         let fetchedData = false;
+        let chunkFetchFailed = false;
         
         if (snap.exists()) {
           const numChunks = snap.data().numChunks || 1;
@@ -461,13 +462,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                   const localChunkSnap = await getDoc(doc(db, 'store_data', `apps_chunk_${i}`));
                   if (localChunkSnap.exists() && localChunkSnap.data().items) return localChunkSnap.data().items;
                 } catch (e) { }
+                chunkFetchFailed = true;
               }
               return [];
             })());
           }
           const chunkResults = await Promise.all(fetchPromises);
           chunkResults.forEach(items => loadedApps.push(...items));
-          fetchedData = true;
+          fetchedData = !chunkFetchFailed;
         } else {
           // Fallback to old apps document
           try {
@@ -501,16 +503,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             setLastSyncTime(new Date().toLocaleTimeString());
           }
           checkLoaded('apps');
-        } else {
+        } else if (!chunkFetchFailed) {
           setApps([]);
           secureStorage.setItem('rummystore_apps', JSON.stringify([]));
           setAppsSyncedWithServer(true);
           setServerAppsFetched(true);
           setLoadedFromServer(true);
           checkLoaded('apps');
+        } else {
+           console.warn("Aborted fetching apps due to chunk fail. Preserving local cache.");
+           setAppsSyncedWithServer(true);
+           setServerAppsFetched(true);
+           setLoadedFromServer(true);
+           checkLoaded('apps');
         }
       }, (err) => {
         console.warn("Firestore apps listener error, falling back:", err);
+        // Do not clear apps on error (quota exceeded, offline), keep cached value
         setAppsSyncedWithServer(true);
         setServerAppsFetched(true);
         setLoadedFromServer(true);
@@ -561,6 +570,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
       }, (err) => {
         console.warn("Firestore news listener error, falling back:", err);
+        // Do not clear data on error
         setNewsSyncedWithServer(true);
         setServerNewsFetched(true);
         checkLoaded('news');
@@ -585,6 +595,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
       }, (err) => {
         console.warn("Firestore blogs listener error, falling back:", err);
+        // Do not clear data on error
         setBlogsSyncedWithServer(true);
         setServerBlogsFetched(true);
         checkLoaded('blogs');
@@ -609,6 +620,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
       }, (err) => {
         console.warn("Firestore videos listener error, falling back:", err);
+        // Do not clear data on error
         setVideosSyncedWithServer(true);
         setServerVideosFetched(true);
         checkLoaded('videos');

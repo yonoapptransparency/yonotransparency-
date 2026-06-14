@@ -150,9 +150,10 @@ export default function UserReviews({ appId, appTitle, overallRating = 5.0 }: Us
               helpful_count: data.helpful_count || 0,
               source: data.source || 'community',
               reported: data.reported || false,
-              report_count: data.report_count || 0
+              report_count: data.report_count || 0,
+              is_approved: data.is_approved
             };
-          });
+          }).filter(r => r.is_approved !== false);
 
           // Prevent listing duplicates (e.g. if localstorage matches firestore ID)
           const dbIds = new Set(firestoreReviews.map(r => r.id));
@@ -322,7 +323,7 @@ export default function UserReviews({ appId, appTitle, overallRating = 5.0 }: Us
           comment: cleanComment,
           created_at: newSubmission.created_at,
           helpful_count: 0,
-          is_approved: true,
+          is_approved: false,
           source: newSubmission.source
         });
       }

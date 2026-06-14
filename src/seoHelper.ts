@@ -35,17 +35,7 @@ function getRawFirebaseConfig(): any {
       };
     }
     
-    // Fallback to the working dynamic config
-    return {
-      projectId: "gen-lang-client-0825832493",
-      appId: "1:103973989874:web:733a6afd8e837224900f6b",
-      apiKey: "AIzaSyBey9sUbeWlrcXS2kl" + "4ewOzkTy4arg03Ok",
-      authDomain: "gen-lang-client-0825832493.firebaseapp.com",
-      firestoreDatabaseId: "ai-studio-886315a4-8b9f-4ff6-8986-a90ad172210a",
-      storageBucket: "gen-lang-client-0825832493.firebasestorage.app",
-      messagingSenderId: "103973989874",
-      measurementId: ""
-    };
+    throw new Error('Firebase configuration is missing. Please set environment variables or create firebase-applet-config.json.');
   }
 }
 
@@ -958,7 +948,7 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
     }
   }
 
-  const schemaScript = schemaOrg ? `<script type="application/ld+json">${JSON.stringify(schemaOrg)}</script>` : '';
+  const schemaScript = schemaOrg ? `<script type="application/ld+json">${JSON.stringify(schemaOrg).replace(/</g, '\\u003c')}</script>` : '';
 
   // Construct replacement tags
   const tags = isAdmin ? `
