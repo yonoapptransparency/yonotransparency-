@@ -78,6 +78,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
   const [tokenCountdown, setTokenCountdown] = useState(600);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [pageLoadTime] = useState(() => Date.now());
+  const [linkConfigured, setLinkConfigured] = useState<boolean | null>(null);
 
   // Behavioral tracking
   const mouseMoved  = useRef(false);
@@ -177,6 +178,18 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
   }, []);
 
   useEffect(() => { resetState(); }, [appId]);
+
+  // Check if a download link is actually configured for this app before showing the button.
+  // If not, show a clear message rather than letting users waste time on verification.
+  useEffect(() => {
+    setLinkConfigured(null);
+    let cancelled = false;
+    fetch(`/api/v1/link-check?id=${encodeURIComponent(appId)}`)
+      .then(r => r.json())
+      .then(data => { if (!cancelled) setLinkConfigured(data.configured !== false); })
+      .catch(() => { if (!cancelled) setLinkConfigured(true); }); // fail-open
+    return () => { cancelled = true; };
+  }, [appId]);
 
   useEffect(() => {
     const h = () => resetState();
@@ -417,7 +430,6 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       const challengeResponse = await fetch(_EP.challenge, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
-        credentials: 'include',
       });
 
       if (!challengeResponse.ok) {
@@ -437,7 +449,6 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       const tokenResponse = await fetch(_EP.process, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           nonce,
           solution,
@@ -508,62 +519,81 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
   return (
     <div className="flex flex-col items-center gap-2 w-full">
       <div ref={cfContainerRef} className="hidden" aria-hidden="true" />
-      
-      {phase === 'error' && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-xl text-xs font-semibold w-full sm:w-96 mb-2 text-center shadow-sm">
-          {errorMsg || "Action could not be completed. Please retry."}
-        </div>
-      )}
-
-      {phase === 'ready' ? (
-        variant === 'compact' ? (
-          <a 
-            href={dynamicLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm shadow-md h-[44px]"
-          >
-            <span className="font-bold flex items-center gap-1.5">More Information <CheckCircle2 className="w-4 h-4" /></span>
-          </a>
-        ) : (
-          <div className="flex flex-col items-center gap-3 w-full sm:w-96">
-            <a 
-              href={dynamicLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-10 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-md active:scale-[0.98] shrink-0"
-            >
-              <span>More Information</span>
-            </a>
-            <span className="text-[10px] font-semibold text-green-600 flex items-center gap-1.5 mt-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Checked
-            </span>
+      {/* Link not configured — show clear message instead of letting user verify for nothing */}
+      {linkConfigured === false ? (
+        <div className="w-full sm:w-96 flex flex-col items-center gap-2">
+          <div className="w-full py-4 px-6 rounded-2xl flex items-center justify-center gap-3 bg-zinc-100 dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-zinc-400 dark:text-zinc-500 cursor-not-allowed select-none">
+            <Lock className="w-4 h-4 shrink-0" />
+            <span className="font-semibold text-sm">Link Not Available</span>
           </div>
-        )
+          <p className="text-[11px] text-zinc-400 dark:text-zinc-500 text-center leading-relaxed">
+            The download link for this app has not been set up yet.<br/>
+            Please check back later or contact support.
+          </p>
+        </div>
+      ) : linkConfigured === null ? (
+        <div className="w-full sm:w-96 flex items-center justify-center py-4">
+          <div className="w-5 h-5 border-2 border-zinc-200 dark:border-zinc-700 border-t-blue-500 rounded-full animate-spin" />
+        </div>
       ) : (
-        <button 
-          onClick={handleClearance}
-          disabled={isGenerating}
-          className={variant === 'compact' 
-            ? `w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm shadow-md h-[44px] ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}`
-            : `w-full sm:w-96 py-4 px-10 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm text-base font-semibold shrink-0 active:scale-[0.98] ${
-                status === 'Verified' ? 'bg-blue-600 hover:bg-blue-700 text-white' : 
-                status === 'Caution' ? 'bg-amber-500 hover:bg-amber-400 text-white' : 
-                'bg-zinc-800 hover:bg-zinc-700 text-white'
-              } ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}`
-          }
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className={`animate-spin text-current ${variant === 'compact' ? 'w-4 h-4' : 'w-5 h-5'}`} /> 
-              <span className="font-bold">{variant === 'compact' ? 'Verifying...' : 'Loading...'}</span>
-            </>
-          ) : (
-            <span className={variant === 'compact' ? "flex items-center gap-1.5 font-bold" : "text-current"}>
-              {variant === 'compact' ? 'Download' : 'More Information'}
-            </span>
+        <>
+          {phase === 'error' && (
+            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-xs font-semibold w-full sm:w-96 mb-2 text-center shadow-sm">
+              {errorMsg || "Action could not be completed. Please retry."}
+            </div>
           )}
-        </button>
+
+          {phase === 'ready' ? (
+            variant === 'compact' ? (
+              <a 
+                href={dynamicLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm shadow-md h-[44px]"
+              >
+                <span className="font-bold flex items-center gap-1.5">More Information <CheckCircle2 className="w-4 h-4" /></span>
+              </a>
+            ) : (
+              <div className="flex flex-col items-center gap-3 w-full sm:w-96">
+                <a 
+                  href={dynamicLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-10 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-md active:scale-[0.98] shrink-0"
+                >
+                  <span>More Information</span>
+                </a>
+                <span className="text-[10px] font-semibold text-green-600 flex items-center gap-1.5 mt-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Checked
+                </span>
+              </div>
+            )
+          ) : (
+            <button 
+              onClick={handleClearance}
+              disabled={isGenerating}
+              className={variant === 'compact' 
+                ? `w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm shadow-md h-[44px] ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}`
+                : `w-full sm:w-96 py-4 px-10 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm text-base font-semibold shrink-0 active:scale-[0.98] ${
+                    status === 'Verified' ? 'bg-blue-600 hover:bg-blue-700 text-white' : 
+                    status === 'Caution' ? 'bg-amber-500 hover:bg-amber-400 text-white' : 
+                    'bg-zinc-800 hover:bg-zinc-700 text-white'
+                  } ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}`
+              }
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className={`animate-spin text-current ${variant === 'compact' ? 'w-4 h-4' : 'w-5 h-5'}`} /> 
+                  <span className="font-bold">{variant === 'compact' ? 'Verifying...' : 'Loading...'}</span>
+                </>
+              ) : (
+                <span className={variant === 'compact' ? "flex items-center gap-1.5 font-bold" : "text-current"}>
+                  {variant === 'compact' ? 'Download' : 'More Information'}
+                </span>
+              )}
+            </button>
+          )}
+        </>
       )}
     </div>
   );

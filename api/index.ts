@@ -23,6 +23,19 @@ const app = express();
 // Initialize middlewares
 app.use(compression());
 app.use(cookieParser());
+
+// CORS Headers for public API endpoints and sandboxed iframes
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PATCH, PUT, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Accept,Authorization,X-Forwarded-For");
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
+  }
+  next();
+});
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -374,6 +387,74 @@ app.post(["/api/v1/_proc", "/api/v1/get-token", "/api/v1/process-file"], async (
   const token = generateToken(ip, sid, fingerprint);
 
   res.json({ token });
+});
+
+// API Route: Public link status check — called before verification to avoid
+// wasting the user's time if no download link has been configured for this app.
+app.get("/api/v1/link-check", async (req, res) => {
+  const appId = req.query.id as string;
+  if (!appId) return res.status(400).json({ configured: false });
+  res.set("Cache-Control", "no-store");
+  try {
+    const config = getRawFirebaseConfig();
+    if (!config) return res.json({ configured: true }); // fail-open if config missing
+    const db = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents`;
+    const apiSuffix = config.apiKey ? `?key=${config.apiKey}` : '';
+    const AES_SECRET = process.env.AES_SECRET || '';
+    
+    // Check sec_public_links, secure_links, sec_vault (in that order)
+    for (const docName of ['sec_public_links', 'secure_links', 'sec_vault']) {
+      try {
+        const r = await fetch(`${db}/store_data/${docName}${apiSuffix}`);
+        const d = await r.json();
+        if (d.error) continue;
+        // If encrypted blob exists and AES_SECRET is set, check if this appId is in it
+        if (d.fields?.encryptedData?.stringValue && AES_SECRET) {
+          try {
+            const dec = safeDecrypt(d.fields.encryptedData.stringValue, AES_SECRET);
+            if (dec) {
+              const arr = JSON.parse(dec);
+              if (arr.find((v: any) => v.id === appId && v.url)) {
+                return res.json({ configured: true });
+              }
+            }
+          } catch {}
+        }
+        // Legacy unencrypted items array
+        if (d.fields?.items?.arrayValue?.values) {
+          const found = d.fields.items.arrayValue.values.find(
+            (v: any) => v.mapValue?.fields?.id?.stringValue === appId && v.mapValue?.fields?.url?.stringValue
+          );
+          if (found) return res.json({ configured: true });
+        }
+      } catch {}
+    }
+    // Fallback: scan app chunks for download_url / more_information_url
+    try {
+      const metaR = await fetch(`${db}/store_data/apps_meta${apiSuffix}`);
+      const metaD = await metaR.json();
+      const numChunks = (!metaD.error && metaD.fields?.numChunks?.integerValue)
+        ? parseInt(metaD.fields.numChunks.integerValue, 10) : 2;
+      for (let i = 0; i < numChunks; i++) {
+        const chunkR = await fetch(`${db}/store_data/apps_chunk_${i}${apiSuffix}`);
+        const chunkD = await chunkR.json();
+        if (!chunkD.error && chunkD.fields?.items?.arrayValue?.values) {
+          const item = chunkD.fields.items.arrayValue.values.find(
+            (v: any) => v.mapValue?.fields?.id?.stringValue === appId
+          );
+          if (item?.mapValue?.fields) {
+            const hasUrl = item.mapValue.fields.more_information_url?.stringValue
+                        || item.mapValue.fields.download_url?.stringValue;
+            if (hasUrl) return res.json({ configured: true });
+          }
+        }
+      }
+    } catch {}
+    return res.json({ configured: false });
+  } catch (err) {
+    console.warn('[link-check] Error:', err);
+    return res.json({ configured: true }); // fail-open — don't block button if Firestore is down
+  }
 });
 
 // API Route: Process temporary dynamic verification token (Multi-use allowed within validity lifespan!)
