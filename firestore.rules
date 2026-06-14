@@ -44,7 +44,7 @@ service cloud.firestore {
     // Restrict sensitive vault maps and git config strictly to authorized administrators
     match /store_data/{docId} {
       allow read: if isValidId(docId) && ((docId != 'sec_git_config') || isAdmin());
-      allow write: if true;
+      allow write: if isAdmin();
     }
     
     // Support for metadata or other collections if they exist

@@ -9,11 +9,7 @@ import { injectSeoTags, fetchStoreData, getField } from "./src/seoHelper";
 import CryptoJS from "crypto-js";
 
 function safeDecrypt(ciphertext: string, primarySecret: string) {
-    const fallbackKeys = [
-        ["fallback", "secure", "store", "key", "19482"].join("-"),
-        "Shehzad@4874",
-        "Shehzad@78"
-    ];
+    const fallbackKeys: string[] = [];
     
     function log(msg: string) {
         fs.appendFileSync('/tmp/decryption-debug.log', msg + '\n');
@@ -72,6 +68,11 @@ function getRawFirebaseConfig(): any {
 // Cryptographic secrets for hashing, signature verification, and session identifiers
 const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
+if (!process.env.AES_SECRET) {
+  console.error("FATAL: AES_SECRET environment variable is not set. Server will not start.");
+  process.exit(1);
+}
 
 // Comprehensive crawler, headless scraper, scanner, and search-spider blacklists
 const BAD_UA = [
@@ -277,7 +278,7 @@ function ensureSession(req: express.Request, res: express.Response): string {
 
 // Verify HMAC signed token attributes
 function generateToken(ip: string, sessionId: string, fingerprint: string): string {
-  const EXPIRY = 600; // Signed dynamic URLs are active for 10 minutes (600s) for maximum reliability
+  const EXPIRY = 120; // Signed dynamic URLs are active for 10 minutes (600s) for maximum reliability
   const expires = Math.floor(Date.now() / 1000) + EXPIRY;
   const payload = `${ip}|${sessionId}|${fingerprint}|${expires}`;
   const sig = crypto.createHmac("sha256", TOKEN_SECRET).update(payload).digest("hex");
@@ -350,7 +351,9 @@ async function startServer() {
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
 
     // CORS Headers for public API endpoints and sandboxed iframes
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://yourdomain.com";
+    res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+    res.setHeader("Vary", "Origin");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PATCH, PUT, DELETE");
     res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Accept,Authorization,X-Forwarded-For");
 
@@ -896,8 +899,7 @@ async function startServer() {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
     try {
-      const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-      const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+      const AES_SECRET = process.env.AES_SECRET as string;
       const ciphertext = CryptoJS.AES.encrypt(url, AES_SECRET).toString();
       res.json({ encrypted: ciphertext });
     } catch (err) {
@@ -912,8 +914,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Valid links array payload is required.' });
     }
     try {
-      const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-      const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+      const AES_SECRET = process.env.AES_SECRET as string;
       
       // Double encrypt: Encrypt the URL individually first
       const processedItems = items.map((item: any) => {
@@ -935,6 +936,26 @@ async function startServer() {
     }
   });
 
+  // Admin API: Debug/View decrypted links
+  app.get("/api/v1/admin/debug-links", verifyAdminToken, async (req, res) => {
+    try {
+      const config = JSON.parse(fs.readFileSync('firebase-applet-config.json', 'utf8'));
+      const db = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/sec_vault?key=${config.apiKey}`;
+      const r = await fetch(db);
+      const data = await r.json();
+      if (!data.fields || !data.fields.encryptedData) {
+        return res.json({ error: "No vault data found" });
+      }
+      const ciphertext = data.fields.encryptedData.stringValue;
+      const AES_SECRET = process.env.AES_SECRET as string;
+      
+      const decrypted = safeDecrypt(ciphertext, AES_SECRET);
+      res.json({ decrypted: JSON.parse(decrypted) });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to decrypt vault: ' + err });
+    }
+  });
+
   // Admin API: Decrypt secure links payload list
   app.post("/api/v1/admin/decrypt-links", verifyAdminToken, (req, res) => {
     const { encryptedData } = req.body;
@@ -942,8 +963,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Encrypted payload ciphertext is required.' });
     }
     try {
-      const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-      const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+      const AES_SECRET = process.env.AES_SECRET as string;
       const decryptedText = safeDecrypt(encryptedData, AES_SECRET);
       if (!decryptedText) {
         throw new Error("Empty decrypted block.");
@@ -1121,8 +1141,7 @@ const rateLimitMap = new Map<string, number[]>();
       if (!config) return res.json({ configured: true }); // fail-open if config missing
       const db = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents`;
       const apiSuffix = config.apiKey ? `?key=${config.apiKey}` : '';
-      const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-      const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+      const AES_SECRET = process.env.AES_SECRET as string;
       
       // Check sec_public_links, secure_links, sec_vault (in that order)
       for (const docName of ['sec_public_links', 'secure_links', 'sec_vault']) {
@@ -1137,9 +1156,6 @@ const rateLimitMap = new Map<string, number[]>();
               const dec = safeDecrypt(d.fields.encryptedData.stringValue, AES_SECRET);
               if (dec) {
                 const arr = JSON.parse(dec);
-                if (appId === 'tahynyt00') {
-                  return res.json({ configured: true, debugArr: arr });
-                }
                 const foundEntry = arr.find((v: any) => v.id === appId && v.url);
                 if (foundEntry) {
                   foundInEncrypted = true;
@@ -1290,8 +1306,7 @@ const rateLimitMap = new Map<string, number[]>();
 
         let targetUrl = '';
         try {
-          const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-          const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+          const AES_SECRET = process.env.AES_SECRET as string;
           const config = getRawFirebaseConfig();
           if (!config) {
             throw new Error("Missing Firebase configuration.");

@@ -1343,6 +1343,14 @@ export default function AdminDashboard() {
   const [sessionTimeLeft, setSessionTimeLeft] = useState(15 * 60);
 
   const syncSecureVault = async () => {
+    if (!isInitializedRef.current) {
+      console.warn("Sync blocked: vault not initialized");
+      return;
+    }
+    if (fetchFailedRef.current) {
+      console.error("Sync blocked: previous vault fetch failed due to quota or network block. We cannot overwrite the vault without knowing its entire previous state.");
+      return;
+    }
     try {
       const items = Array.from(cachedSecureMapRef.current.entries()).map(([k, v]) => ({ id: k, url: v }));
       const idToken = await auth?.currentUser?.getIdToken();
@@ -1414,6 +1422,7 @@ export default function AdminDashboard() {
   // This shields active typed text fields from being silently discarded by background snapshots
   const cachedSecureMapRef = React.useRef(new Map());
   const isInitializedRef = React.useRef(false);
+  const fetchFailedRef = React.useRef(false);
 
   React.useEffect(() => {
     // Note: Developer bypass has been disabled to ensure Firebase Auth and Firestore Security Rules operate correctly in production and staging environments.
@@ -1518,9 +1527,11 @@ export default function AdminDashboard() {
                     }
                   } else {
                     console.error("Server link decryption failed:", await res.text());
+                    fetchFailedRef.current = true;
                   }
                 } catch (decErr) {
                   console.error("Failed to decrypt secure references:", decErr);
+                  fetchFailedRef.current = true;
                 }
               } else if (snapData.items) {
                 snapData.items.forEach((it: any) => secureMap.set(it.id, it.url));
@@ -1531,12 +1542,13 @@ export default function AdminDashboard() {
             const mergedApps = mockApps.map(a => ({...a, more_information_url: secureMap.get(a.id) || a.more_information_url }));
             setAppsList(mergedApps);
 
-            if (!hadPublicLinks && secureMap.size > 0) {
+            if (!hadPublicLinks && secureMap.size > 0 && !fetchFailedRef.current) {
               console.log("Silently self-healing sec_public_links...");
               syncSecureVault();
             }
           }).catch(err => {
             console.error("Failed to load secure references:", err);
+            fetchFailedRef.current = true;
             setAppsList(mockApps);
           }).finally(() => {
             isInitializedRef.current = true;
@@ -1843,7 +1855,6 @@ export default function AdminDashboard() {
       }
       
       await saveMockApps(updatedApps);
-      await syncSecureVault();
       setAppsList(updatedApps);
       triggerHaptic();
       setEditingAppId(null);
@@ -1868,7 +1879,6 @@ export default function AdminDashboard() {
           cachedSecureMapRef.current.delete(id);
           const updatedApps = appsList.filter(a => a.id !== id);
           await saveMockApps(updatedApps);
-          await syncSecureVault();
           setAppsList(updatedApps);
         } catch (err: any) {
           alert('Error deleting app: ' + err.message);

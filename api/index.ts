@@ -7,7 +7,6 @@ import path from "path";
 import CryptoJS from "crypto-js";
 
 function safeDecrypt(ciphertext: string, primarySecret: string) {
-    const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
     if (primarySecret && primarySecret.trim() !== "") {
         try {
             const bytes = CryptoJS.AES.decrypt(ciphertext, primarySecret);
@@ -15,11 +14,6 @@ function safeDecrypt(ciphertext: string, primarySecret: string) {
             if (text) return text;
         } catch(e) {}
     }
-    try {
-        const bytes = CryptoJS.AES.decrypt(ciphertext, fallbackKey);
-        const text = bytes.toString(CryptoJS.enc.Utf8);
-        if (text) return text;
-    } catch(e) {}
     return '';
 }
 
@@ -33,7 +27,9 @@ app.use(cookieParser());
 
 // CORS Headers for public API endpoints and sandboxed iframes
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://yourdomain.com";
+  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+  res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PATCH, PUT, DELETE");
   res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Accept,Authorization,X-Forwarded-For");
   if (req.method === 'OPTIONS') {
@@ -79,6 +75,11 @@ function getRawFirebaseConfig(): any {
 
 // Cryptographic secrets for hashing, signature verification, and session identifiers
 const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
+
+if (!process.env.AES_SECRET) {
+  console.error("FATAL: AES_SECRET environment variable is not set. Server will not start.");
+  process.exit(1);
+}
 
 // Comprehensive crawler, headless scraper, scanner, and search-spider blacklists
 const BAD_UA = [
@@ -224,7 +225,7 @@ function ensureSession(req: express.Request, res: express.Response): string {
 
 // Verify HMAC signed token attributes
 function generateToken(ip: string, sessionId: string, fingerprint: string): string {
-  const EXPIRY = 600; // Signed dynamic URLs are active for 10 minutes (600s) for maximum reliability
+  const EXPIRY = 120; // Signed dynamic URLs are active for 10 minutes (600s) for maximum reliability
   const expires = Math.floor(Date.now() / 1000) + EXPIRY;
   const payload = `${ip}|${sessionId}|${fingerprint}|${expires}`;
   const sig = crypto.createHmac("sha256", TOKEN_SECRET).update(payload).digest("hex");
@@ -397,8 +398,7 @@ app.get("/api/v1/link-check", async (req, res) => {
     if (!config) return res.json({ configured: true }); // fail-open if config missing
     const db = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents`;
     const apiSuffix = config.apiKey ? `?key=${config.apiKey}` : '';
-    const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-    const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+    const AES_SECRET = process.env.AES_SECRET as string;
     
     // Check sec_public_links, secure_links, sec_vault (in that order)
     for (const docName of ['sec_public_links', 'secure_links', 'sec_vault']) {
@@ -512,7 +512,6 @@ app.get(["/api/v1/secure-payload", "/api/v1/file-payload"], async (req, res) => 
   const ip = getIp(req);
   const sid = (req.query.sid || req.cookies?.__sid) as string;
   const token = (req.query.token || req.query.t) as string;
-  const obfuscatedUrl = req.query.url as string;
   const appId = req.query.id as string;
 
   if (!token || !appId) {
@@ -564,18 +563,10 @@ app.get(["/api/v1/secure-payload", "/api/v1/file-payload"], async (req, res) => 
       usedTokens.add(token);
 
       let targetUrl = '';
-      if (obfuscatedUrl) {
-        try {
-          targetUrl = Buffer.from(obfuscatedUrl, "base64").toString("utf-8");
-        } catch {
-          targetUrl = '';
-        }
-      }
 
       if (!targetUrl && appId) {
         try {
-          const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-          const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+          const AES_SECRET = process.env.AES_SECRET as string;
           const config = getRawFirebaseConfig();
           if (!config) {
             throw new Error("Missing Firebase configuration.");
@@ -728,45 +719,7 @@ app.get(["/api/v1/secure-payload", "/api/v1/file-payload"], async (req, res) => 
 });
 
 // API Route: Legacy Secure Link Fallback (with bot protection)
-app.get(["/api/v1/secure-fetch", "/api/v1/fetch-file"], (req, res) => {
-  const { id } = req.query;
-  
-  // User-Agent validation (reject curl, wget, basic scrapers)
-  const userAgent = (req.headers['user-agent'] as string) || '';
-  if (!userAgent || /curl|wget|bot|spider|crawler/i.test(userAgent)) {
-    res.status(403).json({ error: 'Access Denied: Bot detected' });
-    return;
-  }
 
-  if (!id || typeof id !== 'string') {
-    res.status(400).json({ error: 'Access Denied: Missing App ID' });
-    return;
-  }
-
-  // Setup the target secure URL
-  let targetUrl = `https://example.com/download-secure?fileId=${id}&token=${crypto.randomBytes(16).toString('hex')}`;
-  if (req.query.url && typeof req.query.url === 'string') {
-    try {
-      // Decode base64 URL
-      targetUrl = Buffer.from(req.query.url, 'base64').toString('utf-8');
-    } catch (e) {
-      targetUrl = req.query.url;
-    }
-    
-    // Safety checks / formatting
-    if (!targetUrl.startsWith('http')) {
-      if (req.query.url.startsWith('http')) {
-         targetUrl = req.query.url;
-      } else {
-         targetUrl = 'https://' + targetUrl.replace(/^[^\w]+/, '');
-      }
-    }
-  }
-  
-  // Disable caching to safeguard download requests
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-  res.redirect(302, targetUrl);
-});
 
 // API Route: Secure Server-Side GitHub Synchronization Proxy (Bypasses CORS/sandboxing restrictions)
 // Helper: Secure Admin validation middleware for API endpoints
@@ -855,8 +808,7 @@ app.get(["/api/v1/secure-fetch", "/api/v1/fetch-file"], (req, res) => {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
     try {
-      const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-      const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+      const AES_SECRET = process.env.AES_SECRET as string;
       const ciphertext = CryptoJS.AES.encrypt(url, AES_SECRET).toString();
       res.json({ encrypted: ciphertext });
     } catch (err) {
@@ -871,8 +823,7 @@ app.get(["/api/v1/secure-fetch", "/api/v1/fetch-file"], (req, res) => {
       return res.status(400).json({ error: 'Valid links array payload is required.' });
     }
     try {
-      const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-      const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+      const AES_SECRET = process.env.AES_SECRET as string;
       
       // Let's attempt to retrieve pre-existing links for a safe, non-destructive merge
       let existingItems: any[] = [];
@@ -950,8 +901,7 @@ app.get(["/api/v1/secure-fetch", "/api/v1/fetch-file"], (req, res) => {
       return res.status(400).json({ error: 'Encrypted payload ciphertext is required.' });
     }
     try {
-      const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-      const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+      const AES_SECRET = process.env.AES_SECRET as string;
       const decryptedText = safeDecrypt(encryptedData, AES_SECRET);
       if (!decryptedText) {
         throw new Error("Empty decrypted block.");
@@ -997,8 +947,7 @@ app.get(["/api/v1/secure-fetch", "/api/v1/fetch-file"], (req, res) => {
            apps = apps.concat(chunk1Data.fields.items.arrayValue.values.map((v: any) => v.mapValue.fields.id.stringValue));
        }
        
-       const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-       const AES_SECRET = process.env.AES_SECRET || fallbackKey;
+       const AES_SECRET = process.env.AES_SECRET as string;
        const sampleUrls = apps.map(id => ({ id, url: `https://example.com/demo/${id}` }));
        const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(sampleUrls), AES_SECRET).toString();
        
