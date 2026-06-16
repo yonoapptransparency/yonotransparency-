@@ -1541,8 +1541,28 @@ const rateLimitMap = new Map<string, number[]>();
         })),
         apps: (data.apps || []).map((app: any) => ({
            n: app.name,
-           c: app.category
+           c: app.category,
+           desc: app.description_html?.replace(/<[^>]+>/g, '').substring(0, 1000), // strips HTML and truncates
+           r: app.rating,
+           f: app.faqs, // Include FAQs
+           red: app.red_box_msg,
+           yel: app.yellow_box_msg
         })),
+        news: (data.news || []).map((item: any) => ({
+           t: item.title,
+           d: item.description,
+           c: item.content?.replace(/<[^>]+>/g, '').substring(0, 1000)
+        })),
+        blogs: (data.blogs || []).map((item: any) => ({
+           t: item.title,
+           d: item.description,
+           c: item.content?.replace(/<[^>]+>/g, '').substring(0, 1000)
+        })),
+        videos: (data.videos || []).map((item: any) => ({
+           t: item.title,
+           d: item.description,
+           c: item.content?.replace(/<[^>]+>/g, '').substring(0, 1000)
+        }))
       };
 
       const { GoogleGenAI } = require("@google/genai");
@@ -1555,39 +1575,55 @@ const rateLimitMap = new Map<string, number[]>();
         }
       });
 
-      // 3. Strict Grounding System Prompt
-      const sysInstruction = `You are the official RummyApp Online Public Assistant. Your sole purpose is to help visitors navigate the site, understand the directory structure, and find simulated card applications.
+      // 3. System Prompt
+      const sysInstruction = `You are the official RummyApp Online Public Assistant. Your purpose is to help visitors navigate the site, understand the directory structure, and find simulated card applications, news, blogs, and videos.
 
-STRICT KNOWLEDGE BOUNDARIES:
-You have been provided with the complete text and structural layout of the public RummyApp Online website. You must answer user questions ONLY using this specific provided data.
-Under no circumstances are you to provide information, opinions, or advice outside of what is explicitly written in the provided site data. If a user asks about a topic, game, or concept not present on the site, you must reply: "I can only provide information directly related to the apps and policies listed on RummyApp Online."
-You have absolutely no knowledge of the site's administrative panel, backend code, or hosting environment.
-Maintain a helpful, objective, and transparent tone. Always remind users that all listed apps are simulated, non-wager environments for users aged 18+.
+You have access to the website's public context via the provided data. You can also use your general knowledge and internet search capabilities to supplement your answers when asked about general topics or when the user needs more details.
+Always provide detailed, helpful, and comprehensive answers. Where appropriate, provide step-by-step summaries and structured information to make it easy to read.
 
 PUBLIC CONTEXT:
 ${JSON.stringify(publicContext, null, 2)}`;
 
-      // 4. Output capped at 150 tokens
-      const response = await client.models.generateContent({
-        model: "gemini-flash-latest", // Using advanced model for large context
-        contents: message.trim(),
-        config: {
-          systemInstruction: sysInstruction,
-          maxOutputTokens: 150, 
-          temperature: 0.2
+      // 4. Output capped at 1000 tokens for detailed answers
+      try {
+        const responseStream = await client.models.generateContentStream({
+          model: "gemini-2.0-flash", // Using advanced model for large context
+          contents: message.trim(),
+          config: {
+            systemInstruction: sysInstruction,
+            maxOutputTokens: 1000, 
+            temperature: 0.3,
+            tools: [{ googleSearch: {} }]
+          }
+        });
+
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.flushHeaders();
+
+        for await (const chunk of responseStream) {
+          if (chunk.text) {
+            res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
+          }
         }
-      });
-
-      let aiResponse = "";
-      if (response && response.text) {
-         aiResponse = response.text;
-      } else {
-         aiResponse = "I am currently unable to answer that question based on the directory information.";
+        res.write(`data: [DONE]\n\n`);
+        return res.end();
+      } catch (err: any) {
+        if (!res.headersSent) {
+          throw err; // Bubble up to outer catch block for fallback
+        }
+        res.write(`data: ${JSON.stringify({ error: err.message || "Streaming failed" })}\n\n`);
+        return res.end();
       }
-
-      return res.json({ success: true, answer: aiResponse });
     } catch (err: any) {
-      // Fallback message for public chat if quota is exceeded
+      if (err.status === 429 || err.message?.includes('429')) {
+         return res.json({ success: true, answer: "🚨 **API Quota Exceeded:** The system is currently overloaded or your Gemini API key has exceeded its free tier usage limits. Please try again later, or configure a paid/upgraded API key to ensure uninterrupted live browsing and answering capabilities." });
+      } else if (err.status === 403 || err.message?.includes('403')) {
+         return res.json({ success: true, answer: "🚨 **API Access Denied:** Your Gemini API key does not have permission or is invalid. Please update your API key in the settings." });
+      }
+      
+      // Fallback message for public chat if there's a normal connectivity issue
       const lowerMessage = message.trim().toLowerCase();
       
       try {
