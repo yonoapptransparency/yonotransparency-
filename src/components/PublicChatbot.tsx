@@ -13,6 +13,12 @@ export default function PublicChatbot() {
   const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const handleOpenExternal = () => setIsOpen(true);
+    window.addEventListener('open-public-chatbot', handleOpenExternal);
+    return () => window.removeEventListener('open-public-chatbot', handleOpenExternal);
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -115,37 +121,13 @@ export default function PublicChatbot() {
   return (
     <>
       <AnimatePresence>
-        {!isOpen && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 w-[72px] h-[72px] bg-white/95 dark:bg-white/95 backdrop-blur-3xl border border-white/60 text-zinc-900 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.2)] flex items-center justify-center z-50 group hover:shadow-[0_15px_40px_rgba(0,0,0,0.3)] transition-all hover:-translate-y-1 before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/80 before:to-transparent before:opacity-50"
-            aria-label="Open AI Assistant"
-          >
-            <div className="relative">
-              <MessageCircle className="w-8 h-8 group-hover:scale-110 transition-transform duration-300 text-black fill-white" />
-              <Sparkles className="w-5 h-5 absolute -top-3 -right-3 text-pink-500 animate-pulse drop-shadow-md" />
-            </div>
-            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-[2.5px] border-white dark:border-neutral-800"></span>
-            </span>
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
         {isOpen && (
           <motion.div
             layout
             initial={{ opacity: 0, y: 40, scale: 0.95, transformOrigin: 'bottom right' }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95, y: 20, transition: { duration: 0.2 } }}
-            className="fixed bottom-20 right-6 lg:bottom-24 lg:right-10 w-[90vw] max-w-[400px] h-[650px] max-h-[80vh] bg-white/40 dark:bg-neutral-900/50 backdrop-blur-3xl rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.2)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden border border-white/60 dark:border-white/10 z-50 ring-1 ring-black/5"
+            className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 w-[90vw] max-w-[400px] h-[650px] max-h-[85vh] bg-white/40 dark:bg-neutral-900/50 backdrop-blur-3xl rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.2)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden border border-white/60 dark:border-white/10 z-50 ring-1 ring-black/5"
           >
             {/* Header */}
             <div className="bg-white/40 dark:bg-black/20 border-b border-white/40 dark:border-white/10 p-6 pb-5 flex items-center justify-between shrink-0 relative overflow-hidden backdrop-blur-2xl">

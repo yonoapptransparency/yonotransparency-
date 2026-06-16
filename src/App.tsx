@@ -1042,7 +1042,6 @@ function AppContent() {
       
       <Ticker />
       {memoizedFooter}
-      {memoizedBottomNav}
       <BackToTop />
     </div>
   );
