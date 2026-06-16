@@ -33,6 +33,7 @@ export interface GlobalSettings {
   important_notice?: string;
   categories: string[];
   banners: Banner[];
+  quick_links?: { title: string; subtitle: string; icon: string; url: string; color: string }[];
   last_updated?: string;
   secure_index_title?: string;
   secure_index_subtitle?: string;

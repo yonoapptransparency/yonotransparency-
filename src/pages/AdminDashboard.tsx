@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { getAdminPath } from '../lib/utils';
-import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, Shield, LogOut, Save, Upload, Type, Link as LinkIcon, ToggleLeft, Layers, Newspaper, Plus, Trash2, Video as VideoIcon, Github, GitBranch, RefreshCw, CheckCircle2, AlertTriangle, Search, MessageSquare, CheckSquare, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, Shield, LogOut, Save, Upload, Type, Link as LinkIcon, ToggleLeft, Layers, Newspaper, Plus, Trash2, Video as VideoIcon, Github, GitBranch, RefreshCw, CheckCircle2, AlertTriangle, Search, MessageSquare, CheckSquare, Sparkles, Compass } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { db, auth } from '../lib/firebase';
 import { AppConfig, GlobalSettings, NewsItem, BlogPost, VideoItem } from '../lib/staticData';
@@ -1731,6 +1731,7 @@ export default function AdminDashboard() {
   const [blogs, setBlogs] = useState(mockBlogs);
   const [videosList, setVideosList] = useState(mockVideos);
   const [categoriesList, setCategoriesList] = useState<string[]>(mockSettings.categories || []);
+  const [quickLinksList, setQuickLinksList] = useState(mockSettings.quick_links || []);
   const [newCatInput, setNewCatInput] = useState('');
   const [user, setUser] = useState<any>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -1992,6 +1993,7 @@ export default function AdminDashboard() {
       setBlogs(mockBlogs);
       setVideosList(mockVideos);
       setCategoriesList(mockSettings.categories || []);
+      setQuickLinksList(mockSettings.quick_links || []);
     }
   }, [loading, mockApps, mockNews, mockSettings, mockBlogs, mockVideos, isAdminUser]);
 
@@ -2064,6 +2066,40 @@ export default function AdminDashboard() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveQuickLinks = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const updatedSettings = {
+        ...mockSettings,
+        quick_links: quickLinksList,
+      };
+      await saveMockSettings(updatedSettings);
+      triggerHaptic();
+      alert('Quick Links saved successfully!');
+    } catch (err: any) {
+      alert('Error saving quick links: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddQuickLink = () => {
+    setQuickLinksList([...quickLinksList, { title: 'New Link', subtitle: 'Description', icon: 'compass', color: 'blue', url: '/' }]);
+  };
+
+  const handleRemoveQuickLink = (index: number) => {
+    const updated = [...quickLinksList];
+    updated.splice(index, 1);
+    setQuickLinksList(updated);
+  };
+
+  const handleQuickLinkChange = (index: number, field: string, value: string) => {
+    const updated = [...quickLinksList];
+    updated[index] = { ...updated[index], [field]: value };
+    setQuickLinksList(updated);
   };
 
   const addCategory = async () => {
@@ -2589,6 +2625,7 @@ export default function AdminDashboard() {
             <div className="h-px bg-black/10 dark:bg-white/10 my-4"></div>
             <h3 className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em] italic mb-2 ml-4 dark:text-white">Frontend</h3>
             
+            <SidebarItem id="quicklinks" label="Quick Links" icon={Compass} active={activeTab === 'quicklinks'} onClick={handleTabChange} />
             <SidebarItem id="categories" label="Categories" icon={Layers} active={activeTab === 'categories'} onClick={handleTabChange} />
             <SidebarItem id="banners" label="Ad Banners" icon={LayoutDashboard} active={activeTab === 'banners'} onClick={handleTabChange} />
             
@@ -2646,6 +2683,75 @@ export default function AdminDashboard() {
                   handleSaveVideos={handleSaveVideos} 
                   saving={saving} 
                 />
+              )}
+              {activeTab === 'quicklinks' && (
+                <div className="animate-fade-in">
+                  <div className="flex justify-between items-center mb-8 border-b-4 border-pink-500/20 pb-4 ">
+                    <h2 className="text-2xl font-black dark:text-white uppercase italic tracking-tighter">Navigation Hub Links</h2>
+                    <button onClick={handleAddQuickLink} className="bg-pink-500/10 text-pink-500 px-6 py-3 rounded-xl border-2 border-pink-500/20 flex items-center gap-2 font-black uppercase tracking-widest italic text-[10px]"><Plus className="w-4 h-4" /> Add Link</button>
+                  </div>
+                  
+                  <form onSubmit={handleSaveQuickLinks} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {quickLinksList.map((link: any, index: number) => (
+                        <div key={index} className="bg-zinc-50 dark:bg-zinc-800/40 border-2 border-black/5 dark:border-white/5 rounded-2xl p-6 shadow-sm relative">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveQuickLink(index)}
+                            className="absolute top-4 right-4 text-rose-500 bg-rose-500/10 p-2 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                          
+                          <div className="space-y-4 pt-2">
+                            <div>
+                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Title</label>
+                              <input required type="text" value={link.title} onChange={(e) => handleQuickLinkChange(index, 'title', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Subtitle</label>
+                              <input required type="text" value={link.subtitle} onChange={(e) => handleQuickLinkChange(index, 'subtitle', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">URL Path</label>
+                                <input required type="text" value={link.url} onChange={(e) => handleQuickLinkChange(index, 'url', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white" />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Color Variant</label>
+                                <select value={link.color} onChange={(e) => handleQuickLinkChange(index, 'color', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white">
+                                  <option value="blue">Blue</option>
+                                  <option value="emerald">Emerald</option>
+                                  <option value="amber">Amber</option>
+                                  <option value="rose">Rose</option>
+                                  <option value="purple">Purple</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Icon Name</label>
+                                <select value={link.icon} onChange={(e) => handleQuickLinkChange(index, 'icon', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white">
+                                  <option value="compass">Compass (Explore)</option>
+                                  <option value="newspaper">Newspaper (News)</option>
+                                  <option value="video">Video (Media)</option>
+                                  <option value="book-open">Book Open (Guides)</option>
+                                </select>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {quickLinksList.length === 0 && (
+                        <div className="col-span-1 md:col-span-2 text-center py-12 opacity-50 border-2 border-dashed border-black/10 dark:border-white/10 rounded-2xl dark:text-white font-bold italic">
+                          No quick links added. The unified hub will show defaults until you add one.
+                        </div>
+                      )}
+                    </div>
+                    
+                    <button type="submit" disabled={saving} className="min-h-[64px] w-full max-w-sm ml-auto block px-12 bg-pink-500 text-white font-black uppercase tracking-widest italic rounded-[2rem] shadow-xl shadow-pink-500/30">
+                      Sync Links to Live
+                    </button>
+                  </form>
+                </div>
               )}
               {activeTab === 'categories' && (
                 <div className="animate-fade-in">

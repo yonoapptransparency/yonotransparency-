@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, User, Loader2, BotMessageSquare, Sparkles } from 'lucide-react';
+import { X, Send, User, Loader2, BotMessageSquare, Sparkles, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 
@@ -123,12 +123,12 @@ export default function PublicChatbot() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 w-[68px] h-[68px] bg-white/80 dark:bg-neutral-800/80 backdrop-blur-3xl border border-white dark:border-white/20 text-neutral-800 dark:text-white rounded-[24px] shadow-[0_10px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center justify-center z-50 group hover:shadow-[0_10px_40px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-1 before:absolute before:inset-0 before:rounded-[24px] before:bg-gradient-to-br before:from-white/60 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity"
+            className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 w-[72px] h-[72px] bg-white/95 dark:bg-white/95 backdrop-blur-3xl border border-white/60 text-zinc-900 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.2)] flex items-center justify-center z-50 group hover:shadow-[0_15px_40px_rgba(0,0,0,0.3)] transition-all hover:-translate-y-1 before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/80 before:to-transparent before:opacity-50"
             aria-label="Open AI Assistant"
           >
             <div className="relative">
-              <BotMessageSquare className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" />
-              <Sparkles className="w-4 h-4 absolute -top-2 -right-2 text-indigo-500 animate-pulse" />
+              <MessageCircle className="w-8 h-8 group-hover:scale-110 transition-transform duration-300 text-black fill-white" />
+              <Sparkles className="w-5 h-5 absolute -top-3 -right-3 text-pink-500 animate-pulse drop-shadow-md" />
             </div>
             <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -155,8 +155,8 @@ export default function PublicChatbot() {
               
               
               <div className="flex items-center gap-4 relative z-10">
-                <div className="w-12 h-12 bg-white/60 dark:bg-neutral-800/60 backdrop-blur-md shadow-sm border border-white/50 dark:border-white/10 text-indigo-600 dark:text-indigo-400 rounded-[18px] flex items-center justify-center relative">
-                  <BotMessageSquare className="w-6 h-6 text-indigo-500" />
+                <div className="w-12 h-12 bg-white/90 backdrop-blur-md shadow-sm border border-white/50 text-indigo-600 rounded-full flex items-center justify-center relative">
+                  <MessageCircle className="w-6 h-6 text-indigo-600 fill-white" />
                   <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-neutral-800"></span>
@@ -203,7 +203,7 @@ export default function PublicChatbot() {
                   className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
                 >
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-auto shadow-sm backdrop-blur-md ${msg.role === 'user' ? 'bg-gradient-to-tr from-indigo-500/80 to-purple-500/80 text-white' : 'bg-white/60 dark:bg-neutral-800/60 text-indigo-600 dark:text-indigo-400 border border-white/50 dark:border-neutral-700/50'}`}>
-                    {msg.role === 'user' ? <User className="w-4 h-4 text-white" /> : <BotMessageSquare className="w-4 h-4" />}
+                    {msg.role === 'user' ? <User className="w-4 h-4 text-white" /> : <MessageCircle className="w-4 h-4" />}
                   </div>
                   <div className={`px-4 py-3.5 text-[14.5px] leading-[1.6] max-w-[80%] shadow-sm backdrop-blur-md ${msg.role === 'user' ? 'bg-indigo-600/80 dark:bg-indigo-500/80 text-white rounded-[20px] rounded-br-sm font-medium shadow-indigo-500/20 border border-indigo-400/30' : 'bg-white/60 dark:bg-neutral-800/60 text-neutral-800 dark:text-neutral-200 border border-white/50 dark:border-white/10 rounded-[20px] rounded-bl-sm'}`}>
                     <ReactMarkdown 
@@ -232,7 +232,7 @@ export default function PublicChatbot() {
                   className="flex gap-3 flex-row"
                 >
                   <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-auto bg-white/60 dark:bg-neutral-800/60 backdrop-blur-md text-indigo-600 dark:text-indigo-400 shadow-sm border border-white/50 dark:border-white/10">
-                    <BotMessageSquare className="w-4 h-4" />
+                    <MessageCircle className="w-4 h-4" />
                   </div>
                   <div className="px-5 py-4 bg-white/60 dark:bg-neutral-800/60 backdrop-blur-md shadow-sm border border-white/50 dark:border-white/10 rounded-2xl rounded-bl-sm flex items-center gap-1.5 h-[46px]">
                     <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0 }} className="w-1.5 h-1.5 bg-neutral-400 rounded-full" />

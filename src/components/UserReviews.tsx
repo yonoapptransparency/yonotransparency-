@@ -3,7 +3,6 @@ import { Star, ShieldCheck, Check, Loader2, ThumbsUp, AlertCircle, Sparkles, Mes
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, isFirebaseConfigured, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, addDoc, getDocs, query, where, orderBy, doc, updateDoc } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
 interface Review {
   id: string;
@@ -49,9 +48,9 @@ export default function UserReviews({ appId, appTitle, overallRating = 5.0 }: Us
   const [success, setSuccess] = useState(false);
   const [errorText, setErrorText] = useState('');
 
-  // Google Auth states
+  // Local state
   const [user, setUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
 
   // Form states
   const [username, setUsername] = useState('');
@@ -60,20 +59,7 @@ export default function UserReviews({ appId, appTitle, overallRating = 5.0 }: Us
   const [comment, setComment] = useState('');
 
   useEffect(() => {
-    if (!auth) {
-      setAuthLoading(false);
-      return;
-    }
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u);
-      setAuthLoading(false);
-      if (u) {
-        setUsername(u.displayName || u.email?.split('@')[0] || '');
-      } else {
-        setUsername('');
-      }
-    });
-    return () => unsubscribe();
+    // Auth check removed to reduce Firebase client quotas. User explicitly types name.
   }, []);
 
   // Expand states for long comments

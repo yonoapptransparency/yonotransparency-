@@ -8,7 +8,6 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ClearanceButton from '../components/ClearanceButton';
 import { auth } from '../lib/firebase';
-import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
 export default function GatewayPage() {
   const { apps: mockApps, settings: mockSettings, loading, appsSyncedWithServer, serverAppsFetched, refreshAll } = useData();
@@ -25,20 +24,12 @@ export default function GatewayPage() {
   const [verifyInterval, setVerifyInterval] = useState<ReturnType<typeof setInterval> | null>(null);
 
   const [user, setUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
 
   const isActuallyComingSoon = app?.is_coming_soon;
 
   useEffect(() => {
-    if (!auth) {
-      setAuthLoading(false);
-      return;
-    }
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u);
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
+    // Auth check removed to reduce Firebase quotas.
   }, []);
 
   useEffect(() => {

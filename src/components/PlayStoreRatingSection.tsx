@@ -3,7 +3,6 @@ import { Star, Check, AlertCircle, Sparkles, MessageSquare, ShieldCheck, ArrowRi
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType, auth } from '../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 interface PlayStoreRatingSectionProps {
   appId: string;
@@ -21,25 +20,12 @@ export default function PlayStoreRatingSection({ appId, appTitle, onReviewSubmit
   const [errorText, setErrorText] = useState('');
   const [googleOpened, setGoogleOpened] = useState(false);
 
-  // Google Auth states for authenticated postings
+  // State for username
   const [user, setUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
 
   useEffect(() => {
-    if (!auth) {
-      setAuthLoading(false);
-      return;
-    }
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u);
-      setAuthLoading(false);
-      if (u) {
-        setUsername(u.displayName || u.email?.split('@')[0] || '');
-      } else {
-        setUsername('');
-      }
-    });
-    return () => unsubscribe();
+    // Auth check removed to reduce Firebase quotas. Only admin uses auth.
   }, []);
 
   // Check if user has already rated this app in this browser session or memory

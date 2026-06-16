@@ -4,7 +4,6 @@ import { useData } from '../contexts/DataContext';
 import { Link } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
-import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { collection, addDoc } from 'firebase/firestore';
 
 export default function Contact() {

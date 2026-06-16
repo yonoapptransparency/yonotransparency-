@@ -50,14 +50,7 @@ export default function QuickHub({ buttonClassName, isMobileSize = false }: Quic
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    if (!auth) return;
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u);
-      if (u) {
-        setUsername(u.displayName || u.email?.split('@')[0] || '');
-      }
-    });
-    return () => unsubscribe();
+    // Auth check removed
   }, []);
 
   // Prevent background scroll when open
@@ -260,81 +253,56 @@ export default function QuickHub({ buttonClassName, isMobileSize = false }: Quic
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       
-                      {/* Short Link 1: New Apps */}
-                      <Link
-                        id="hub-link-newapps"
-                        to="/new-apps"
-                        onClick={handleToggle}
-                        className="p-3.5 bg-zinc-50 dark:bg-zinc-800/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 rounded-2xl border border-zinc-100 dark:border-white/5 transition-all group flex items-start gap-3"
-                      >
-                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-all">
-                          <Compass className="w-4.5 h-4.5" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1">
-                            Browse App Store 
-                            <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-                          </p>
-                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">Explore listed packages with direct mirrors</p>
-                        </div>
-                      </Link>
+                      {(settings?.quick_links && settings.quick_links.length > 0 ? settings.quick_links : [
+                        { title: "Browse App Store", subtitle: "Explore listed packages with direct mirrors", icon: "compass", color: "blue", url: "/new-apps" },
+                        { title: "News & Releases", subtitle: "Stay updated with official security patches", icon: "newspaper", color: "amber", url: "/news" },
+                        { title: "Gameplay Arena", subtitle: "Explore user guides & immersive play walkthroughs", icon: "video", color: "rose", url: "/videos" },
+                        { title: "Community Reads", subtitle: "Read deep tips, developer updates, and tricks", icon: "book-open", color: "emerald", url: "/blogs" },
+                      ]).map((link, idx) => {
+                        const IconComponent = link.icon === 'compass' ? Compass : link.icon === 'newspaper' ? Newspaper : link.icon === 'video' ? Video : link.icon === 'book-open' ? BookOpen : Compass;
+                        let colorClass = "blue";
+                        let bgHoverClass = "hover:bg-blue-50/50 dark:hover:bg-blue-950/20";
+                        let iconTextClass = "text-blue-600 dark:text-blue-400";
+                        let iconBgClass = "bg-blue-500/10";
+                        
+                        if (link.color === 'amber') {
+                           bgHoverClass = "hover:bg-amber-50/50 dark:hover:bg-amber-950/20";
+                           iconTextClass = "text-amber-600 dark:text-amber-400";
+                           iconBgClass = "bg-amber-500/10";
+                        } else if (link.color === 'rose') {
+                           bgHoverClass = "hover:bg-rose-50/50 dark:hover:bg-rose-950/20";
+                           iconTextClass = "text-rose-600 dark:text-rose-400";
+                           iconBgClass = "bg-rose-500/10";
+                        } else if (link.color === 'emerald') {
+                           bgHoverClass = "hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20";
+                           iconTextClass = "text-emerald-600 dark:text-emerald-400";
+                           iconBgClass = "bg-emerald-500/10";
+                        } else if (link.color === 'purple') {
+                           bgHoverClass = "hover:bg-purple-50/50 dark:hover:bg-purple-950/20";
+                           iconTextClass = "text-purple-600 dark:text-purple-400";
+                           iconBgClass = "bg-purple-500/10";
+                        }
 
-                      {/* Short Link 2: News Desk */}
-                      <Link
-                        id="hub-link-news"
-                        to="/news"
-                        onClick={handleToggle}
-                        className="p-3.5 bg-zinc-50 dark:bg-zinc-800/40 hover:bg-amber-50/50 dark:hover:bg-amber-950/20 rounded-2xl border border-zinc-100 dark:border-white/5 transition-all group flex items-start gap-3"
-                      >
-                        <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-all">
-                          <Newspaper className="w-4.5 h-4.5" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1">
-                            News & Releases
-                            <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-                          </p>
-                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">Stay updated with official security patches</p>
-                        </div>
-                      </Link>
-
-                      {/* Short Link 3: Video Library */}
-                      <Link
-                        id="hub-link-videos"
-                        to="/videos"
-                        onClick={handleToggle}
-                        className="p-3.5 bg-zinc-50 dark:bg-zinc-800/40 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 rounded-2xl border border-zinc-100 dark:border-white/5 transition-all group flex items-start gap-3"
-                      >
-                        <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-105 transition-all">
-                          <Video className="w-4.5 h-4.5" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1">
-                            Gameplay Arena
-                            <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-                          </p>
-                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">Explore user guides & immersive play walkthroughs</p>
-                        </div>
-                      </Link>
-
-                      {/* Short Link 4: Custom Blogs */}
-                      <Link
-                        id="hub-link-blogs"
-                        to="/blogs"
-                        onClick={handleToggle}
-                        className="p-3.5 bg-zinc-50 dark:bg-zinc-800/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 rounded-2xl border border-zinc-100 dark:border-white/5 transition-all group flex items-start gap-3"
-                      >
-                        <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-all">
-                          <BookOpen className="w-4.5 h-4.5" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1">
-                            Community Reads
-                            <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-                          </p>
-                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">Read deep tips, developer updates, and tricks</p>
-                        </div>
-                      </Link>
+                        return (
+                          <Link
+                            key={idx}
+                            to={link.url}
+                            onClick={handleToggle}
+                            className={`p-3.5 bg-zinc-50 dark:bg-zinc-800/40 rounded-2xl border border-zinc-100 dark:border-white/5 transition-all group flex items-start gap-3 ${bgHoverClass}`}
+                          >
+                            <div className={`p-2 rounded-xl group-hover:scale-105 transition-all ${iconBgClass} ${iconTextClass}`}>
+                              <IconComponent className="w-4.5 h-4.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1">
+                                {link.title}
+                                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                              </p>
+                              <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">{link.subtitle}</p>
+                            </div>
+                          </Link>
+                        );
+                      })}
 
                     </div>
                   </div>
