@@ -1,23 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, User, Loader2 } from 'lucide-react';
-import { auth } from '../lib/firebase';
 
 export default function PublicChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
-    { role: 'assistant', content: 'Hello! I am the RummyApp Admin AI. I securely process admin system commands.' }
+    { role: 'assistant', content: 'Hello! I am the RummyApp Assistant. How can I help you navigate the directory today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isAdminLocally, setIsAdminLocally] = useState<boolean>(false);
-
-  useEffect(() => {
-    return auth.onAuthStateChanged((user) => {
-      setIsAdminLocally(!!user);
-    });
-  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,11 +23,6 @@ export default function PublicChatbot() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    if (!auth.currentUser) {
-      setError("AI strictly locked: Admin authentication required.");
-      return;
-    }
-
     const userMessage = input.trim();
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
@@ -43,12 +30,10 @@ export default function PublicChatbot() {
     setError('');
 
     try {
-      const token = await auth.currentUser.getIdToken();
       const res = await fetch('/api/v1/public/chat', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ message: userMessage }),
       });
@@ -66,8 +51,6 @@ export default function PublicChatbot() {
       setIsLoading(false);
     }
   };
-
-  if (!isAdminLocally) return null; // Only render when local admin state is confirmed
 
   return (
     <>

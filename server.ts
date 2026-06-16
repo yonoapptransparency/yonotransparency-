@@ -1495,7 +1495,7 @@ const rateLimitMap = new Map<string, number[]>();
   const publicChatRateLimits = new Map<string, { count: number, resetTime: number }>();
 
   // API Route: Secure AI Assistant Chat (Restricted to Admin)
-  app.post("/api/v1/public/chat", verifyAdminToken, async (req, res) => {
+  app.post("/api/v1/public/chat", async (req, res) => {
     // 1. Rate limiting: 10 messages per hour per IP
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown') as string;
     const now = Date.now();
