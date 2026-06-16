@@ -475,6 +475,136 @@ app.get("/api/v1/link-check", async (req, res) => {
   }
 });
 
+// Rate limiting map for public chat
+const publicChatRateLimits = new Map<string, { count: number, resetTime: number }>();
+
+// API Route: Secure AI Assistant Chat
+app.post("/api/v1/public/chat", async (req, res) => {
+  // 1. Rate limiting: 10 messages per hour per IP
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown') as string;
+  const now = Date.now();
+  const rateLimitWindow = 60 * 60 * 1000; // 1 hour
+  const maxMessages = 10;
+  
+  let userLimit = publicChatRateLimits.get(ip);
+  if (!userLimit || now > userLimit.resetTime) {
+    userLimit = { count: 0, resetTime: now + rateLimitWindow };
+  }
+  
+  if (userLimit.count >= maxMessages) {
+    return res.status(429).json({ error: "Rate limit exceeded. Maximum 10 messages per hour. Please try again later." });
+  }
+  
+  userLimit.count += 1;
+  publicChatRateLimits.set(ip, userLimit);
+
+  const { message } = req.body;
+  if (!message || typeof message !== 'string') {
+    return res.status(400).json({ error: 'Message payload is required.' });
+  }
+
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("AI service is currently offline.");
+    }
+
+    // 2. Fetch public context
+    const data = await fetchStoreData();
+    
+    const publicContext = {
+      settings: {
+         site_title: data.settings?.site_title,
+         meta_description: data.settings?.meta_description,
+         policies: data.settings?.policies ? data.settings.policies.substring(0, 500) : "",
+      },
+      categories: (data.categories || []).map((cat: any) => ({
+          id: cat.id,
+          n: cat.name
+      })),
+      apps: (data.apps || []).map((app: any) => ({
+         n: app.name,
+         c: app.category
+      })),
+    };
+
+    const { GoogleGenAI } = require("@google/genai");
+    const client = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build'
+        }
+      }
+    });
+
+    // 3. Strict Grounding System Prompt
+    const sysInstruction = `You are the official RummyApp Online Public Assistant. Your sole purpose is to help visitors navigate the site, understand the directory structure, and find simulated card applications.
+
+STRICT KNOWLEDGE BOUNDARIES:
+You have been provided with the complete text and structural layout of the public RummyApp Online website. You must answer user questions ONLY using this specific provided data.
+Under no circumstances are you to provide information, opinions, or advice outside of what is explicitly written in the provided site data. If a user asks about a topic, game, or concept not present on the site, you must reply: "I can only provide information directly related to the apps and policies listed on RummyApp Online."
+You have absolutely no knowledge of the site's administrative panel, backend code, or hosting environment.
+Maintain a helpful, objective, and transparent tone. Always remind users that all listed apps are simulated, non-wager environments for users aged 18+.
+
+PUBLIC CONTEXT:
+${JSON.stringify(publicContext, null, 2)}`;
+
+    // 4. Output capped at 150 tokens
+    const response = await client.models.generateContent({
+      model: "gemini-flash-latest", // Using advanced model for large context
+      contents: message.trim(),
+      config: {
+        systemInstruction: sysInstruction,
+        maxOutputTokens: 150, 
+        temperature: 0.2
+      }
+    });
+
+    let aiResponse = "";
+    if (response && response.text) {
+       aiResponse = response.text;
+    } else {
+       aiResponse = "I am currently unable to answer that question based on the directory information.";
+    }
+
+    return res.json({ success: true, answer: aiResponse });
+  } catch (err: any) {
+    // Fallback message for public chat if quota is exceeded
+    const lowerMessage = message.trim().toLowerCase();
+    
+    try {
+      const data = await fetchStoreData();
+      const apps = data.apps || [];
+      
+      const matches = apps.filter((a: any) => 
+          (a.name && a.name.toLowerCase().includes(lowerMessage)) || 
+          (a.category && a.category.toLowerCase().includes(lowerMessage))
+      );
+      
+      if (matches.length > 0) {
+          const names = matches.slice(0, 3).map((a: any) => a.name).join(', ');
+          return res.json({ 
+            success: true, 
+            answer: `(Offline Fallback): I found some apps in the directory matching your query: ${names}${matches.length > 3 ? ' and more.' : '.'}`
+          });
+      } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi ') || lowerMessage === 'hi') {
+          return res.json({ 
+            success: true, 
+            answer: `(Offline Fallback): Hello! Our AI is currently in offline mode due to high traffic, but I can still help you search for app titles and categories!`
+          });
+      }
+    } catch (fallbackErr) {
+      // Ignore fallback errors
+    }
+
+    return res.json({ 
+      success: true, 
+      answer: "(Offline Fallback): I am experiencing high traffic right now and cannot answer complex questions. Please browse the directory directly."
+    });
+  }
+});
+
 // API Route: Report missing link to admin
 app.post("/api/v1/report-missing", async (req, res) => {
   const { appId } = req.body;
