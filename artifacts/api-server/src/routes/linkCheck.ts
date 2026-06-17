@@ -70,8 +70,10 @@ router.get("/v1/link-check", async (req, res) => {
               item.mapValue.fields.download_url?.stringValue;
             // A plaintext URL in the chunk always works regardless of AES_SECRET
             if (plainUrl) return res.json({ configured: true });
-            // link_configured flag is only meaningful when we CAN decrypt the vault
-            if (hasAesSecret && item.mapValue.fields.link_configured?.booleanValue === true) {
+            // link_configured is a safe public indicator set by the admin — trust it
+            // unconditionally. It contains no URL data. Whether the redirect succeeds
+            // depends on AES_SECRET being set at payload time, not at check time.
+            if (item.mapValue.fields.link_configured?.booleanValue === true) {
               return res.json({ configured: true });
             }
           }
