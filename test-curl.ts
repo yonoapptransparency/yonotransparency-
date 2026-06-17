@@ -1,0 +1,1 @@
+fetch("https://firestore.googleapis.com/v1/projects/gen-lang-client-0825832493/databases/ai-studio-886315a4-8b9f-4ff6-8986-a90ad172210a/documents/store_data/settings").then(r=>r.text()).then(console.log).catch(console.error);

@@ -227,16 +227,6 @@ async function doFetchStoreData() {
       delete app.more_information_url;
       delete app.encrypted_download_url;
       delete app.download_url;
-      
-      // GHOST FIX: Ensure all fields are primitive to avoid [object Object] during SSR stringification
-      for (const key in app) {
-        if (app[key] && typeof app[key] === 'object' && !Array.isArray(app[key])) {
-          if (app[key].stringValue) app[key] = app[key].stringValue;
-          else if (app[key].integerValue) app[key] = parseInt(app[key].integerValue, 10);
-          else if (app[key].booleanValue) app[key] = app[key].booleanValue;
-        }
-      }
-      
       return app;
     });
     
@@ -368,6 +358,12 @@ async function getPagePreRender(urlPath: string, data: any): Promise<string> {
     bodyContent = renderPrivacy(settings);
   } else if (cleanPathLower === '/terms') {
     bodyContent = renderTerms(settings);
+  } else if (cleanPathLower === '/notice') {
+    bodyContent = renderNotice(settings);
+  } else if (cleanPathLower === '/ethics') {
+    bodyContent = renderEthics(settings);
+  } else if (cleanPathLower === '/disclaimer') {
+    bodyContent = renderDisclaimer(settings);
   } else if (cleanPathLower === '/responsibility') {
     bodyContent = renderResponsibility(settings);
   } else {
@@ -444,15 +440,13 @@ function renderFooter(settings: any) {
           <a href="/">Home</a>
           <a href="/about">About</a>
           <a href="/contact">Contact</a>
+          <a href="/videos">Apps</a>
+          <a href="/blogs">Blog</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
-          <a href="/responsibility">Safety</a>
-        </div>
-        
-        <div class="max-w-7xl mx-auto flex flex-col gap-4 text-left text-xs text-zinc-500 leading-relaxed">
-          ${disclaimerText ? `<div class="bg-white dark:bg-zinc-900 border border-black/5 rounded-2xl p-6"><strong>Disclaimer:</strong> ${disclaimerText}</div>` : ''}
-          ${ethicsText ? `<div class="bg-white dark:bg-zinc-900 border border-black/5 rounded-2xl p-6"><strong>Ethics & Safety:</strong> ${ethicsText}</div>` : ''}
-          ${importantNotice ? `<div class="bg-blue-50/50 dark:bg-blue-500/10 border border-blue-100 rounded-2xl p-6"><strong>Notice:</strong> ${importantNotice}</div>` : ''}
+          <a href="/notice">Notice</a>
+          <a href="/ethics">Ethics</a>
+          <a href="/disclaimer">Disclaimer</a>
         </div>
         <div class="text-xs text-zinc-400 mt-8">&copy; ${new Date().getFullYear()} ${escapeHtml(siteTitle)}. All rights reserved.</div>
       </div>
@@ -749,6 +743,24 @@ function renderTerms(settings: any) {
 function renderResponsibility(settings: any) {
   const content = getField(settings, 'responsibility_content') || 'Play safe for custom virtual entertainment.';
   return `<div class="max-w-3xl mx-auto py-12 text-left bg-white p-8 rounded-3xl border border-black/5"><h1 class="text-4xl font-bold mb-6">Responsible Gaming</h1><article class="prose text-zinc-750 leading-relaxed font-semibold">${content.replace(/\n\n/g, '<br/><br/>').replace(/\n/g, '<br/>')}</article></div>`;
+}
+
+function renderNotice(settings: any) {
+  const heading = getField(settings, 'important_notice_heading') || 'Important Notice';
+  const content = getField(settings, 'important_notice') || 'No important notices at this time.';
+  return `<div class="max-w-3xl mx-auto py-12 text-left bg-white p-8 rounded-3xl border border-black/5"><h1 class="text-4xl font-bold mb-6">${heading}</h1><article class="prose text-zinc-750 leading-relaxed font-semibold">${content}</article></div>`;
+}
+
+function renderEthics(settings: any) {
+  const heading = getField(settings, 'ethics_heading') || 'Ethics & Safety';
+  const content = getField(settings, 'ethics_discrimination_text') || 'Ethics and safety information goes here.';
+  return `<div class="max-w-3xl mx-auto py-12 text-left bg-white p-8 rounded-3xl border border-black/5"><h1 class="text-4xl font-bold mb-6">${heading}</h1><article class="prose text-zinc-750 leading-relaxed font-semibold">${content}</article></div>`;
+}
+
+function renderDisclaimer(settings: any) {
+  const heading = getField(settings, 'disclaimer_heading') || 'Disclaimer';
+  const content = getField(settings, 'disclaimer_text') || 'Disclaimer information goes here.';
+  return `<div class="max-w-3xl mx-auto py-12 text-left bg-white p-8 rounded-3xl border border-black/5"><h1 class="text-4xl font-bold mb-6">${heading}</h1><article class="prose text-zinc-750 leading-relaxed font-semibold">${content}</article></div>`;
 }
 
 function getSafeFirebaseConfig(): any {

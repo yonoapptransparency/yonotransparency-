@@ -65,8 +65,8 @@ function sha256(ascii: string): string {
 
 // ── Internal API paths (match backend) ──
 const _EP = {
-  challenge: '/api/v1/_chal',
-  process:   '/api/v1/_proc',
+  challenge: '/api/v1/init-file',
+  process:   '/api/v1/process-file',
   payload:   '/api/v1/file-payload',
 };
 
@@ -190,8 +190,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
   useEffect(() => {
     setLinkConfigured(null);
     let cancelled = false;
-    const safeAppId = typeof appId === 'object' ? (appId as any).id : String(appId);
-    fetch(`/api/v1/link-check?id=${encodeURIComponent(safeAppId)}`)
+    fetch(`/api/v1/link-check?id=${encodeURIComponent(appId)}`)
       .then(r => r.json())
       .then(data => { if (!cancelled) setLinkConfigured(data.configured !== false); })
       .catch(() => { if (!cancelled) setLinkConfigured(true); }); // fail-open
@@ -446,7 +445,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
     }
   };
 
-  const triggerHandshake = async () => {
+  const triggerHandshake = async (popupWindow: Window | null) => {
     setPhase('working');
     setErrorMsg('');
 
@@ -503,9 +502,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       // Step 4: Build the clearance URL — the backend 302-redirects to the real link.
       // DO NOT fetch() this URL — fetch follows the redirect to the external site (HTML),
       // which cannot be parsed as JSON. Just open it directly in the browser.
-      // Ghost Fix: Ensure appId is a string. If it's an object (e.g. from SSR), stringify its ID field.
-      const safeAppId = typeof appId === 'object' ? (appId as any).id : String(appId);
-      const params = new URLSearchParams({ t: token, id: safeAppId });
+      const params = new URLSearchParams({ t: token, id: appId });
       if (sid) params.set('sid', sid);
       const finalUrl = `${_EP.payload}?${params.toString()}`;
 
@@ -513,8 +510,19 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       setPhase('ready');
       setTokenCountdown(600);
 
+      // Auto-navigate user to prevent 2nd click requirement
+      if (popupWindow && !popupWindow.closed) {
+        popupWindow.location.href = finalUrl;
+      } else {
+        const fallbackWindow = window.open(finalUrl, '_blank', 'noopener,noreferrer');
+        if (!fallbackWindow || fallbackWindow.closed || typeof fallbackWindow.closed === 'undefined') {
+          window.location.href = finalUrl;
+        }
+      }
+
     } catch (err: any) {
       console.error('Clearance handshake failed:', err);
+      if (popupWindow && !popupWindow.closed) popupWindow.close();
       setErrorMsg(err.message || 'Initialization did not complete. Please retry.');
       setPhase('error');
       setTimeout(resetState, 4000);
@@ -523,6 +531,18 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
 
   const handleClearance = () => {
     if (phase === 'ready' || phase === 'working') return;
+    
+    // Open a blank popup immediately to ensure we use the explicit user activation token.
+    const popupWindow = window.open('', '_blank', 'noopener,noreferrer');
+    if (popupWindow) {
+      popupWindow.document.write(`
+        <html><head><title>Verifying...</title></head>
+        <body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;background:#f9fafb;margin:0;">
+        <h3 style="color:#4b5563;">Security verification in progress, please wait...</h3>
+        </body></html>
+      `);
+      popupWindow.document.close();
+    }
     
     mouseMoved.current = true;
     moveCount.current = Math.max(moveCount.current, 1);
@@ -533,7 +553,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       window.navigator.vibrate(50);
     }
     
-    triggerHandshake();
+    triggerHandshake(popupWindow);
   };
 
   const isGenerating = phase === 'working';

@@ -388,12 +388,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }, 400);
 
-    const isPublicVisitorOnStaticDeploy = typeof window !== 'undefined' 
-        && window.location.pathname.indexOf('/admin') !== 0
-        && (window as any).__INITIAL_DATA__;
-
     const checkConnection = async () => {
-      if (!isFirebaseConfigured || isPublicVisitorOnStaticDeploy) {
+      if (!isFirebaseConfigured) {
           setIsConnected(false);
           setLoadedFromServer(true);
           setLoading(false);
@@ -450,7 +446,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     checkConnection();
     const connInterval = setInterval(checkConnection, 60000);
 
-    if (!isFirebaseConfigured || isPublicVisitorOnStaticDeploy) {
+    if (!isFirebaseConfigured) {
         return () => {
             if (timeout) clearTimeout(timeout);
             clearTimeout(syncTimeout);
@@ -528,6 +524,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           setAppsSyncedWithServer(true);
           setServerAppsFetched(true);
           setLoadedFromServer(true);
+          if (!snap.metadata?.fromCache) {
+            setIsConnected(true);
+            setIsLive(true);
+          }
           checkLoaded('apps');
         } else {
            console.warn("Aborted fetching apps due to chunk fail. Preserving local cache.");
@@ -564,6 +564,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         } else {
           setSettingsSyncedWithServer(true);
           setLoadedFromServer(true);
+          if (!snap.metadata?.fromCache) {
+            setIsConnected(true);
+            setIsLive(true);
+          }
         }
         checkLoaded('settings');
       }, (err) => {
@@ -994,8 +998,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const settingsDoc = doc(db, 'store_data', 'settings');
     
     try {
-      await getDocFromServer(settingsDoc);
-      return true;
+      const snap = await getDoc(settingsDoc);
+      if (!snap.metadata.fromCache) {
+        setIsConnected(true);
+        setIsLive(true);
+        return true;
+      }
+      return false;
     } catch (err: any) {
       console.warn("Connectivity Test: Read failed.", err.message || err);
       return false;
@@ -1028,7 +1037,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
               const allApps = [];
               for(let i=0; i<numChunks; i++) {
                 try {
-                  const snapChunk = await withServerConfirmation(() => getDocFromServer(doc(db, 'store_data', `apps_chunk_${i}`)), 10000);
+                  const snapChunk = await withServerConfirmation(() => getDoc(doc(db, 'store_data', `apps_chunk_${i}`)), 10000);
                   if(snapChunk.exists() && snapChunk.data().items) {
                     allApps.push(...snapChunk.data().items);
                   }
@@ -1062,8 +1071,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
               }
             }
           } else {
-            // Use getDocFromServer to ensure it receives fresh updates
-            const snap = await withServerConfirmation(() => getDocFromServer(doc(db, 'store_data', d.path)), 10000);
+            // Use getDoc to ensure it gracefully falls back
+            const snap = await withServerConfirmation(() => getDoc(doc(db, 'store_data', d.path)), 10000);
             if (snap.exists()) {
               const data = (d as any).key ? (snap.data() as any)[(d as any).key] : snap.data();
               d.setter(data);

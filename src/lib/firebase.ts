@@ -5,7 +5,6 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore } from 'firebase/firestore';
 
 // Allow Vite to statically bundle the configuration file
 import appletConfig from '../../firebase-applet-config.json';
@@ -72,19 +71,11 @@ export const app = firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null 
 
 export const auth = app ? getAuth(app) : null as any;
 
-// EXPERIMENTAL FORCE LONG POLLING IS REQUIRED for Indian Mobile ISPs and Sandbox environments!
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore } from 'firebase/firestore';
 
 let firestoreInstance: any = null;
 if (app) {
-  try {
-    firestoreInstance = initializeFirestore(app, {
-      experimentalForceLongPolling: true
-    }, firebaseConfig.firestoreDatabaseId === '(default)' ? undefined : firebaseConfig.firestoreDatabaseId);
-  } catch (e) {
-    console.warn("Firestore already initialized. Reusing existing instance.");
     firestoreInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId === '(default)' ? undefined : firebaseConfig.firestoreDatabaseId);
-  }
 }
 
 export const db = firestoreInstance;

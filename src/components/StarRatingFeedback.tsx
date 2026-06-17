@@ -109,14 +109,8 @@ export default function StarRatingFeedback() {
   return (
     <div 
       id="feedback-ratings-container" 
-      className="w-full max-w-2xl mx-auto bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-3xl p-6 md:p-8 shadow-sm text-left transition-all relative overflow-hidden"
+      className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden"
     >
-      {/* Background soft element for responsive look */}
-      <div 
-        id="feedback-bg-glow" 
-        className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-2xl pointer-events-none" 
-      />
-
       <AnimatePresence mode="wait">
         {!submitted ? (
           <motion.div
@@ -129,22 +123,22 @@ export default function StarRatingFeedback() {
             <div className="flex items-center gap-3 mb-4">
               <div 
                 id="feedback-badge" 
-                className="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 p-2 rounded-xl"
+                className="bg-blue-500/20 text-blue-400 p-2 rounded-xl"
               >
-                <MessageSquare className="w-5 h-5" />
+                <MessageSquare className="w-4 h-4" />
               </div>
               <div>
                 <h3 
                   id="feedback-title" 
-                  className="text-lg font-bold text-zinc-900 dark:text-zinc-100"
+                  className="text-sm font-bold text-white"
                 >
                   Rate Your Experience
                 </h3>
                 <p 
                   id="feedback-subtitle" 
-                  className="text-xs text-zinc-500 dark:text-zinc-400 font-medium"
+                  className="text-[11px] text-slate-400 font-medium"
                 >
-                  Help us make this clearance portal safer and better for everyone.
+                  Your feedback helps us maintain a reliable platform.
                 </p>
               </div>
             </div>
@@ -152,7 +146,7 @@ export default function StarRatingFeedback() {
             {/* Interactive Stars Block */}
             <div 
               id="feedback-stars-wrapper" 
-              className="flex items-center justify-center gap-2 py-4 border-b border-dashed border-zinc-100 dark:border-zinc-800"
+              className="flex items-center gap-1.5 py-3"
             >
               {[1, 2, 3, 4, 5].map((s) => (
                 <motion.button
@@ -167,10 +161,10 @@ export default function StarRatingFeedback() {
                   className="p-1 focus:outline-none cursor-pointer group"
                 >
                   <Star 
-                    className={`w-10 h-10 transition-all duration-200 ${
+                    className={`w-7 h-7 transition-all duration-200 ${
                       s <= (hoveredRating !== null ? hoveredRating : (rating || 0))
-                        ? 'fill-amber-400 text-amber-400 drop-shadow-[0_2px_8px_rgba(251,191,36,0.3)]' 
-                        : 'text-zinc-300 dark:text-zinc-700'
+                        ? 'fill-[#FBBC05] text-[#FBBC05] drop-shadow-[0_2px_8px_rgba(251,191,36,0.3)]' 
+                        : 'text-slate-700'
                     }`} 
                   />
                 </motion.button>
@@ -182,46 +176,44 @@ export default function StarRatingFeedback() {
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="pt-5 space-y-4"
+                className="pt-3 space-y-4"
               >
                 {/* Branch 1: High Rating (4 or 5 stars) -> Promote Google Review Link */}
                 {rating >= 4 ? (
                   <div 
                     id="feedback-positive-branch" 
-                    className="space-y-4 text-center bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10 dark:border-blue-500/20 p-5 rounded-2xl"
+                    className="space-y-3 bg-white/5 border border-white/5 p-4 rounded-xl"
                   >
-                    <div className="flex justify-center mb-1 text-amber-400 animate-pulse">
-                      <Heart className="w-8 h-8 fill-rose-500 text-rose-500" />
-                    </div>
                     <h4 
                       id="feedback-positive-title" 
-                      className="text-sm font-bold text-zinc-900 dark:text-zinc-100"
+                      className="text-xs font-bold text-white flex items-center gap-2"
                     >
-                      Wow! Thank you for the positive vibes! 🌟
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      Thank you for your feedback
                     </h4>
                     <p 
                       id="feedback-positive-desc" 
-                      className="text-xs text-zinc-650 dark:text-zinc-400 max-w-md mx-auto leading-relaxed"
+                      className="text-[11px] text-slate-400 leading-relaxed"
                     >
-                      Since you rate us <span className="font-bold text-blue-600 dark:text-blue-400">{rating} Stars</span>, could you take 5 seconds to voice your support on Google? Google reviews protect our active gamer base from ISP blocking!
+                      Your rating of <span className="font-bold text-white">{rating} stars</span> is highly appreciated. Please consider leaving a review on Google to support our platform.
                     </p>
 
-                    <div className="pt-2 flex justify-center">
+                    <div className="pt-1">
                       <a
                         id="google-review-primary-button"
                         href="https://g.page/r/Cd8k-znwB0BDEBI/review"
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={handleGoogleReviewClick}
-                        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-2xl shadow-md transition-all divide-x divide-white/20 active:scale-95 text-xs uppercase tracking-wider group"
+                        className="inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 font-bold py-2 px-4 rounded-lg shadow-md transition-all active:scale-95 text-[11px]"
                       >
-                        <span className="flex items-center gap-1.5 pr-2.5">
-                          <Chrome className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                          Rate us on Google
-                        </span>
-                        <span className="pl-2.5 flex items-center gap-1">
-                          Review 🚀
-                        </span>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        Review on Google
                       </a>
                     </div>
                   </div>
@@ -229,63 +221,49 @@ export default function StarRatingFeedback() {
                   // Branch 2: Low Rating (1-3 stars)
                   <div 
                     id="feedback-negative-branch" 
-                    className="p-4 bg-zinc-50 dark:bg-zinc-800/30 border border-black/5 dark:border-white/5 rounded-2xl flex items-start gap-3"
+                    className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-start gap-2"
                   >
-                    <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <ShieldAlert className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <h4 className="text-xs font-bold text-zinc-800 dark:text-zinc-200">How can we win back your trust?</h4>
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
-                        We take safety and platform reliability extremely seriously. Tell us what went wrong so we can debug, update the gateway clearance routes, or enhance security.
+                      <h4 className="text-[11px] font-bold text-white">We value your feedback</h4>
+                      <p className="text-[10px] text-slate-400 leading-relaxed mt-1">
+                        We take platform reliability seriously. Please let us know how we can improve.
                       </p>
                     </div>
                   </div>
                 )}
 
                 {/* Local Form Field for everyone */}
-                <form onSubmit={handleTextSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="col-span-1">
-                      <label 
-                        id="feedback-name-label"
-                        htmlFor="feedback-username" 
-                        className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1"
-                      >
-                        Your Name
-                      </label>
+                <form onSubmit={handleTextSubmit} className="space-y-3">
+                  <div className="grid grid-cols-1 gap-2">
+                    <div>
                       <input
                         id="feedback-username"
                         type="text"
                         required
                         maxLength={30}
-                        placeholder="e.g. Rahul Singh"
+                        placeholder="Your Name"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="w-full bg-zinc-50 focus:bg-white dark:bg-zinc-950 border border-black/5 dark:border-white/10 rounded-xl p-3 text-xs font-medium text-zinc-800 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-2.5 text-xs font-medium text-white outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all placeholder:text-slate-600"
                       />
                     </div>
-                    <div className="col-span-2">
-                      <label 
-                        id="feedback-comment-label"
-                        htmlFor="feedback-comment" 
-                        className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1"
-                      >
-                        On-Site Feedback Comment (Optional)
-                      </label>
+                    <div>
                       <textarea
                         id="feedback-comment"
                         maxLength={400}
-                        placeholder="Write dynamic elements or platform details you loved or want us to resolve..."
+                        placeholder="Additional comments (optional)"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                         rows={2}
-                        className="w-full bg-zinc-50 focus:bg-white dark:bg-zinc-950 border border-black/5 dark:border-white/10 rounded-xl p-3 text-xs font-medium text-zinc-800 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none min-h-[50px]"
+                        className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-2.5 text-xs font-medium text-white outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all resize-none min-h-[50px] placeholder:text-slate-600"
                       />
                     </div>
                   </div>
 
                   {errorText && (
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-500">
-                      <ShieldAlert className="w-4 h-4 shrink-0" />
+                    <div className="flex items-center gap-1.5 text-[10px] font-semibold text-rose-400">
+                      <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
                       <span>{errorText}</span>
                     </div>
                   )}
@@ -295,7 +273,7 @@ export default function StarRatingFeedback() {
                       id="feedback-submit-button"
                       type="submit"
                       disabled={submitting}
-                      className="flex items-center justify-center gap-2 h-10 px-6 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold text-xs rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+                      className="flex items-center justify-center gap-2 h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] rounded-lg cursor-pointer disabled:opacity-50 transition-all"
                     >
                       {submitting ? 'Submitting...' : 'Submit Feedback'}
                     </button>
@@ -312,15 +290,15 @@ export default function StarRatingFeedback() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="py-8 text-center"
+            className="py-6 text-left"
           >
             <motion.div 
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 220, damping: 16, delay: 0.1 }}
-              className="inline-flex p-3 bg-emerald-500/10 text-emerald-500 rounded-full mb-4"
+              className="inline-flex p-2 bg-emerald-500/20 text-emerald-400 rounded-lg mb-3"
             >
-              <Check className="w-8 h-8" />
+              <Check className="w-5 h-5" />
             </motion.div>
             
             <motion.h3 
@@ -328,9 +306,9 @@ export default function StarRatingFeedback() {
               initial={{ y: 12, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5, delay: 0.18 }}
-              className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2"
+              className="text-sm font-bold text-white mb-2"
             >
-              Feedback Successfully Logged!
+              Feedback Submitted
             </motion.h3>
             
             <motion.p 
@@ -338,9 +316,9 @@ export default function StarRatingFeedback() {
               initial={{ y: 8, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5, delay: 0.24 }}
-              className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto mb-6 leading-relaxed"
+              className="text-[11px] text-slate-400 mb-4 leading-relaxed"
             >
-              Thank you for verifying your visit. Every rating allows us to maintain stable server mirrors and clean APK audits.
+              Thank you for taking the time to share your experience with us.
             </motion.p>
 
             {rating && rating >= 4 && !hasReviewedOnGoogle && (
@@ -348,10 +326,10 @@ export default function StarRatingFeedback() {
                 initial={{ opacity: 0, y: 12, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ type: "spring", stiffness: 140, damping: 18, delay: 0.32 }}
-                className="bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10 dark:border-blue-500/20 p-5 rounded-2xl max-w-md mx-auto"
+                className="bg-white/5 border border-white/5 p-4 rounded-xl mt-4"
               >
-                <p className="text-xs text-zinc-650 dark:text-zinc-400 mb-3.5 leading-relaxed">
-                  To complete your review audit, please write your review directly on our official Google Business page:
+                <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
+                  Please consider sharing your review on our Google profile.
                 </p>
                 <a
                   id="google-review-success-button"
@@ -359,10 +337,15 @@ export default function StarRatingFeedback() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleGoogleReviewClick}
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl text-xs transition-all pointer-events-auto shadow-md"
+                  className="inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 font-bold py-2 px-4 rounded-lg transition-all pointer-events-auto text-[11px]"
                 >
-                  <Chrome className="w-4 h-4" />
-                  <span>Post on Google Reviews</span>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  <span>Review on Google</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </a>
               </motion.div>
@@ -381,9 +364,9 @@ export default function StarRatingFeedback() {
                 setRating(null);
                 setHasReviewedOnGoogle(false);
               }}
-              className="text-xs text-blue-500 hover:text-blue-600 font-bold mt-6 underline cursor-pointer"
+              className="text-[11px] text-slate-400 hover:text-white mt-4 underline cursor-pointer"
             >
-              Update my review / Change rating
+              Update your feedback
             </motion.button>
           </motion.div>
         )}
