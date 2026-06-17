@@ -478,7 +478,11 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       // Step 3: Submit verification → receive HMAC token
       const tokenResponse = await fetch(_EP.process, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
         body: JSON.stringify({
           nonce,
           solution,

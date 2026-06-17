@@ -1855,8 +1855,8 @@ export default function AdminDashboard() {
 
         // Static Site Offline/Client-side Fallback (checks Firestore database if backend API didn't verify)
         if (!adminVerified) {
-           const fallbackAdmin = (import.meta.env.VITE_ADMIN_EMAIL || 'defentechscholar@gmail.com').toLowerCase();
-           if (currentUser.emailVerified && currentUser.email?.toLowerCase() === fallbackAdmin) {
+           const fallbackAdmin = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
+           if (fallbackAdmin && currentUser.emailVerified && currentUser.email?.toLowerCase() === fallbackAdmin) {
                adminVerified = true;
            } else {
                try {
