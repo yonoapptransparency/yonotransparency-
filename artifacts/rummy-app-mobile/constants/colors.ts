@@ -27,9 +27,12 @@ const colors = {
     border: "rgba(0, 0, 0, 0.06)",
     input: "#e8e8ed",
 
+    // Status colors — both naming conventions kept for compatibility
     success: "#34c759",
+    verified: "#34c759",
     warning: "#ff9500",
     caution: "#ff9500",
+    unsafe: "#ff3b30",
   },
 
   dark: {
@@ -60,9 +63,12 @@ const colors = {
     border: "rgba(255, 255, 255, 0.1)",
     input: "#3a3a3c",
 
+    // Status colors — both naming conventions kept for compatibility
     success: "#30d158",
+    verified: "#30d158",
     warning: "#ff9f0a",
     caution: "#ff9f0a",
+    unsafe: "#ff453a",
   },
 
   radius: 12,
