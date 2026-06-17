@@ -1,3 +1,8 @@
+/**
+ * Front-end entry point of the Portal Directory application
+ * Mounts the core React layout with Global Error Boundary handlers.
+ */
+
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App';

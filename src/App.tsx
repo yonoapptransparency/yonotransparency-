@@ -1,3 +1,8 @@
+/**
+ * Main Application Core
+ * Coordinates global routes, SEO head tag helpers, persistent layouts, and custom dynamic components.
+ */
+
 import { DataProvider, useData } from './contexts/DataContext';
 import { useLocation, BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';

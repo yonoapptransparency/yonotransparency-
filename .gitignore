@@ -7,19 +7,4 @@ coverage/
 .env*
 !.env.example
 firebase-blueprint.json
-firebase-applet-config.json
-view-sec-public-links.ts
-test-secure-links.ts
-dump-docs.ts
-add-admin.ts
-add-admin-rest.ts
-test-admin-encrypt.js
-test-all-keys.ts
-verify-db-rest.ts
-verify-db.js
-debug-db.js
-check-env.ts
-print-env.ts
-fix-missing-urls.cjs
-test-chunk-item.cjs
-test-payload.mjs
+# firebase-applet-config.json
