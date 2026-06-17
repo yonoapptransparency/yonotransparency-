@@ -1,2 +1,0 @@
-- [API routing setup](api-routing.md) — Vite proxies /api to api-server on port 8080; frontend uses relative /api/... paths
-- [Firebase config](firebase-config.md) — firebase-applet-config.json must exist in both rummy-app and api-server roots; falls back to VITE_FIREBASE_* env vars
