@@ -309,17 +309,17 @@ function verifyToken(token: string, ip: string, sessionId: string, fingerprint: 
   }
 }
 
-const getFallbackSecret = (name: string) => process.env[name] ? process.env[name]! : `fallback-${name.toLowerCase().replace('_secret', '')}-for-vercel`;
-const TOKEN_SECRET = getFallbackSecret('TOKEN_SECRET');
-const SESSION_SECRET = getFallbackSecret('SESSION_SECRET');
-const AES_SECRET = getFallbackSecret('AES_SECRET');
+const TOKEN_SECRET = process.env.TOKEN_SECRET || '';
+const SESSION_SECRET = process.env.SESSION_SECRET || '';
 
 async function startServer() {
   if (!process.env.AES_SECRET) {
-    console.warn('WARNING: AES_SECRET is not set. Download links cannot be decrypted securely. Using a fallback secret.');
+    console.error('FATAL: AES_SECRET is not set. Download links cannot be decrypted. Set it in your environment and restart.');
+    process.exit(1);
   }
   if (!process.env.TOKEN_SECRET) {
-    console.warn('WARNING: TOKEN_SECRET is not set. Tokens are not secure. Using a fallback secret.');
+    console.error('FATAL: TOKEN_SECRET is not set. Tokens are not secure. Set it and restart.');
+    process.exit(1);
   }
   const app = express();
   const PORT = 3000;
