@@ -146,8 +146,8 @@ async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
     }
     return true;
   } catch (e) {
-    console.warn('[CF_TURNSTILE] Error:', e);
-    return true; // fail-open on network issues to avoid blocking real users
+    console.error('[CF_TURNSTILE] FAIL-CLOSED EVENT: Network error verifying token. IP:', ip, e);
+    return false; // fail-closed on network issues for maximum security
   }
 }
 
