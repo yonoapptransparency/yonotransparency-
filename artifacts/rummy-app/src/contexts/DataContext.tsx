@@ -235,7 +235,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   // Load GitHub config on admin session auth via secure server-side lookup
   useEffect(() => {
     if (!auth) return;
-    const unsubAuth = auth.onAuthStateChanged(async (currentUser) => {
+    const unsubAuth = auth.onAuthStateChanged(async (currentUser: import('firebase/auth').User | null) => {
       if (currentUser) {
         let isAuthorized = false;
 

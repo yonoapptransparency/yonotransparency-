@@ -190,7 +190,7 @@ export default function GatewayPage() {
     return stripped.replace(/\s+/g, ' ').trim();
   };
 
-  const cleanSeoDescription = (rawDesc: string) => {
+  const cleanSeoDescription = (rawDesc: string | undefined) => {
     if (!rawDesc) return '';
     const trimmed = rawDesc.trim();
     if (trimmed.startsWith('<') || trimmed.includes('<meta ')) {

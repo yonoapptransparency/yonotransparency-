@@ -20,7 +20,7 @@ function LoadingScreen() {
 // --- HIGH PERFORMANCE CUSTOM ROUTE PRELOADER ENGINE ---
 // Caches resolved ES modules to bypass React Suspense triggers and provide completely synchronous, zero-lag rendering.
 const resolvedComponents: Record<string, ComponentType<any>> = {};
-const loadingPromises: Record<string, Promise<any>> = {};
+const loadingPromises: Record<string, Promise<any> | undefined> = {};
 
 export function preloadComponent(name: string, importFn: () => Promise<{ default: ComponentType<any> }>) {
   if (resolvedComponents[name]) {

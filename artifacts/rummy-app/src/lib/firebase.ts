@@ -124,7 +124,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
       emailVerified: user?.emailVerified || null,
       isAnonymous: user?.isAnonymous || null,
       tenantId: user?.tenantId || null,
-      providerInfo: user?.providerData?.map(provider => ({
+      providerInfo: user?.providerData?.map((provider: import('firebase/auth').UserInfo) => ({
         providerId: provider.providerId,
         email: provider.email,
       })) || []
