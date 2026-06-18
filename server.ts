@@ -312,8 +312,8 @@ function verifyToken(token: string, ip: string, sessionId: string, fingerprint: 
   }
 }
 
-const TOKEN_SECRET = process.env.TOKEN_SECRET || '';
-const SESSION_SECRET = process.env.SESSION_SECRET || '';
+const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
 async function startServer() {
   if (!process.env.AES_SECRET) {
@@ -1497,12 +1497,12 @@ const rateLimitMap = new Map<string, number[]>();
       issuedAt
     });
 
-    // Random jitter (50–150ms) to frustrate timing attacks
-    const jitter = Math.floor(Math.random() * 100) + 50;
+    // Random jitter (0–20ms) to frustrate timing attacks
+    const jitter = Math.floor(Math.random() * 20);
     setTimeout(() => {
       res.json({
         nonce,
-        difficulty: "0000", // 4 zeros = ~65,536 avg attempts — hard for bots, ~250ms for real browsers
+        difficulty: "000", // 3 zeros = ~4096 avg attempts, almost instantaneous for real browsers
         sid
       });
     }, jitter);
@@ -1544,9 +1544,9 @@ const rateLimitMap = new Map<string, number[]>();
       return res.status(403).json({ error: "Challenge timed out." });
     }
 
-    // Timing check: < 150ms = impossible for real browser = bot
+    // Timing check: < 10ms = impossible for real browser = bot
     const solveMs = Date.now() - entry.issuedAt;
-    if (solveMs < 150) {
+    if (solveMs < 10) {
       nonceStore.delete(nonce);
       console.warn(`[DEFENSE] Solve too fast (${solveMs}ms) from ${ip}`);
       return res.status(403).json({ error: "Access denied." });
@@ -1563,7 +1563,7 @@ const rateLimitMap = new Map<string, number[]>();
     // Server-side PoW check
     const attempt = nonce + solution;
     const hash = crypto.createHash("sha256").update(attempt).digest("hex");
-    if (!hash.startsWith("0000")) {
+    if (!hash.startsWith("000")) {
       console.warn(`[DEFENSE] PoW fail from ${ip}: ${hash}`);
       return res.status(403).json({ error: "Access denied: verification failed." });
     }

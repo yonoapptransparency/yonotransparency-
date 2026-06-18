@@ -450,7 +450,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
     }
   };
 
-  const triggerHandshake = async (popupWindow: Window | null) => {
+  const triggerHandshake = async () => {
     setPhase('working');
     setErrorMsg('');
 
@@ -516,18 +516,10 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       setTokenCountdown(600);
 
       // Auto-navigate user to prevent 2nd click requirement
-      if (popupWindow && !popupWindow.closed) {
-        popupWindow.location.href = finalUrl;
-      } else {
-        const fallbackWindow = window.open(finalUrl, '_blank', 'noopener,noreferrer');
-        if (!fallbackWindow || fallbackWindow.closed || typeof fallbackWindow.closed === 'undefined') {
-          window.location.href = finalUrl;
-        }
-      }
+      window.location.href = finalUrl;
 
     } catch (err: any) {
       console.error('Clearance handshake failed:', err);
-      if (popupWindow && !popupWindow.closed) popupWindow.close();
       setErrorMsg(err.message || 'Initialization did not complete. Please retry.');
       setPhase('error');
       setTimeout(resetState, 4000);
@@ -536,18 +528,6 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
 
   const handleClearance = () => {
     if (phase === 'ready' || phase === 'working') return;
-    
-    // Open a blank popup immediately to ensure we use the explicit user activation token.
-    const popupWindow = window.open('', '_blank', 'noopener,noreferrer');
-    if (popupWindow) {
-      popupWindow.document.write(`
-        <html><head><title>Verifying...</title></head>
-        <body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;background:#f9fafb;margin:0;">
-        <h3 style="color:#4b5563;">Security verification in progress, please wait...</h3>
-        </body></html>
-      `);
-      popupWindow.document.close();
-    }
     
     mouseMoved.current = true;
     moveCount.current = Math.max(moveCount.current, 1);
@@ -558,7 +538,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       window.navigator.vibrate(50);
     }
     
-    triggerHandshake(popupWindow);
+    triggerHandshake();
   };
 
   const isGenerating = phase === 'working';
@@ -633,7 +613,6 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
             variant === 'compact' ? (
               <a 
                 href={dynamicLink}
-                target="_blank"
                 rel="noopener noreferrer"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm shadow-md h-[44px]"
               >
@@ -643,7 +622,6 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
               <div className="flex flex-col items-center gap-3 w-full sm:w-96">
                 <a 
                   href={dynamicLink}
-                  target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-10 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-md active:scale-[0.98] shrink-0"
                 >

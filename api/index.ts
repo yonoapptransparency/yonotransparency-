@@ -312,8 +312,8 @@ function verifyToken(token: string, ip: string, sessionId: string, fingerprint: 
   }
 }
 
-const TOKEN_SECRET = process.env.TOKEN_SECRET || '';
-const SESSION_SECRET = process.env.SESSION_SECRET || '';
+const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
 
   if (!process.env.AES_SECRET) {
