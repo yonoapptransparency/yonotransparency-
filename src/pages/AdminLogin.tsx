@@ -3,14 +3,26 @@
  * Supports Firebase single-authority logins for dashboard panel modifications.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Shield, Mail, KeyRound, Loader2 } from 'lucide-react';
+import { Shield, Mail, KeyRound, Loader2, ShieldCheck } from 'lucide-react';
 import { auth } from '../lib/firebase';
 import { useData } from '../contexts/DataContext';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 import { getAdminPath } from '../lib/utils';
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: string | HTMLElement, params: object) => string;
+      execute: (widgetId: string) => void;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
+    onTurnstileLoad?: () => void;
+  }
+}
 
 export default function AdminLogin() {
   const { settings } = useData();
@@ -19,11 +31,123 @@ export default function AdminLogin() {
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [domainMismatch, setDomainMismatch] = useState(false);
-  const [decryptionProgress, setDecryptionProgress] = useState(10);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState(0);
+
+  // Manual Captcha
+  const [captchaText, setCaptchaText] = useState('');
+  const [captchaInput, setCaptchaInput] = useState('');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const generateCaptcha = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let result = '';
+    for (let i = 0; i < 5; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setCaptchaText(result);
+    setCaptchaInput('');
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
+
+  useEffect(() => {
+    if (captchaText && canvasRef.current) {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // draw background noise
+        for (let i = 0; i < 100; i++) {
+          ctx.beginPath();
+          ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(150, 150, 150, ${Math.random() * 0.5})`;
+          ctx.fill();
+        }
+
+        // draw disruption lines
+        for (let i = 0; i < 12; i++) {
+          ctx.beginPath();
+          ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+          ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+          ctx.strokeStyle = `rgba(180, 180, 180, ${Math.random() * 0.8})`;
+          ctx.stroke();
+        }
+
+        ctx.font = 'bold 36px monospace';
+        ctx.fillStyle = '#f8fafc'; // slate-50
+
+        // Draw each char with some jitter
+        for (let i = 0; i < captchaText.length; i++) {
+            const char = captchaText[i];
+            const xOffset = 30 + (i * 35);
+            ctx.save();
+            ctx.translate(xOffset, canvas.height / 2);
+            ctx.rotate((Math.random() - 0.5) * 0.6); // rotate randomly
+            ctx.fillText(char, -10, 10 + (Math.random() - 0.5) * 10);
+            ctx.restore();
+        }
+    }
+  }, [captchaText]);
+
+  // Cloudflare Turnstile
+  const [cfToken, setCfToken] = useState<string>('');
+  const cfWidgetId = useRef<string>('');
+  const cfContainerRef = useRef<HTMLDivElement>(null);
+  
+  const rawSiteKey = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_CF_TURNSTILE_SITE_KEY) || '';
+  const isRealValue = (id: string | undefined): boolean => {
+    if (!id) return false;
+    if (id === 'PLACEHOLDER') return false;
+    if (id.includes('#') || id.includes('!') || id.includes('@') || id.includes('$') || id.includes('^') || id.includes('*') || id.includes('+')) return false;
+    return true;
+  };
+  const SITE_KEY = isRealValue(rawSiteKey) ? rawSiteKey : '1x00000000000000000000AA'; // Use dummy test key if none provided
+
+  useEffect(() => {
+    if (!document.querySelector('script[data-cf-ts]')) {
+      window.onTurnstileLoad = () => {};
+      const s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit';
+      s.async = true; s.defer = true;
+      s.setAttribute('data-cf-ts', '1');
+      document.head.appendChild(s);
+    }
+    
+    return () => { window.onTurnstileLoad = undefined; };
+  }, []);
+
+  useEffect(() => {
+    if (!cfContainerRef.current) return;
+    const tryRender = () => {
+      if (!window.turnstile || !cfContainerRef.current) { setTimeout(tryRender, 300); return; }
+      if (cfWidgetId.current) return;
+      try {
+        cfWidgetId.current = window.turnstile.render(cfContainerRef.current, {
+          sitekey: SITE_KEY,
+          theme: 'dark',
+          callback: (token: string) => { setCfToken(token); setError(null); },
+          'error-callback': () => { setCfToken(''); },
+          'expired-callback': () => { setCfToken(''); },
+        });
+      } catch(e) {
+        console.error("Turnstile render error", e);
+      }
+    };
+    setTimeout(tryRender, 600);
+    return () => {
+      if (cfWidgetId.current && window.turnstile) {
+        try { window.turnstile.remove(cfWidgetId.current); } catch {}
+        cfWidgetId.current = '';
+      }
+    };
+  }, [SITE_KEY]);
 
   useEffect(() => {
     const host = window.location.hostname;
@@ -48,6 +172,17 @@ export default function AdminLogin() {
 
 
   const handleGoogleLogin = async () => {
+    if (!cfToken) {
+      setError("Please complete the security verification first.");
+      return;
+    }
+    
+    if (captchaInput.toUpperCase() !== captchaText) {
+      setError("CAPTCHA code is incorrect.");
+      generateCaptcha();
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     setMessage(null);
@@ -69,6 +204,17 @@ export default function AdminLogin() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!cfToken) {
+      setError("Please complete the security verification first.");
+      return;
+    }
+
+    if (captchaInput.toUpperCase() !== captchaText) {
+      setError("CAPTCHA code is incorrect.");
+      generateCaptcha();
+      return;
+    }
 
     if (Date.now() < lockedUntil) {
       const secs = Math.ceil((lockedUntil - Date.now()) / 1000);
@@ -99,6 +245,11 @@ export default function AdminLogin() {
         setError(`Login failed: ${err.message}`);
       }
       setIsLoading(false);
+      // Reset Turnstile on login failure so they must click again
+      if (window.turnstile && cfWidgetId.current) {
+        window.turnstile.reset(cfWidgetId.current);
+        setCfToken('');
+      }
     }
   };
 
@@ -109,10 +260,54 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[100vh] bg-slate-950 text-white animate-fade-in relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-      <div className="absolute top-0 left-0 w-full h-1 bg-rose-500 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.8)]"></div>
-      <div className="glass-panel p-10 w-full max-w-md border-2 border-rose-500/20 shadow-2xl relative z-10 backdrop-blur-xl">
+    <div className="flex flex-col items-center justify-center min-h-[100vh] text-white animate-fade-in relative overflow-hidden">
+      <style>{`
+        @keyframes moveBlob {
+          0% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes float {
+          0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+          10% { opacity: 0.3; }
+          90% { opacity: 0.3; }
+          100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+      `}</style>
+      
+      {/* Base animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-[#0a0f24] to-[#1a0b16] z-0">
+        {/* Animated glowing orbs */}
+        <div className="absolute top-[10%] left-[20%] w-96 h-96 bg-rose-600/20 rounded-full blur-[100px] mix-blend-screen" style={{ animation: 'moveBlob 15s infinite alternate' }}></div>
+        <div className="absolute bottom-[20%] right-[10%] w-80 h-80 bg-blue-600/20 rounded-full blur-[100px] mix-blend-screen" style={{ animation: 'moveBlob 12s infinite alternate-reverse' }}></div>
+        <div className="absolute top-[40%] left-[60%] w-72 h-72 bg-purple-600/20 rounded-full blur-[100px] mix-blend-screen" style={{ animation: 'moveBlob 18s infinite alternate' }}></div>
+
+        {/* Floating particles/shapes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(15)].map((_, i) => {
+            const size = Math.random() * 60 + 20;
+            return (
+               <div 
+                key={i}
+                className="absolute bottom-[-100px] bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  animation: `float ${Math.random() * 10 + 10}s linear infinite`,
+                  animationDelay: `${Math.random() * 10}s`
+                }}
+              ></div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.05] z-0"></div>
+      <div className="absolute top-0 left-0 w-full h-1 bg-rose-500 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.8)] z-10"></div>
+      
+      <div className="glass-panel p-10 w-full max-w-md border-2 border-rose-500/20 shadow-2xl relative z-10 backdrop-blur-xl bg-black/40">
         <div className="flex justify-center mb-6">
           <div className="bg-rose-500/10 p-5 rounded-full border border-rose-500/30">
             {settings.logo_url ? (
@@ -145,7 +340,43 @@ export default function AdminLogin() {
           </div>
         )}
 
+        <div className="mb-6">
+          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Security Challenge</label>
+          <div className="flex gap-3">
+            <div 
+              className="bg-black border border-slate-700/50 rounded-lg select-none flex-1 flex items-center justify-center overflow-hidden"
+            >
+              <canvas 
+                ref={canvasRef} 
+                width={200} 
+                height={60} 
+                className="w-full h-[60px] object-cover pointer-events-none"
+              />
+            </div>
+            <button 
+              type="button" 
+              onClick={generateCaptcha}
+              className="bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 transition flex-shrink-0 flex items-center justify-center"
+              title="Refresh CAPTCHA"
+            >
+              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+          <input
+            type="text"
+            required
+            value={captchaInput}
+            onChange={(e) => setCaptchaInput(e.target.value)}
+            placeholder="Type the characters above"
+            className="w-full bg-black/30 border border-slate-800 rounded-lg p-3 text-white placeholder-slate-600 focus:ring-2 focus:ring-rose-500 font-mono mt-3 text-center uppercase tracking-widest"
+          />
+        </div>
 
+        <div className="mb-6 flex justify-center w-full min-h-[65px] overflow-hidden">
+          <div ref={cfContainerRef} />
+        </div>
 
         {error && (
           <div className="space-y-4 mb-6">

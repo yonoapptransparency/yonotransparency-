@@ -1869,7 +1869,7 @@ export default function AdminDashboard() {
                        if (emailDoc.exists()) adminVerified = true;
                    }
                } catch (err: any) {
-                   console.warn("Firestore static admin check failed:", err.message || err);
+                   
                }
            }
         }
@@ -2023,7 +2023,7 @@ export default function AdminDashboard() {
           const newsDocRef = doc(db, 'store_data', 'news');
           const newsSnap = await getDoc(newsDocRef);
           if (!newsSnap.exists()) {
-            console.log("Admin Seeder: Seeding news to Firestore...");
+            
             const sanitizedNews = JSON.parse(JSON.stringify({ items: mockNews }));
             await setDoc(newsDocRef, sanitizedNews);
           }
@@ -2031,7 +2031,7 @@ export default function AdminDashboard() {
           const videosDocRef = doc(db, 'store_data', 'videos');
           const videosSnap = await getDoc(videosDocRef);
           if (!videosSnap.exists()) {
-            console.log("Admin Seeder: Seeding videos to Firestore...");
+            
             const sanitizedVideos = JSON.parse(JSON.stringify({ items: mockVideos }));
             await setDoc(videosDocRef, sanitizedVideos);
           }

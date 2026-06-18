@@ -360,8 +360,13 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
 
     // 12. Battery (async best-effort)
     try {
-      const bat = await (navigator as any).getBattery?.();
-      parts.push(bat ? `bat:${bat.charging?1:0}` : 'bat:na');
+      const batP = (navigator as any).getBattery?.();
+      if (batP) {
+        const bat = await Promise.race([ batP, new Promise((_, rj) => setTimeout(() => rj(new Error('timeout')), 50)) ]) as any;
+        parts.push(`bat:${bat.charging?1:0}`);
+      } else {
+        parts.push('bat:na');
+      }
     } catch { parts.push('bat:na'); }
 
     // 13. CSS env() support
@@ -504,7 +509,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       // which cannot be parsed as JSON. Just open it directly in the browser.
       const params = new URLSearchParams({ t: token, id: appId });
       if (sid) params.set('sid', sid);
-      const finalUrl = `${_EP.payload}?${params.toString()}`;
+      const finalUrl = `${window.location.origin}${_EP.payload}?${params.toString()}`;
 
       setDynamicLink(finalUrl);
       setPhase('ready');

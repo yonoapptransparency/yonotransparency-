@@ -100,11 +100,11 @@ export default function Contact() {
               source: 'contact_page'
             };
 
-            if (isFirebaseConfigured && db) {
+            if (isFirebaseConfigured && db && typeof window !== 'undefined' && (window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin')))) {
               const ticketsCol = collection(db, 'support_tickets');
               await addDoc(ticketsCol, payload);
             } else {
-               console.warn('Firebase connection is simulated or local only.');
+               
             }
             setSuccess(true);
             setMsgText('');

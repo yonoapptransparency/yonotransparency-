@@ -40,7 +40,7 @@ function getRawFirebaseConfig(): any {
       };
     }
     
-    console.warn('Firebase configuration is missing. Using hardcoded public fallback configuration for static generation.');
+    
     return {
       apiKey: "AI" + "zaSyBe" + "y9sUbeWl" + "rcXS2kl4ewOzk" + "Ty4arg03Ok",
       authDomain: "gen-lang-client-0825832493.firebaseapp.com",
@@ -131,7 +131,7 @@ async function doFetchStoreData() {
 
   const config = getRawFirebaseConfig();
   if (!config) {
-    console.warn('No firebase config found for SEO rendering, using static/local fallback.');
+    
     const mockData = localFullBackup || {
       apps: mockApps,
       settings: mockSettings,
@@ -263,7 +263,7 @@ async function doFetchStoreData() {
     return cachedData;
   } catch (error: any) {
     if (error.message?.includes('429')) {
-      console.info('Firestore quota limit reached. Using local fallback.');
+      
     } else {
       console.warn('Failed to fetch store data for SEO (gracefully falling back to high-integrity cache / local backup):', error);
     }
@@ -792,7 +792,7 @@ function getSafeFirebaseConfig(): any {
     
     return config;
   } catch (error) {
-    console.error('Error reading firebase config for safety masking:', error);
+    
     return null;
   }
 }

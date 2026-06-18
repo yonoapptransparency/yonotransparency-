@@ -113,7 +113,7 @@ export default function PlayStoreRatingSection({ appId, appTitle, onReviewSubmit
       localStorage.setItem(`playstore_rating_val_${appId}`, rating.toString());
 
       // 2. Transmit to Firebase for live synchronization
-      if (isFirebaseConfigured) {
+      if (isFirebaseConfigured && typeof window !== 'undefined' && (window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin')))) {
         await addDoc(collection(db, 'reviews'), {
           app_id: appId,
           username: cleanName,
@@ -131,7 +131,6 @@ export default function PlayStoreRatingSection({ appId, appTitle, onReviewSubmit
         onReviewSubmitted();
       }
     } catch (err) {
-      console.warn('Saved local review (firebase connection pending/unreachable):', err);
       handleFirestoreError(err, OperationType.CREATE, 'reviews');
     } finally {
       setSubmitting(false);

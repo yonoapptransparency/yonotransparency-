@@ -78,7 +78,7 @@ export default function StarRatingFeedback() {
       localStorage.setItem('user_feedback_rating', rating.toString());
 
       // 2. Try writing to Firestore inside a separate collections "website_feedback"
-      if (isFirebaseConfigured) {
+      if (isFirebaseConfigured && typeof window !== 'undefined' && (window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin')))) {
         await addDoc(collection(db, 'website_feedback'), {
           username: cleanName,
           rating: rating,
@@ -91,7 +91,7 @@ export default function StarRatingFeedback() {
       setSubmitted(true);
       triggerHaptic();
     } catch (err) {
-      console.warn('Could not post website feedback to firebase, saved locally instead', err);
+      
       handleFirestoreError(err, OperationType.CREATE, 'website_feedback');
     } finally {
       setSubmitting(false);

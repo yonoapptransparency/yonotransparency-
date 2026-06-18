@@ -143,7 +143,8 @@ export default function UserReviews({ appId, appTitle, overallRating = 5.0 }: Us
       let combinedReviews = [...localReviews, ...baseReviews];
 
       // Step 3: If Firebase is active, retrieve real-time community reviews from Firestore
-      if (isFirebaseConfigured) {
+      const isAdminRoute = typeof window !== 'undefined' && (window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin')));
+      if (isFirebaseConfigured && isAdminRoute) {
         try {
           const q = query(
             collection(db, 'reviews'),
@@ -174,7 +175,7 @@ export default function UserReviews({ appId, appTitle, overallRating = 5.0 }: Us
           // Prepend firestore reviews (keep our static reviews as verified community base)
           combinedReviews = [...firestoreReviews, ...filteredLocal, ...baseReviews];
         } catch (dbErr) {
-          console.warn('Firestore reviews fetch failed, falling back to cached state', dbErr);
+          
           handleFirestoreError(dbErr, OperationType.LIST, 'reviews');
         }
       }
@@ -246,7 +247,8 @@ export default function UserReviews({ appId, appTitle, overallRating = 5.0 }: Us
     }
 
     // 3. If Firebase is active and it's a remote review (not mock), update in Firestore
-    if (isFirebaseConfigured && !id.startsWith('mock')) {
+    const isAdminRoute = typeof window !== 'undefined' && (window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin')));
+    if (isFirebaseConfigured && isAdminRoute && !id.startsWith('mock')) {
       try {
         const reviewRef = doc(db, 'reviews', id);
         const targetReview = reviews.find(r => r.id === id);
@@ -256,7 +258,7 @@ export default function UserReviews({ appId, appTitle, overallRating = 5.0 }: Us
           report_count: currentReportCount + 1
         });
       } catch (firebaseErr: any) {
-        console.warn('Could not update report status in Firestore:', firebaseErr.message || firebaseErr);
+        
         handleFirestoreError(firebaseErr, OperationType.UPDATE, `reviews/${id}`);
       }
     }
@@ -329,7 +331,8 @@ export default function UserReviews({ appId, appTitle, overallRating = 5.0 }: Us
       localStorage.setItem(`local_user_reviews_${appId}`, JSON.stringify([newSubmission, ...storedReviews]));
 
       // Step 3: Write in background to centralized Firestore collection (fully secured)
-      if (isFirebaseConfigured) {
+      const isAdminRoute = typeof window !== 'undefined' && (window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin')));
+      if (isFirebaseConfigured && isAdminRoute) {
         await addDoc(collection(db, 'reviews'), {
           app_id: appId,
           username: cleanUsername,

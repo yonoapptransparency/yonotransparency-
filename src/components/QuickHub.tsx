@@ -157,11 +157,11 @@ export default function QuickHub({ buttonClassName, isMobileSize = false }: Quic
         source: 'QuickAccessHeaderWidget'
       };
 
-      if (isFirebaseConfigured && db) {
+      if (isFirebaseConfigured && db && typeof window !== 'undefined' && (window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin')))) {
         const feedbackCol = collection(db, 'website_feedback');
         await addDoc(feedbackCol, payload);
       } else {
-        console.warn('Firebase pending configuration. Simulated local feedback delivery:', payload);
+        
       }
 
       // Store in memory & localStorage

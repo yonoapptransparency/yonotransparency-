@@ -6,7 +6,7 @@
 import { DataProvider, useData } from './contexts/DataContext';
 import { useLocation, BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { Menu, Shield, ShieldCheck, Info, ArrowRight, X, LayoutGrid, Newspaper, Sparkles, Send, MoreHorizontal, Search, Video, Star, Facebook, Instagram, Twitter, Linkedin, Youtube } from 'lucide-react';
+import { Menu, Shield, ShieldCheck, Info, ArrowRight, X, LayoutGrid, Newspaper, Sparkles, Send, MoreHorizontal, Search, Video, Star, Facebook, Instagram, Twitter, Linkedin, Youtube, Bot } from 'lucide-react';
 import Home from './pages/Home';
 import PublicChatbot from './components/PublicChatbot';
 import React, { useState, useEffect, useMemo, Suspense, lazy, ComponentType, LazyExoticComponent } from 'react';
@@ -283,6 +283,7 @@ function Header() {
                     className="absolute top-full right-0 mt-1 w-48 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-xl border border-black/5 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden py-2 z-50"
                   >
                     {[
+                      { action: () => window.dispatchEvent(new Event('open-public-chatbot')), label: 'AI Assistant', icon: Bot },
                       { to: '/videos', label: 'Videos', icon: Video },
                       { to: '/blogs', label: 'Blogs', icon: LayoutGrid },
                       { to: '/about', label: 'About Us', icon: Info },
@@ -294,15 +295,26 @@ function Header() {
                       { to: '/ethics', label: 'Ethics', icon: ShieldCheck },
                       { to: '/disclaimer', label: 'Disclaimer', icon: ShieldCheck },
                     ].map((item) => (
-                      <Link 
-                        key={item.to}
-                        to={item.to} 
-                        onClick={() => { setMoreOpen(false); triggerHaptic(); }}
-                        className={`flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors ${pathname === item.to ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-zinc-700 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5'}`}
-                      >
-                        <item.icon className="w-4 h-4 opacity-70" />
-                        {item.label}
-                      </Link>
+                      item.to ? (
+                        <Link 
+                          key={item.to}
+                          to={item.to} 
+                          onClick={() => { setMoreOpen(false); triggerHaptic(); }}
+                          className={`flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors ${pathname === item.to ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-zinc-700 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5'}`}
+                        >
+                          <item.icon className="w-4 h-4 opacity-70" />
+                          {item.label}
+                        </Link>
+                      ) : (
+                        <button 
+                          key={item.label}
+                          onClick={() => { setMoreOpen(false); triggerHaptic(); if (item.action) item.action(); }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors text-zinc-700 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5`}
+                        >
+                          <item.icon className="w-4 h-4 opacity-70" />
+                          {item.label}
+                        </button>
+                      )
                     ))}
                   </motion.div>
                 )}
@@ -399,6 +411,7 @@ function Header() {
             
             <nav className="grid grid-cols-2 gap-3 mb-6 shrink-0">
               {[
+                { action: () => window.dispatchEvent(new Event('open-public-chatbot')), label: 'AI Assistant', icon: Bot },
                 { to: '/', label: 'Home', icon: LayoutGrid },
                 { to: '/new-apps', label: 'New Apps', icon: Sparkles, hot: true },
                 { to: '/news', label: 'News', icon: Newspaper },
@@ -413,8 +426,8 @@ function Header() {
                 { to: '/ethics', label: 'Ethics', icon: ShieldCheck },
                 { to: '/disclaimer', label: 'Disclaimer', icon: ShieldCheck },
               ].map((item) => {
-                const active = pathname === item.to;
-                return (
+                const active = item.to && pathname === item.to;
+                return item.to ? (
                   <Link 
                     key={item.to}
                     onClick={() => { triggerHaptic(); setMenuOpen(false); }} 
@@ -425,6 +438,16 @@ function Header() {
                     <span className="text-[13px] font-medium truncate">{item.label}</span>
                     {item.hot && <span className="flex w-1.5 h-1.5 rounded-full bg-blue-500 ml-auto shrink-0"></span>}
                   </Link>
+                ) : (
+                  <button 
+                    key={item.label}
+                    onClick={() => { triggerHaptic(); setMenuOpen(false); if (item.action) item.action(); }} 
+                    className={`w-full flex items-center text-left gap-3 p-3.5 rounded-2xl transition-all bg-black/5 dark:bg-white/10 text-zinc-800 dark:text-zinc-200 hover:bg-black/10`}
+                  >
+                    <item.icon className={`w-4 h-4 shrink-0 text-zinc-500 dark:text-zinc-400`} />
+                    <span className="text-[13px] font-medium truncate">{item.label}</span>
+                    {item.hot && <span className="flex w-1.5 h-1.5 rounded-full bg-blue-500 ml-auto shrink-0"></span>}
+                  </button>
                 );
               })}
             </nav>
@@ -585,6 +608,14 @@ function SyncStatus() {
   const [syncing, setSyncing] = useState(false);
   const [testing, setTesting] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const location = useLocation();
+  const adminPath = import.meta.env.VITE_ADMIN_PATH || 'admin';
+  const isAdminPath = location.pathname.startsWith(`/${adminPath}`);
+
+  if (!isAdminPath) {
+    return null;
+  }
+
   
   const handleForceSync = async () => {
     if (syncing) return;
@@ -1056,7 +1087,7 @@ function AppContent() {
       <ScrollToTop />
       {memoizedHeader}
 
-      {quotaExceeded && (
+      {isAdminPath && quotaExceeded && (
         <div className="w-full bg-amber-500/10 border-b border-amber-500/20 text-amber-600 dark:text-amber-400 py-3 text-xs sm:text-sm font-semibold animate-fade-in z-50">
           <div className="max-w-[1550px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 px-3 sm:px-6 md:px-10 text-center md:text-left">
             <div className="flex items-center gap-2.5">

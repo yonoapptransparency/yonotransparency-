@@ -389,7 +389,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }, 400);
 
     const checkConnection = async () => {
-      if (!isFirebaseConfigured) {
+      if (!isFirebaseConfigured || (typeof window !== 'undefined' && !(window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin'))))) {
           setIsConnected(false);
           setLoadedFromServer(true);
           setLoading(false);
@@ -446,7 +446,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     checkConnection();
     const connInterval = setInterval(checkConnection, 60000);
 
-    if (!isFirebaseConfigured) {
+    const isAdminRoute = typeof window !== 'undefined' && (window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin')));
+
+    if (!isFirebaseConfigured || !isAdminRoute) {
+        if (!isAdminRoute) {
+            
+            // Mark as loaded immediately
+            setLoadedFromServer(true);
+            setLoading(false);
+            setServerAppsFetched(true);
+            setServerNewsFetched(true);
+            setServerBlogsFetched(true);
+            setServerVideosFetched(true);
+        }
         return () => {
             if (timeout) clearTimeout(timeout);
             clearTimeout(syncTimeout);
@@ -524,7 +536,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           setAppsSyncedWithServer(true);
           setServerAppsFetched(true);
           setLoadedFromServer(true);
-          if (!snap.metadata?.fromCache) {
+          if (!(snap as any).metadata?.fromCache) {
             setIsConnected(true);
             setIsLive(true);
           }
@@ -537,7 +549,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
            checkLoaded('apps');
         }
       }, (err) => {
-        console.warn("Firestore apps listener error, falling back:", err);
+        
         if (checkIsQuotaError(err)) {
           setQuotaExceeded(true);
         }
@@ -564,14 +576,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         } else {
           setSettingsSyncedWithServer(true);
           setLoadedFromServer(true);
-          if (!snap.metadata?.fromCache) {
+          if (!(snap as any).metadata?.fromCache) {
             setIsConnected(true);
             setIsLive(true);
           }
         }
         checkLoaded('settings');
       }, (err) => {
-        console.warn("Firestore settings listener error, falling back:", err);
+        
         if (checkIsQuotaError(err)) {
           setQuotaExceeded(true);
         }
@@ -598,7 +610,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           checkLoaded('news');
         }
       }, (err) => {
-        console.warn("Firestore news listener error, falling back:", err);
+        
         if (checkIsQuotaError(err)) {
           setQuotaExceeded(true);
         }
@@ -626,7 +638,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           checkLoaded('blogs');
         }
       }, (err) => {
-        console.warn("Firestore blogs listener error, falling back:", err);
+        
         if (checkIsQuotaError(err)) {
           setQuotaExceeded(true);
         }
@@ -654,7 +666,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           checkLoaded('videos');
         }
       }, (err) => {
-        console.warn("Firestore videos listener error, falling back:", err);
+        
         if (checkIsQuotaError(err)) {
           setQuotaExceeded(true);
         }
@@ -739,9 +751,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         
         const metaRef = doc(db, 'store_data', 'apps_meta');
         await setDoc(metaRef, { numChunks, last_updated: now });
-        console.log("Cloud: Pushed Apps catalog update to Firestore.");
+        
       } catch (dbErr) {
-        console.warn("Failed to push Apps catalog to Firestore (Quota exceeded or network issue). Proceeding with local/GitHub backups.", dbErr);
+        // failed
       }
       
       // Save secure links mapping separately (fully encrypted to prevent read-leak of download URLs)
@@ -776,9 +788,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         try {
           await setDoc(doc(db, 'store_data', 'secure_links'), { encryptedData });
           await setDoc(doc(db, 'store_data', 'sec_public_links'), { encryptedData });
-          console.log("Cloud: Pushed encrypted secure links map to Firestore.");
+          
         } catch (dbErr) {
-          console.warn("Failed to push secure links map to Firestore (Quota exceeded or network issue). Proceeding with local/GitHub backups.", dbErr);
+          // failed
         }
       } else {
         console.error("Skipping secure_links update due to encryption failure to prevent data leak.");
@@ -978,7 +990,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const updatedCode = generateStaticDataFileCode(apps, settings, news, blogs, videos);
     
     log(`GitHub Sync: Payload generated successfully (${apps.length} apps, ${news.length} news items).`);
-    log("GitHub Sync: Uploading to GitHub...");
+    log("GitHub Sync: Uploading public static data to GitHub...");
     
     await commitFileToGitHub({
       owner: configToUse.owner,
@@ -989,11 +1001,52 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       content: updatedCode,
       message: `Admin Release: Manual platform synchronization triggered`
     });
+
+    log("GitHub Sync: Public static data successfully synced.");
+
+    log("GitHub Sync: Building AES Encrypted Vault for hidden secure links...");
+    try {
+      // Must include auth token from Firebase
+      const { getAuth } = await import('firebase/auth');
+      const auth = getAuth();
+      const idToken = auth.currentUser ? await auth.currentUser.getIdToken() : '';
+      
+      const vaultRes = await fetch('/api/v1/admin/seal-vault', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json', ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}) },
+         body: JSON.stringify({ items: apps })
+      });
+
+      if (vaultRes.ok) {
+         const vaultData = await vaultRes.json();
+         if (vaultData.ciphertext) {
+            log("GitHub Sync: Writing Encrypted Vault to Git...");
+            await commitFileToGitHub({
+              owner: configToUse.owner,
+              repo: configToUse.repo,
+              token: configToUse.token,
+              branch: configToUse.branch || 'main',
+              path: 'src/lib/secureVault.ts',
+              content: `export const ENCRYPTED_LINKS = "${vaultData.ciphertext}";\n`,
+              message: `Admin Release: Secure vault synchronization`
+            });
+            log("GitHub Sync: Encrypted Vault successfully synced.");
+         } else {
+            throw new Error(vaultData.error || "No ciphertext returned");
+         }
+      } else {
+         throw new Error("Failed to seal vault: HTTP " + vaultRes.status);
+      }
+    } catch(err: any) {
+        log(`GitHub Sync Error (Vault Sync): ${err.message}`);
+        throw new Error(`Failed to commit secure vault to GitHub: ${err.message}`);
+    }
+
     log("GitHub Sync: Manual push successful!");
   }, [gitConfig, apps, settings, news, blogs, videos]);
 
   const testCloudConnection = React.useCallback(async () => {
-    if (!isFirebaseConfigured) return false;
+    if (!isFirebaseConfigured || (typeof window !== 'undefined' && !(window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin'))))) return false;
     console.log("Connectivity Test: Starting...");
     const settingsDoc = doc(db, 'store_data', 'settings');
     
@@ -1012,7 +1065,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshAll = React.useCallback(async (silent = false) => {
-    if (!isFirebaseConfigured) {
+    if (!isFirebaseConfigured || (typeof window !== 'undefined' && !(window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin'))))) {
         setIsConnected(false);
         setLoading(false);
         return;
