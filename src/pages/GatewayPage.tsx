@@ -290,7 +290,7 @@ export default function GatewayPage() {
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold mb-3 tracking-tight text-zinc-900 dark:text-zinc-100 flex flex-wrap items-center justify-center gap-3">
           <Info className="w-6 h-6 text-blue-500" />
-          <span>More Information URL Page</span>
+          <span>More Info URL Page</span>
         </h1>
         <p className="font-medium text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
           Specifications and details for <span className="font-semibold text-zinc-900 dark:text-zinc-100">{app.name}</span>.

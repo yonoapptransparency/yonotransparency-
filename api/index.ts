@@ -12,8 +12,7 @@ import CryptoJS from "crypto-js";
 import { GoogleGenAI, Type } from "@google/genai";
 
 function safeDecrypt(ciphertext: string, secret: string): string {
-    const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
-    const keys = [secret, fallbackKey].filter(Boolean);
+    const keys = [secret].filter(Boolean);
     for (const key of keys) {
         if (!key || key.trim() === '') continue;
         try {
@@ -299,7 +298,7 @@ function verifyToken(token: string, ip: string, sessionId: string, fingerprint: 
     if (tSession !== sessionId || tIp !== ip) {
       if (tSession !== sessionId) console.warn(`[WARN] Session mismatch: ${tSession} !== ${sessionId}`);
       if (tIp !== ip) console.warn(`[WARN] IP mismatch: ${tIp} !== ${ip}`);
-      // return false; 
+      return false; 
     }
     if (Math.floor(Date.now() / 1000) > parseInt(expires, 10)) {
       console.warn(`[WARN] Signature expired.`);
@@ -545,13 +544,6 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
           // Direct shortcut path (SEO redirection support matches routing block at bottom)
           xml += `  <url>\n`;
           xml += `    <loc>${host}/${escapeHtmlForSitemap(slug)}</loc>\n`;
-          xml += `    <changefreq>weekly</changefreq>\n`;
-          xml += `    <priority>0.8</priority>\n`;
-          xml += `  </url>\n`;
-          
-          // Secure gateway path
-          xml += `  <url>\n`;
-          xml += `    <loc>${host}/gateway/${escapeHtmlForSitemap(slug)}</loc>\n`;
           xml += `    <changefreq>weekly</changefreq>\n`;
           xml += `    <priority>0.8</priority>\n`;
           xml += `  </url>\n`;
@@ -1040,7 +1032,6 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
     }
     try {
       const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
-      const fallbackKey = ["fallback", "secure", "store", "key", "19482"].join("-");
       if (!AES_SECRET || AES_SECRET.trim() === '') {
           return res.status(500).json({ error: 'AES_SECRET environment variable is missing on Server. Please configure it.' });
       }
@@ -1056,9 +1047,6 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
             const d = await r.json();
             if (d && !d.error && d.fields?.encryptedData?.stringValue) {
               let decryptedBlob = safeDecrypt(d.fields.encryptedData.stringValue, AES_SECRET);
-              if (!decryptedBlob) {
-                  decryptedBlob = safeDecrypt(d.fields.encryptedData.stringValue, fallbackKey);
-              }
               if (decryptedBlob) {
                 const parsed = JSON.parse(decryptedBlob);
                 if (Array.isArray(parsed)) {
@@ -1176,22 +1164,15 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
     }
   });
 
-  // Admin API: Backup full data to container files for robust offline/quota fallback
-  app.post("/api/v1/admin/backup-data", verifyAdminToken, async (req: any, res) => {
+  // Admin API: Force sync local files from GitHub Push event
+  app.post("/api/v1/admin/sync-local", verifyAdminToken, async (req: any, res) => {
     try {
       const { apps, settings, news, blogs, videos } = req.body;
       if (!apps || !settings) {
-        return res.status(400).json({ error: "Invalid backup payload." });
+        return res.status(400).json({ error: "Invalid sync payload." });
       }
 
-      // 1. Save full data with intact URLs for local pre-rendering fallback
-      fs.writeFileSync(
-        path.join(process.cwd(), 'src/lib/staticDataFull.json'),
-        JSON.stringify({ apps, settings, news, blogs, videos }, null, 2),
-        'utf8'
-      );
-
-      // 2. Save public clean staticData.ts file (with secure URLs scrubbed)
+      // 1. Save public clean staticData.ts file (with secure URLs scrubbed)
       const tsCode = generateStaticDataFileCode(apps, settings, news, blogs, videos);
       fs.writeFileSync(
         path.join(process.cwd(), 'src/lib/staticData.ts'),
@@ -1199,7 +1180,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
         'utf8'
       );
 
-      // 3. Save secure download/more_information_url references separately
+      // 2. Save secure download/more_information_url references separately
       const backupLinks: Record<string, string> = {};
       apps.forEach((app: any) => {
         if (app.more_information_url) {
@@ -1218,10 +1199,10 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
 
       fs.writeFileSync(backupPath, JSON.stringify(mergedBackup, null, 2), 'utf8');
 
-      res.json({ success: true, message: "Backup successfully stored locally." });
+      res.json({ success: true, message: "Local fallback components strictly synced." });
     } catch (err: any) {
-      console.error("backup-data endpoint error:", err);
-      res.status(500).json({ error: "Failed to store backup: " + err.message });
+      console.error("local file sync endpoint error:", err);
+      res.status(500).json({ error: "Failed to store local fallback: " + err.message });
     }
   });
 
@@ -1298,25 +1279,9 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
      }
   });
 
-  // Public API: Direct local filesystem backup endpoint to load fast fallback when Firestore has quota limit reached
+  // Public API: Direct local filesystem backup endpoint to load fast fallback
   app.get("/api/v1/public/backup-data", (req, res) => {
     try {
-      const fullBackupPath = path.join(process.cwd(), 'src/lib/staticDataFull.json');
-      if (fs.existsSync(fullBackupPath)) {
-        const raw = fs.readFileSync(fullBackupPath, 'utf8');
-        const data = JSON.parse(raw);
-        if (data && Array.isArray(data.apps)) {
-          data.apps = data.apps.map((app: any) => {
-            const cleanApp = { ...app };
-            delete cleanApp.more_information_url;
-            delete cleanApp.encrypted_download_url;
-            delete cleanApp.download_url;
-            return cleanApp;
-          });
-        }
-        return res.json(data);
-      }
-      
       const { mockApps, mockSettings, mockNews, mockBlogs, mockVideos } = require('../src/lib/staticData');
       return res.json({
         apps: mockApps || [],
@@ -1491,18 +1456,19 @@ const rateLimitMap = new Map<string, number[]>();
     const nonce = crypto.randomBytes(20).toString("hex");
     const issuedAt = Date.now();
 
+    // Random jitter (50–150ms) to frustrate timing attacks
+    const jitter = Math.floor(Math.random() * 100) + 50;
+    
     nonceStore.set(nonce, {
       sessionId: sid,
       expiresAt: issuedAt + 120 * 1000,
-      issuedAt
+      issuedAt: issuedAt + jitter
     });
 
-    // Random jitter (0–20ms) to frustrate timing attacks
-    const jitter = Math.floor(Math.random() * 20);
     setTimeout(() => {
       res.json({
         nonce,
-        difficulty: "000", // 3 zeros = ~4096 avg attempts, almost instantaneous for real browsers
+        difficulty: "0000", // 4 zeros = ~65,536 avg attempts — hard for bots
         sid
       });
     }, jitter);
@@ -1544,9 +1510,9 @@ const rateLimitMap = new Map<string, number[]>();
       return res.status(403).json({ error: "Challenge timed out." });
     }
 
-    // Timing check: < 10ms = impossible for real browser = bot
+    // Timing check: < 80ms = impossible for real browser doing 4 zeros
     const solveMs = Date.now() - entry.issuedAt;
-    if (solveMs < 10) {
+    if (solveMs < 80) {
       nonceStore.delete(nonce);
       console.warn(`[DEFENSE] Solve too fast (${solveMs}ms) from ${ip}`);
       return res.status(403).json({ error: "Access denied." });
@@ -1563,7 +1529,7 @@ const rateLimitMap = new Map<string, number[]>();
     // Server-side PoW check
     const attempt = nonce + solution;
     const hash = crypto.createHash("sha256").update(attempt).digest("hex");
-    if (!hash.startsWith("000")) {
+    if (!hash.startsWith("0000")) {
       console.warn(`[DEFENSE] PoW fail from ${ip}: ${hash}`);
       return res.status(403).json({ error: "Access denied: verification failed." });
     }
@@ -1623,6 +1589,7 @@ const rateLimitMap = new Map<string, number[]>();
   } catch(e) {}
   
   
+  // Lookup 3: Local Offline Backup directly
   try {
     const backupPath = require('path').join(process.cwd(), 'src/lib/secure_links_backup.json');
     if (require('fs').existsSync(backupPath)) {
@@ -1631,36 +1598,13 @@ const rateLimitMap = new Map<string, number[]>();
     }
   } catch (e) {}
 
-  // Lookup 3: Firestore in parallel
+  // Lookup 4: Apps static array
   try {
-    const config = getRawFirebaseConfig();
-    if (!config) return res.json({ configured: false });
-    const db = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents`;
-    const apiSuffix = config.apiKey ? `?key=${config.apiKey}` : '';
-    // @ts-ignore
-    const AES_SECRET = process.env.AES_SECRET || (typeof AES_SECRET_GLOBAL !== 'undefined' ? AES_SECRET_GLOBAL : '');
-
-    const paths = ['sec_public_links', 'secure_links', 'sec_vault'];
-    const promises = paths.map(p => fetch(`${db}/store_data/${p}${apiSuffix}`).then(r => r.json()));
-    const results = await Promise.allSettled(promises);
-
-    for (const result of results) {
-      if (result.status === 'fulfilled' && !result.value.error) {
-        const d = result.value;
-        if (d.fields?.encryptedData?.stringValue) {
-          try {
-            const dec = safeDecrypt(d.fields.encryptedData.stringValue, AES_SECRET);
-            if (dec) {
-              const arr = JSON.parse(dec);
-              if (arr.find((v: any) => v.id === appId && v.url)) return res.json({ configured: true });
-            }
-          } catch(e) {}
-        }
-        if (d.fields?.items?.arrayValue?.values) {
-          const found = d.fields.items.arrayValue.values.find((v: any) => v.mapValue?.fields?.id?.stringValue === appId && v.mapValue?.fields?.url?.stringValue);
-          if (found) return res.json({ configured: true });
-        }
-      }
+    const fullPath = require('path').join(process.cwd(), 'src/lib/staticDataFull.json');
+    if (require('fs').existsSync(fullPath)) {
+        const full = JSON.parse(require('fs').readFileSync(fullPath, 'utf8'));
+        const fApp = full.apps.find((a: any) => a.id === appId);
+        if (fApp && (fApp.more_information_url || fApp.download_url)) return res.json({ configured: true });
     }
   } catch(e) {}
 
@@ -1920,8 +1864,6 @@ ${JSON.stringify(publicContext, null, 2)}`;
         const [payload] = raw.split("::");
         const [tIp, tSession, fingerprint] = payload.split("|");
 
-        const finalSid = sid || tSession || "sandbox-bypass";
-
         if (!verifyToken(token, tIp, tSession, fingerprint)) {
           if (req.query.json === 'true') return res.status(403).json({ error: "Cryptographic HMAC validation failed." });
           return res.status(403).send("<h1>403 Forbidden</h1><p>Cryptographic HMAC validation failed.</p>");
@@ -1933,7 +1875,7 @@ ${JSON.stringify(publicContext, null, 2)}`;
           return res.status(403).send("<h1>403 Forbidden</h1><p>IP address mismatch.</p>");
         }
 
-        if (tSession !== finalSid) {
+        if (tSession !== sid) {
           if (req.query.json === 'true') return res.status(403).json({ error: "Session mismatch." });
           return res.status(403).send("<h1>403 Forbidden</h1><p>Session mismatch.</p>");
         }
@@ -1943,84 +1885,70 @@ ${JSON.stringify(publicContext, null, 2)}`;
 
         let targetUrl = '';
         try {
-          const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
-          const config = getRawFirebaseConfig();
-          if (!config) {
-            throw new Error("Missing Firebase configuration.");
-          }
+          const AES_SECRET = process.env.AES_SECRET || (typeof AES_SECRET_GLOBAL !== 'undefined' ? AES_SECRET_GLOBAL : '');
           
-          try {
-            // First try sec_public_links, which is public-readable on all projects & databases
-            const urlResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/sec_public_links?key=${config.apiKey}`);
-            let secureData = await urlResponse.json();
-            
-            // Fallback to secure_links
-            if (secureData.error || (!secureData.fields?.encryptedData && !secureData.fields?.items)) {
-                const slResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/secure_links?key=${config.apiKey}`);
-                const slData = await slResponse.json();
-                if (!slData.error) {
-                    secureData = slData;
-                }
-            }
-            
-            // Fallback to sec_vault
-            if (secureData.error || (!secureData.fields?.encryptedData && !secureData.fields?.items)) {
-                const vaultRes = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/sec_vault?key=${config.apiKey}`);
-                const vaultData = await vaultRes.json();
-                if (!vaultData.error) {
-                    secureData = vaultData;
-                }
-            }
-            
-            if (!secureData.error) {
-              const fields = secureData.fields;
-              if (fields?.encryptedData?.stringValue) {
-                const encryptedBlob = fields.encryptedData.stringValue;
-                const decryptedText = safeDecrypt(encryptedBlob, AES_SECRET);
-                                if (decryptedText) {
-                  const linksArray = JSON.parse(decryptedText);
-                                                      const linkObj = linksArray.find((v: any) => v.id === appId);
-                  if (linkObj && linkObj.url) {
-                    const encryptedUrl = linkObj.url;
-                                        if (encryptedUrl.startsWith('U2FsdGVkX1')) {
-                      targetUrl = safeDecrypt(encryptedUrl, AES_SECRET);
-                    } else {
-                      targetUrl = encryptedUrl; // Legacy plaintext
-                    }
+          // Fallback to secure Vault from Github push
+          if (!targetUrl || !targetUrl.startsWith('http')) {
+            try {
+              const vaultPath = require('path').join(process.cwd(), 'src/lib/secureVault.ts');
+              if (require('fs').existsSync(vaultPath)) {
+                const vaultContent = require('fs').readFileSync(vaultPath, 'utf8');
+                const match = vaultContent.match(/export const ENCRYPTED_LINKS = "([^"]+)";/);
+                if (match && match[1]) {
+                  let dec = '';
+                  if (typeof safeDecrypt !== 'undefined') dec = safeDecrypt(match[1], AES_SECRET);
+                  else {
+                     const CryptoJS = require('crypto-js');
+                     const bytes = CryptoJS.AES.decrypt(match[1], AES_SECRET);
+                     dec = bytes.toString(CryptoJS.enc.Utf8);
+                  }
+                  if (dec) {
+                     const map = JSON.parse(dec);
+                     const encryptedUrl = map[appId];
+                     if (encryptedUrl) {
+                        if (encryptedUrl.startsWith('U2FsdGVkX1')) {
+                           targetUrl = safeDecrypt(encryptedUrl, AES_SECRET);
+                        } else {
+                           targetUrl = encryptedUrl;
+                        }
+                     }
                   }
                 }
               }
-              
-              if (!targetUrl && fields?.items?.arrayValue?.values) {
-                // Backward compatibility for legacy unencrypted list schema
-                const linksArray = fields.items.arrayValue.values;
-                const linkObj = linksArray.find((v: any) => v.mapValue.fields.id.stringValue === appId);
-                if (linkObj && linkObj.mapValue.fields.url) {
-                  const encryptedUrl = linkObj.mapValue.fields.url.stringValue;
-                  if (encryptedUrl) {
-                    if (encryptedUrl.startsWith('U2FsdGVkX1')) {
-                      targetUrl = safeDecrypt(encryptedUrl, AES_SECRET);
-                    } else {
-                      targetUrl = encryptedUrl;
-                    }
+            } catch (e) {
+              console.warn("Vault decryption failed", e);
+            }
+          }
+
+          // Fallback to Env variable
+          if (!targetUrl || !targetUrl.startsWith('http')) {
+            try {
+              if (process.env.SECURE_LINKS) {
+                const parsed = JSON.parse(process.env.SECURE_LINKS);
+                if (parsed[appId]) {
+                  const encryptedUrl = parsed[appId];
+                  if (encryptedUrl.startsWith('U2FsdGVkX1')) {
+                     targetUrl = safeDecrypt(encryptedUrl, AES_SECRET);
+                  } else {
+                     targetUrl = encryptedUrl;
                   }
                 }
               }
-            }
-          } catch (err) {
-            console.warn("secure_links get or decryption failed, falling back to chunks scanner", err);
+            } catch(e) {}
           }
 
           // Fallback to local offline file backup if Firestore is unreachable/exceeded quota
           if (!targetUrl || !targetUrl.startsWith('http')) {
             try {
+              const fs = require('fs');
+              const path = require('path');
               const backupPath = path.join(process.cwd(), 'src/lib/secure_links_backup.json');
               if (fs.existsSync(backupPath)) {
                 const backup = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
                 const encryptedUrl = backup[appId];
                 if (encryptedUrl) {
+                  const AES_SECRET = process.env.AES_SECRET || (typeof AES_SECRET_GLOBAL !== 'undefined' ? AES_SECRET_GLOBAL : '');
                   if (encryptedUrl.startsWith('U2FsdGVkX1')) {
-                    const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
                     targetUrl = safeDecrypt(encryptedUrl, AES_SECRET);
                   } else {
                     targetUrl = encryptedUrl;
@@ -2033,36 +1961,30 @@ ${JSON.stringify(publicContext, null, 2)}`;
             }
           }
 
+          // Fallback to static data full
           if (!targetUrl || !targetUrl.startsWith('http')) {
-            console.log("File Payload Scraper: Attempting direct chunk scan for app ID:", appId);
-            const apiSuffix = config.apiKey ? `?key=${config.apiKey}` : '';
-            const metaResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/apps_meta${apiSuffix}`);
-            const metaData = await metaResponse.json();
-            let numChunks = 1;
-            if (!metaData.error && metaData.fields?.numChunks?.integerValue) {
-                numChunks = parseInt(metaData.fields.numChunks.integerValue, 10);
-            }
-            
-            for (let i = 0; i < numChunks; i++) {
-                const chunkResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/apps_chunk_${i}${apiSuffix}`);
-                const chunkData = await chunkResponse.json();
-                if (!chunkData.error && chunkData.fields?.items?.arrayValue?.values) {
-                    const values = chunkData.fields.items.arrayValue.values;
-                    const item = values.find((v: any) => v.mapValue.fields.id.stringValue === appId);
-                    if (item && item.mapValue.fields) {
-                        const encryptedUrlField = item.mapValue.fields.more_information_url?.stringValue || item.mapValue.fields.download_url?.stringValue;
-                        if (encryptedUrlField) {
-                            if (encryptedUrlField.startsWith('U2FsdGVkX1')) {
-                                targetUrl = safeDecrypt(encryptedUrlField, AES_SECRET);
-                            } else {
-                                targetUrl = encryptedUrlField;
-                            }
-                            console.log("Successfully retrieved URL from fallback chunk scan for app ID:", appId);
-                            break;
-                        }
+             try {
+                const fullPath = require('path').join(process.cwd(), 'src/lib/staticDataFull.json');
+                if (require('fs').existsSync(fullPath)) {
+                  const full = JSON.parse(require('fs').readFileSync(fullPath, 'utf8'));
+                  const fApp = full.apps.find((a: any) => a.id === appId);
+                  if (fApp && fApp.more_information_url) {
+                    const AES_SECRET = process.env.AES_SECRET || (typeof AES_SECRET_GLOBAL !== 'undefined' ? AES_SECRET_GLOBAL : '');
+                    if (fApp.more_information_url.startsWith('U2FsdGVkX1')) {
+                        targetUrl = safeDecrypt(fApp.more_information_url, AES_SECRET);
+                    } else {
+                        targetUrl = fApp.more_information_url;
                     }
+                  } else if (fApp && fApp.download_url) {
+                    const AES_SECRET = process.env.AES_SECRET || (typeof AES_SECRET_GLOBAL !== 'undefined' ? AES_SECRET_GLOBAL : '');
+                    if (fApp.download_url.startsWith('U2FsdGVkX1')) {
+                        targetUrl = safeDecrypt(fApp.download_url, AES_SECRET);
+                    } else {
+                        targetUrl = fApp.download_url;
+                    }
+                  }
                 }
-            }
+             } catch(e) {}
           }
         } catch (err) {
           console.error("Firestore retrieval or decryption failed", err);

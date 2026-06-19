@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ShieldCheck, AlertTriangle, ShieldAlert, Loader2, Lock, CheckCircle2, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 declare global {
   interface Window {
@@ -516,7 +517,8 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       setTokenCountdown(600);
 
       // Auto-navigate user to prevent 2nd click requirement
-      window.location.href = finalUrl;
+      // Use replace so they don't go back and hit a spent token
+      window.location.replace(finalUrl);
 
     } catch (err: any) {
       console.error('Clearance handshake failed:', err);
@@ -551,11 +553,11 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
         <div className="w-full sm:w-96 flex flex-col items-center gap-2">
           <div className="w-full py-4 px-6 rounded-2xl flex items-center justify-center gap-3 bg-zinc-100 dark:bg-zinc-800 border border-black/10 dark:border-white/10 text-zinc-400 dark:text-zinc-500 cursor-not-allowed select-none">
             <Lock className="w-4 h-4 shrink-0" />
-            <span className="font-semibold text-sm">Service Clearance Pending</span>
+            <span className="font-semibold text-sm">Information Unavailable</span>
           </div>
           <p className="text-[11px] text-zinc-400 dark:text-zinc-500 text-center leading-relaxed">
-            The secure access gateway for this application is currently undergoing scheduled system synchronization or administrative integration.<br/>
-            You can dispatch a notice to the Support Desk to expedite this configuration.
+            More information about this application is not currently present.<br/>
+            Please visit again after some time, or report to customer care for assistance.
           </p>
 
           {reportingStatus === 'idle' && (
@@ -564,7 +566,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
               className="mt-2.5 px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 border border-zinc-200 dark:border-zinc-700 rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
             >
               <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-              <span>Contact Support Desk</span>
+              <span>Report to Customer Care</span>
             </button>
           )}
 
@@ -574,14 +576,14 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
               className="mt-2.5 px-4 py-2 text-xs font-semibold text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 rounded-xl flex items-center gap-1.5 cursor-not-allowed select-none"
             >
               <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
-              <span>Contacting Support...</span>
+              <span>Reporting to Customer Care...</span>
             </button>
           )}
 
           {reportingStatus === 'success' && (
             <div className="mt-2.5 px-4 py-2 text-xs font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800/40 rounded-xl flex items-center gap-1.5 select-none">
               <CheckCircle2 className="w-3.5 h-3.5 text-green-500 animate-pulse" />
-              <span>Support team notified successfully!</span>
+              <span>Customer care notified successfully!</span>
             </div>
           )}
 
@@ -603,60 +605,90 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
         </div>
       ) : (
         <>
-          {phase === 'error' && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-xs font-semibold w-full sm:w-96 mb-2 text-center shadow-sm">
-              {errorMsg || "Action could not be completed. Please retry."}
-            </div>
-          )}
-
-          {phase === 'ready' ? (
-            variant === 'compact' ? (
-              <a 
-                href={dynamicLink}
-                rel="noopener noreferrer"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm shadow-md h-[44px]"
+          <AnimatePresence mode="wait">
+            {phase === 'error' && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-red-50 text-red-600 p-4 rounded-xl text-xs font-semibold w-full sm:w-96 mb-2 text-center shadow-sm"
               >
-                <span className="font-bold flex items-center gap-1.5">More Information <CheckCircle2 className="w-4 h-4" /></span>
-              </a>
-            ) : (
-              <div className="flex flex-col items-center gap-3 w-full sm:w-96">
-                <a 
-                  href={dynamicLink}
-                  rel="noopener noreferrer"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-10 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-md active:scale-[0.98] shrink-0"
+                {errorMsg || "Action could not be completed. Please retry."}
+              </motion.div>
+            )}
+
+            {phase === 'ready' ? (
+              variant === 'compact' ? (
+                <motion.button 
+                  key="ready-compact"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => window.location.replace(dynamicLink)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-colors text-sm shadow-md h-[44px]"
                 >
-                  <span>More Information</span>
-                </a>
-                <span className="text-[10px] font-semibold text-green-600 flex items-center gap-1.5 mt-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Checked
-                </span>
-              </div>
-            )
-          ) : (
-            <button 
-              onClick={handleClearance}
-              disabled={isGenerating}
-              className={variant === 'compact' 
-                ? `w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm shadow-md h-[44px] ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}`
-                : `w-full sm:w-96 py-4 px-10 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm text-base font-semibold shrink-0 active:scale-[0.98] ${
-                    status === 'Verified' ? 'bg-blue-600 hover:bg-blue-700 text-white' : 
-                    status === 'Caution' ? 'bg-amber-500 hover:bg-amber-400 text-white' : 
-                    'bg-zinc-800 hover:bg-zinc-700 text-white'
-                  } ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}`
-              }
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className={`animate-spin text-current ${variant === 'compact' ? 'w-4 h-4' : 'w-5 h-5'}`} /> 
-                  <span className="font-bold">{variant === 'compact' ? 'Verifying...' : 'Loading...'}</span>
-                </>
+                  <span className="font-bold flex items-center gap-1.5">More Info <CheckCircle2 className="w-4 h-4" /></span>
+                </motion.button>
               ) : (
-                <span className={variant === 'compact' ? "flex items-center gap-1.5 font-bold" : "text-current"}>
-                  {variant === 'compact' ? 'Get Access' : 'More Information'}
-                </span>
-              )}
-            </button>
-          )}
+                <motion.div 
+                  key="ready-full"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center gap-3 w-full sm:w-96"
+                >
+                  <motion.button 
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => window.location.replace(dynamicLink)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-10 rounded-2xl flex items-center justify-center gap-3 transition-colors shadow-md shrink-0"
+                  >
+                    <span>More Info</span>
+                  </motion.button>
+                  <motion.span 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-[10px] font-semibold text-green-600 flex items-center gap-1.5 mt-1"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Checked
+                  </motion.span>
+                </motion.div>
+              )
+            ) : (
+              <motion.button 
+                key="action-button"
+                whileTap={{ scale: 0.95 }}
+                onClick={handleClearance}
+                disabled={isGenerating}
+                className={variant === 'compact' 
+                  ? `w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex items-center justify-center gap-1.5 transition-colors text-sm shadow-md h-[44px] ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}`
+                  : `w-full sm:w-96 py-4 px-10 rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm text-base font-semibold shrink-0 ${
+                      status === 'Verified' ? 'bg-blue-600 hover:bg-blue-700 text-white' : 
+                      status === 'Caution' ? 'bg-amber-500 hover:bg-amber-400 text-white' : 
+                      'bg-zinc-800 hover:bg-zinc-700 text-white'
+                    } ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}`
+                }
+              >
+                {isGenerating ? (
+                  <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    className="flex items-center gap-2"
+                  >
+                    <Loader2 className={`animate-spin text-current ${variant === 'compact' ? 'w-4 h-4' : 'w-5 h-5'}`} /> 
+                    <span className="font-bold">{variant === 'compact' ? 'Verifying...' : 'Loading...'}</span>
+                  </motion.div>
+                ) : (
+                  <motion.span 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }}
+                    className={variant === 'compact' ? "flex items-center gap-1.5 font-bold" : "text-current"}
+                  >
+                    {variant === 'compact' ? 'Get Access' : 'More Info'}
+                  </motion.span>
+                )}
+              </motion.button>
+            )}
+          </AnimatePresence>
         </>
       )}
     </div>

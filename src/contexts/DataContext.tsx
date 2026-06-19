@@ -787,7 +787,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       if (encryptedData) {
         try {
           await setDoc(doc(db, 'store_data', 'secure_links'), { encryptedData });
-          await setDoc(doc(db, 'store_data', 'sec_public_links'), { encryptedData });
           
         } catch (dbErr) {
           // failed
@@ -811,13 +810,26 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           path: 'src/lib/staticData.ts',
           content: updatedCode,
           message: `Admin Release: Added/Updated apps catalog`
+        }).then(async () => {
+          try {
+            const { getAuth } = await import('firebase/auth');
+            const authObj = getAuth();
+            const idToken = await authObj.currentUser?.getIdToken();
+            await fetch('/api/v1/admin/sync-local', {
+               method: 'POST',
+               headers: {
+                 'Content-Type': 'application/json',
+                 ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
+               },
+               body: JSON.stringify({ apps: newApps, settings, news, blogs, videos })
+            });
+            console.log("Local sync complete.");
+          } catch(e){}
         }).catch(err => console.error("Background auto-sync commit failed:", err));
       }
     } catch (err: any) {
       console.error("Save Apps Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/apps');
-    } finally {
-      await updateLocalContainerBackup(newApps, settings, news, blogs, videos).catch(e => console.error(e));
     }
   }, [gitConfig, settings, news, blogs, videos, updateLocalContainerBackup]);
 
@@ -853,8 +865,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error("Save Settings Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/settings');
-    } finally {
-      await updateLocalContainerBackup(apps, settingsWithTime, news, blogs, videos).catch(e => console.error(e));
     }
   }, [gitConfig, apps, news, blogs, videos, updateLocalContainerBackup]);
 
@@ -887,8 +897,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error("Save News Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/news');
-    } finally {
-      await updateLocalContainerBackup(apps, settings, newNews, blogs, videos).catch(e => console.error(e));
     }
   }, [gitConfig, apps, settings, blogs, videos, updateLocalContainerBackup]);
 
@@ -921,8 +929,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error("Save Blogs Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/blogs');
-    } finally {
-      await updateLocalContainerBackup(apps, settings, news, newBlogs, videos).catch(e => console.error(e));
     }
   }, [gitConfig, apps, settings, news, videos, updateLocalContainerBackup]);
 
@@ -955,8 +961,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error("Save Videos Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/videos');
-    } finally {
-      await updateLocalContainerBackup(apps, settings, news, blogs, newVideos).catch(e => console.error(e));
     }
   }, [gitConfig, apps, settings, news, blogs, updateLocalContainerBackup]);
 
@@ -1041,6 +1045,26 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         log(`GitHub Sync Error (Vault Sync): ${err.message}`);
         throw new Error(`Failed to commit secure vault to GitHub: ${err.message}`);
     }
+
+    log("GitHub Sync: Performing local instance sync for immediate preview availability...");
+    try {
+      const { getAuth } = await import('firebase/auth');
+      const authObj = getAuth();
+      const idToken = await authObj.currentUser?.getIdToken();
+      const syncRes = await fetch('/api/v1/admin/sync-local', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
+         },
+         body: JSON.stringify({ apps, settings, news, blogs, videos })
+      });
+      if (syncRes.ok) {
+         log("GitHub Sync: System fully synced securely.");
+      } else {
+         log(`GitHub Sync: GitHub push successful, but local preview failed to refresh: ${await syncRes.text()}`);
+      }
+    } catch (e) {}
 
     log("GitHub Sync: Manual push successful!");
   }, [gitConfig, apps, settings, news, blogs, videos]);

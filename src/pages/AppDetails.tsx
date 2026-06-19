@@ -480,7 +480,7 @@ export default function AppDetails() {
                     to={`/gateway/${app.slug}`}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all text-sm shadow-md h-[44px]"
                   >
-                    <span className="flex items-center gap-1.5 font-bold">Access Gateway <ArrowRight className="w-4 h-4" /></span>
+                    <span className="flex items-center gap-1.5 font-bold">More Info <ArrowRight className="w-4 h-4" /></span>
                   </Link>
                 )}
               </motion.div>

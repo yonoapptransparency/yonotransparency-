@@ -119,168 +119,19 @@ export async function fetchStoreData() {
 async function doFetchStoreData() {
   const now = Date.now();
   
-  let localFullBackup: any = null;
-  try {
-    const fullBackupPath = path.join(process.cwd(), 'src/lib/staticDataFull.json');
-    if (fs.existsSync(fullBackupPath)) {
-      localFullBackup = JSON.parse(fs.readFileSync(fullBackupPath, 'utf8'));
-    }
-  } catch (e) {
-    console.warn("Failed to read staticDataFull.json:", e);
-  }
+  const { mockApps, mockSettings, mockNews, mockBlogs, mockVideos } = require('./lib/staticData');
 
-  const config = getRawFirebaseConfig();
-  if (!config) {
-    
-    const mockData = localFullBackup || {
-      apps: mockApps,
-      settings: mockSettings,
-      news: mockNews,
-      blogs: mockBlogs,
-      videos: mockVideos
-    };
-    cachedData = mockData;
-    lastFetchTime = now;
-    return mockData;
-  }
-
-  const isApiKeyEmptyOrPlaceholder = 
-    !config.apiKey || 
-    config.apiKey.trim() === "" || 
-    config.apiKey.includes("YOUR_API_KEY");
-
-  if (isApiKeyEmptyOrPlaceholder) {
-    const mockData = localFullBackup || {
-      apps: mockApps,
-      settings: mockSettings,
-      news: mockNews,
-      blogs: mockBlogs,
-      videos: mockVideos
-    };
-    cachedData = mockData;
-    lastFetchTime = now;
-    return mockData;
-  }
-
-  if (isFetchingStoreData) {
-     // If a fetch is already in flight, return the best data we have to avoid blocking duplicate requests
-     return cachedData || { apps: mockApps, settings: mockSettings, news: mockNews, blogs: mockBlogs, videos: mockVideos };
-  }
-
-  try {
-    isFetchingStoreData = true;
-    const cacheHeaders = {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
-    };
-
-    const apiSuffix = config.apiKey ? `?key=${config.apiKey}` : '';
-
-    const [settingsRes, newsRes, blogsRes, videosRes, metaRes] = await Promise.all([
-      fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/settings${apiSuffix}`, { cache: 'no-store', headers: cacheHeaders, signal: AbortSignal.timeout(8000) }).catch(() => null),
-      fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/news${apiSuffix}`, { cache: 'no-store', headers: cacheHeaders, signal: AbortSignal.timeout(8000) }).catch(() => null),
-      fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/blogs${apiSuffix}`, { cache: 'no-store', headers: cacheHeaders, signal: AbortSignal.timeout(8000) }).catch(() => null),
-      fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/videos${apiSuffix}`, { cache: 'no-store', headers: cacheHeaders, signal: AbortSignal.timeout(8000) }).catch(() => null),
-      fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/apps_meta${apiSuffix}`, { cache: 'no-store', headers: cacheHeaders, signal: AbortSignal.timeout(8000) }).catch(() => null)
-    ]);
-
-    const isErrorStatus = (res: any) => {
-      if (!res) return true; // network timeout / offline
-      if (!res.ok && res.status !== 404) return true; // quota (429), permissions (403), etc.
-      return false;
-    };
-
-    if (isErrorStatus(settingsRes) || isErrorStatus(metaRes) || isErrorStatus(newsRes) || isErrorStatus(blogsRes) || isErrorStatus(videosRes)) {
-      const statusStr = `settings: ${settingsRes?.status || 'fail'}, meta: ${metaRes?.status || 'fail'}`;
-      throw new Error(`Database fetch failed with non-404 error status (likely quota limit reached): ${statusStr}`);
-    }
-
-    let numChunks = 5;
-    if (metaRes && metaRes.ok) {
-      const metaData = await metaRes.json();
-      if (metaData && metaData.fields && metaData.fields.numChunks && metaData.fields.numChunks.integerValue) {
-        numChunks = parseInt(metaData.fields.numChunks.integerValue, 10) || 5;
-      }
-    }
-
-    const chunkPromises = Array.from({ length: numChunks }).map((_, i) => 
-      fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/store_data/apps_chunk_${i}${apiSuffix}`, {
-        cache: 'no-store',
-        headers: cacheHeaders,
-        signal: AbortSignal.timeout(8000)
-      })
-        .then(res => res.ok ? res.json() : null)
-        .catch(() => null)
-    );
-
-    const chunkResults = await Promise.all(chunkPromises);
-
-    let apps: any[] = [];
-    for (const chunkData of chunkResults) {
-      if (chunkData && chunkData.fields && chunkData.fields.items && chunkData.fields.items.arrayValue && chunkData.fields.items.arrayValue.values) {
-        apps = apps.concat(chunkData.fields.items.arrayValue.values.map((v: any) => parseFirestoreValue(v)));
-      }
-    }
-
-    // Top Security: Scrub the apps before caching or returning, ensuring sensitive URLs NEVER reach __INITIAL_DATA__ mapping in the HTML response
-    apps = apps.map(app => {
-      delete app.more_information_url;
-      delete app.encrypted_download_url;
-      delete app.download_url;
-      return app;
-    });
-    
-    let settings = null;
-    const settingsData = settingsRes && settingsRes.ok ? await settingsRes.json() : null;
-    if (settingsData && settingsData.fields) {
-      settings = parseFirestoreValue({ mapValue: { fields: settingsData.fields } });
-    }
-    
-    if (!settings || Object.keys(settings).length === 0) {
-      settings = mockSettings;
-    }
-
-    let news: any[] = [];
-    const newsData = newsRes && newsRes.ok ? await newsRes.json() : null;
-    if (newsData && newsData.fields && newsData.fields.items && newsData.fields.items.arrayValue && newsData.fields.items.arrayValue.values) {
-      news = newsData.fields.items.arrayValue.values.map((v: any) => parseFirestoreValue(v));
-    }
-
-    let blogs: any[] = [];
-    const blogsData = blogsRes && blogsRes.ok ? await blogsRes.json() : null;
-    if (blogsData && blogsData.fields && blogsData.fields.items && blogsData.fields.items.arrayValue && blogsData.fields.items.arrayValue.values) {
-      blogs = blogsData.fields.items.arrayValue.values.map((v: any) => parseFirestoreValue(v));
-    }
-
-    let videos: any[] = [];
-    const videosData = videosRes && videosRes.ok ? await videosRes.json() : null;
-    if (videosData && videosData.fields && videosData.fields.items && videosData.fields.items.arrayValue && videosData.fields.items.arrayValue.values) {
-      videos = videosData.fields.items.arrayValue.values.map((v: any) => parseFirestoreValue(v));
-    }
-
-    cachedData = { apps, settings, news, blogs, videos };
-    lastFetchTime = now;
-    return cachedData;
-  } catch (error: any) {
-    if (error.message?.includes('429')) {
-      
-    } else {
-      console.warn('Failed to fetch store data for SEO (gracefully falling back to high-integrity cache / local backup):', error);
-    }
-    const mockFallback = localFullBackup || {
-      apps: mockApps,
-      settings: mockSettings,
-      news: mockNews,
-      blogs: mockBlogs,
-      videos: mockVideos
-    };
-    if (!cachedData) {
-      cachedData = mockFallback;
-    }
-    return cachedData || mockFallback;
-  } finally {
-    isFetchingStoreData = false;
-  }
+  const data = {
+    apps: mockApps || [],
+    settings: mockSettings || {},
+    news: mockNews || [],
+    blogs: mockBlogs || [],
+    videos: mockVideos || []
+  };
+  
+  cachedData = data;
+  lastFetchTime = now;
+  return data;
 }
 
 
