@@ -1,4 +1,6 @@
 declare global { var AES_SECRET_GLOBAL: string; }
+const getFallbackSecret = (name: string) => process.env[name] ? process.env[name]! : `fallback-${name.toLowerCase().replace('_secret', '')}-for-vercel`;
+global.AES_SECRET_GLOBAL = getFallbackSecret('AES_SECRET');
 import express from "express";
 import cookieParser from "cookie-parser";
 import { createServer as createViteServer } from "vite";
@@ -1337,6 +1339,22 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
   
   
   // Admin API: Seal Vault (AES encrypt target URLs for git commit)
+  app.get("/api/v1/admin/system-files", verifyAdminToken, (req, res) => {
+    try {
+      const serverTs = fs.readFileSync(path.join(process.cwd(), "server.ts"), "utf-8");
+      const apiTs = fs.readFileSync(path.join(process.cwd(), "api/index.ts"), "utf-8");
+      const replaceTs = fs.existsSync(path.join(process.cwd(), "scripts/replace.ts")) ? fs.readFileSync(path.join(process.cwd(), "scripts/replace.ts"), "utf-8") : "";
+      
+      res.json({ files: {
+        "server.ts": serverTs,
+        "api/index.ts": apiTs,
+        "scripts/replace.ts": replaceTs
+      }});
+    } catch(err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.post("/api/v1/admin/seal-vault", verifyAdminToken, (req, res) => {
     try {
       const { items } = req.body;
@@ -1577,10 +1595,16 @@ const rateLimitMap = new Map<string, number[]>();
         }
         if (dec) {
            const map = JSON.parse(dec);
-           if (map[appId]) return res.json({ configured: true });
+           if (map[appId]) return res.json({ configured: true, debug: 'decrypted_ok' });
+        } else {
+           return res.json({ configured: false, debug: 'decryption_failed', has_secret: !!AES_SECRET });
         }
+    } else {
+       return res.json({ configured: false, debug: 'no_vault_found' });
     }
-  } catch(e) {}
+  } catch(e: any) {
+    return res.json({ configured: false, debug: 'error_' + e.message });
+  }
 
   
   

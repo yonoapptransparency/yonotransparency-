@@ -1048,6 +1048,42 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         throw new Error(`Failed to commit secure vault to GitHub: ${err.message}`);
     }
 
+    log("GitHub Sync: Pulling and syncing system deployment files...");
+    try {
+      const { getAuth } = await import('firebase/auth');
+      const auth = getAuth();
+      const idToken = auth.currentUser ? await auth.currentUser.getIdToken() : '';
+      
+      const sysRes = await fetch('/api/v1/admin/system-files', {
+         method: 'GET',
+         headers: { ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}) }
+      });
+
+      if (sysRes.ok) {
+         const sysData = await sysRes.json();
+         if (sysData.files) {
+            for (const [filePath, content] of Object.entries(sysData.files)) {
+               if (!content) continue;
+               log(`GitHub Sync: Syncing ${filePath}...`);
+               await commitFileToGitHub({
+                 owner: configToUse.owner,
+                 repo: configToUse.repo,
+                 token: configToUse.token,
+                 branch: configToUse.branch || 'main',
+                 path: filePath,
+                 content: content as string,
+                 message: `Admin Release: System files synchronization (${filePath})`
+               });
+            }
+            log("GitHub Sync: System files successfully synced.");
+         }
+      } else {
+         log("GitHub Sync: Warning: failed to fetch system files for sync.");
+      }
+    } catch(err: any) {
+        log(`GitHub Sync Error (System Files Sync): ${err.message}`);
+    }
+
     log("GitHub Sync: Performing local instance sync for immediate preview availability...");
     try {
       const { getAuth } = await import('firebase/auth');

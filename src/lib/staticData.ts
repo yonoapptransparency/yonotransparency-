@@ -43,14 +43,8 @@ export interface GlobalSettings {
   hero_title_animation?: string;
   hero_title_subtitle?: string;
   hero_title_visible?: boolean;
+  quick_links?: Array<{title?: string; subtitle?: string; icon?: string; color?: string; target?: string; bg_color?: string; url?: string; }>;
   ga_tracking_id?: string;
-  quick_links?: {
-    title: string;
-    subtitle?: string;
-    icon?: string;
-    color?: string;
-    url: string;
-  }[];
 }
 
 export interface NewsItem {

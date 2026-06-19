@@ -1,4 +1,6 @@
 declare global { var AES_SECRET_GLOBAL: string; }
+const getFallbackSecret = (name: string) => process.env[name] ? process.env[name]! : `fallback-${name.toLowerCase().replace('_secret', '')}-for-vercel`;
+global.AES_SECRET_GLOBAL = getFallbackSecret('AES_SECRET');
 import express from "express";
 import cookieParser from "cookie-parser";
 import { createServer as createViteServer } from "vite";
