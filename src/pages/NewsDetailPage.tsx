@@ -144,13 +144,13 @@ export default function NewsDetailPage() {
         <meta name="robots" content="index, follow" />
         {newsItem.target_region && <meta name="geo.region" content={newsItem.target_region} />}
         {newsItem.target_region && <meta name="coverage" content={newsItem.target_region} />}
-        <link rel="canonical" href={window.location.origin + "/news/" + newsItem.slug} />
+        {newsItem.canonical_url ? <link rel="canonical" href={newsItem.canonical_url} /> : <link rel="canonical" href={window.location.origin + "/news/" + newsItem.slug} />}
 
         <meta property="og:title" content={newsItem.title} />
         <meta property="og:description" content={newsItem.description} />
         <meta property="og:image" content={newsItem.og_image_url || newsItem.logo_url} />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={window.location.href} />
+        <meta property="og:url" content={newsItem.canonical_url || window.location.href} />
         <meta property="article:published_time" content={newsItem.published_at || new Date().toISOString()} />
         <meta property="article:author" content={newsItem.ceo_name} />
 

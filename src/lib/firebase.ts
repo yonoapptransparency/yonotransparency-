@@ -67,10 +67,9 @@ const firebaseConfig = getSafeWindowConfig() || {
   messagingSenderId: resolvedMessagingId,
 };
 
-const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/' + ((import.meta as any).env?.VITE_ADMIN_PATH || 'admin'));
 export const isFirebaseConfigured = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== 'PLACEHOLDER' && firebaseConfig.apiKey.trim() !== '' && !firebaseConfig.apiKey.includes('YOUR_API_KEY');
 
-export const app = (isFirebaseConfigured && isAdminRoute) ? initializeApp(firebaseConfig) : null as any;
+export const app = isFirebaseConfigured ? initializeApp(firebaseConfig) : null as any;
 
 export const auth = app ? getAuth(app) : null as any;
 

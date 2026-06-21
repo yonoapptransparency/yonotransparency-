@@ -558,19 +558,13 @@ async function startServer() {
       // 1. Apps
       for (const app of apps) {
         const slug = getField(app, 'slug');
-        if (slug) {
+        const canonicalUrl = getField(app, 'canonical_url');
+        if (slug && !canonicalUrl) {
           // Standard app detail path
           xml += `  <url>\n`;
           xml += `    <loc>${host}/app/${escapeHtmlForSitemap(slug)}</loc>\n`;
           xml += `    <changefreq>weekly</changefreq>\n`;
           xml += `    <priority>0.9</priority>\n`;
-          xml += `  </url>\n`;
-
-          // Direct shortcut path (SEO redirection support matches routing block at bottom)
-          xml += `  <url>\n`;
-          xml += `    <loc>${host}/${escapeHtmlForSitemap(slug)}</loc>\n`;
-          xml += `    <changefreq>weekly</changefreq>\n`;
-          xml += `    <priority>0.8</priority>\n`;
           xml += `  </url>\n`;
         }
       }
@@ -578,7 +572,8 @@ async function startServer() {
       // 2. News
       for (const newsItem of news) {
         const slug = getField(newsItem, 'slug');
-        if (slug) {
+        const canonicalUrl = getField(newsItem, 'canonical_url');
+        if (slug && !canonicalUrl) {
           xml += `  <url>\n`;
           xml += `    <loc>${host}/news/${escapeHtmlForSitemap(slug)}</loc>\n`;
           xml += `    <changefreq>weekly</changefreq>\n`;
@@ -590,7 +585,8 @@ async function startServer() {
       // 3. Blogs
       for (const blog of blogs) {
         const slug = getField(blog, 'slug');
-        if (slug) {
+        const canonicalUrl = getField(blog, 'canonical_url');
+        if (slug && !canonicalUrl) {
           xml += `  <url>\n`;
           xml += `    <loc>${host}/blog/${escapeHtmlForSitemap(slug)}</loc>\n`;
           xml += `    <changefreq>weekly</changefreq>\n`;

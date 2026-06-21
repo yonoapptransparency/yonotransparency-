@@ -161,9 +161,42 @@ export default function AdminLogin() {
     }
 
     if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setAuthenticated(true);
+        // Reject non-admins immediately at the login gate so the login system is fully secure.
+        // Deep enforcement is already in firestore.rules and server.ts
+        const email = user.email?.toLowerCase();
+        const fallbackAdmin = (import.meta.env.VITE_ADMIN_EMAIL || 'defentechscholar@gmail.com').toLowerCase();
+        
+        let verified = false;
+        if (user.emailVerified && email === fallbackAdmin) {
+           verified = true;
+        } else {
+           try {
+               const { getDoc, doc } = await import('firebase/firestore');
+               const { db } = await import('../lib/firebase');
+               const snap = await getDoc(doc(db, 'admins', user.uid));
+               if (snap.exists()) verified = true;
+               else if (email) {
+                   const emailSnap = await getDoc(doc(db, 'admins', email));
+                   if (emailSnap.exists()) verified = true;
+               }
+           } catch(e) {
+               // DB read might fail if no permissions, indicating not an admin
+           }
+        }
+
+        if (verified) {
+           setAuthenticated(true);
+        } else {
+           import('firebase/auth').then(({ signOut }) => signOut(auth));
+           setError(
+             <>
+               <p>Access Denied: Your account ({email}) is not an authorized administrator.</p>
+             </>
+           );
+           setIsLoading(false);
+        }
       }
     });
     return unsubscribe;

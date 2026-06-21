@@ -265,8 +265,9 @@ export default function GatewayPage() {
         <meta property="og:title" content={`${app.seo_title || app.name} - Technical Profile`} />
         <meta property="og:description" content={cleanedAppDesc} />
         <meta property="og:image" content={app.og_image_url || app.icon_url} />
+        <meta property="og:url" content={app.canonical_url || window.location.href} />
         <meta name="robots" content="index, follow" />
-        {app.canonical_url && <link rel="canonical" href={app.canonical_url} />}
+        {app.canonical_url ? <link rel="canonical" href={app.canonical_url} /> : <link rel="canonical" href={window.location.href} />}
         <script type="application/ld+json">
           {JSON.stringify(softwareSchema)}
         </script>

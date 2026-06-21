@@ -103,13 +103,13 @@ export default function BlogDetailPage() {
         <meta name="robots" content="index, follow" />
         {blog.target_region && <meta name="geo.region" content={blog.target_region} />}
         {blog.target_region && <meta name="coverage" content={blog.target_region} />}
-        <link rel="canonical" href={window.location.origin + "/blog/" + encodeURIComponent(blog.slug || blog.id)} />
+        {blog.canonical_url ? <link rel="canonical" href={blog.canonical_url} /> : <link rel="canonical" href={window.location.origin + "/blog/" + encodeURIComponent(blog.slug || blog.id)} />}
 
         <meta property="og:title" content={blog.title} />
         <meta property="og:description" content={blog.content.substring(0, 160).replace(/<[^>]*>?/gm, '')} />
         <meta property="og:image" content={blog.cover_url} />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={window.location.href} />
+        <meta property="og:url" content={blog.canonical_url || window.location.href} />
         <meta property="article:published_time" content={new Date(blog.published_at).toISOString()} />
         <meta property="article:author" content={blog.author} />
 

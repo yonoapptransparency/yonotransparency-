@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { getAdminPath } from '../lib/utils';
-import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, Shield, LogOut, Save, Upload, Type, Link as LinkIcon, ToggleLeft, Layers, Newspaper, Plus, Trash2, Video as VideoIcon, Github, GitBranch, RefreshCw, CheckCircle2, AlertTriangle, Search, MessageSquare, CheckSquare, Sparkles, Compass } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, Shield, LogOut, Save, Upload, Type, Link as LinkIcon, ToggleLeft, Layers, Newspaper, Plus, Trash2, Video as VideoIcon, Github, GitBranch, RefreshCw, CheckCircle2, AlertTriangle, Search, MessageSquare, CheckSquare, Sparkles, Compass, HelpCircle } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { db, auth } from '../lib/firebase';
 import { AppConfig, GlobalSettings, NewsItem, BlogPost, VideoItem } from '../lib/staticData';
@@ -1740,6 +1740,7 @@ export default function AdminDashboard() {
   const [videosList, setVideosList] = useState(mockVideos);
   const [categoriesList, setCategoriesList] = useState<string[]>(mockSettings.categories || []);
   const [quickLinksList, setQuickLinksList] = useState(mockSettings.quick_links || []);
+  const [websiteFaqsList, setWebsiteFaqsList] = useState(mockSettings.website_faqs || []);
   const [newCatInput, setNewCatInput] = useState('');
   const [user, setUser] = useState<any>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -2108,6 +2109,40 @@ export default function AdminDashboard() {
     const updated = [...quickLinksList];
     updated[index] = { ...updated[index], [field]: value };
     setQuickLinksList(updated);
+  };
+
+  const handleSaveWebsiteFaqs = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const updatedSettings = {
+        ...mockSettings,
+        website_faqs: websiteFaqsList,
+      };
+      await saveMockSettings(updatedSettings);
+      triggerHaptic();
+      alert('Website FAQs saved successfully!');
+    } catch (err: any) {
+      alert('Error saving website FAQs: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddWebsiteFaq = () => {
+    setWebsiteFaqsList([...websiteFaqsList, { question: 'New Question', answer: 'New Answer' }]);
+  };
+
+  const handleRemoveWebsiteFaq = (index: number) => {
+    const updated = [...websiteFaqsList];
+    updated.splice(index, 1);
+    setWebsiteFaqsList(updated);
+  };
+
+  const handleWebsiteFaqChange = (index: number, field: string, value: string) => {
+    const updated = [...websiteFaqsList];
+    updated[index] = { ...updated[index], [field]: value };
+    setWebsiteFaqsList(updated);
   };
 
   const addCategory = async () => {
@@ -2634,6 +2669,7 @@ export default function AdminDashboard() {
             <h3 className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em] italic mb-2 ml-4 dark:text-white">Frontend</h3>
             
             <SidebarItem id="quicklinks" label="Quick Links" icon={Compass} active={activeTab === 'quicklinks'} onClick={handleTabChange} />
+            <SidebarItem id="websitefaqs" label="Website FAQs" icon={HelpCircle} active={activeTab === 'websitefaqs'} onClick={handleTabChange} />
             <SidebarItem id="categories" label="Categories" icon={Layers} active={activeTab === 'categories'} onClick={handleTabChange} />
             <SidebarItem id="banners" label="Ad Banners" icon={LayoutDashboard} active={activeTab === 'banners'} onClick={handleTabChange} />
             
@@ -2757,6 +2793,50 @@ export default function AdminDashboard() {
                     
                     <button type="submit" disabled={saving} className="min-h-[64px] w-full max-w-sm ml-auto block px-12 bg-pink-500 text-white font-black uppercase tracking-widest italic rounded-[2rem] shadow-xl shadow-pink-500/30">
                       Sync Links to Live
+                    </button>
+                  </form>
+                </div>
+              )}
+              {activeTab === 'websitefaqs' && (
+                <div className="animate-fade-in">
+                  <div className="flex justify-between items-center mb-8 border-b-4 border-pink-500/20 pb-4">
+                    <h2 className="text-2xl font-black dark:text-white uppercase italic tracking-tighter">Website FAQs Management</h2>
+                    <button onClick={handleAddWebsiteFaq} className="bg-pink-500/10 text-pink-500 px-6 py-3 rounded-xl border-2 border-pink-500/20 flex items-center gap-2 font-black uppercase tracking-widest italic text-[10px]"><Plus className="w-4 h-4" /> Add FAQ</button>
+                  </div>
+                  
+                  <form onSubmit={handleSaveWebsiteFaqs} className="space-y-6">
+                    <div className="grid grid-cols-1 gap-6">
+                      {websiteFaqsList.map((faq: any, index: number) => (
+                        <div key={index} className="bg-zinc-50 dark:bg-zinc-800/40 border-2 border-black/5 dark:border-white/5 rounded-2xl p-6 shadow-sm relative">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveWebsiteFaq(index)}
+                            className="absolute top-4 right-4 text-rose-500 bg-rose-500/10 p-2 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                          
+                          <div className="space-y-4 pt-2">
+                            <div>
+                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Question</label>
+                              <input required type="text" value={faq.question} onChange={(e) => handleWebsiteFaqChange(index, 'question', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Answer</label>
+                              <textarea required rows={3} value={faq.answer} onChange={(e) => handleWebsiteFaqChange(index, 'answer', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-medium dark:text-white resize-none"></textarea>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {websiteFaqsList.length === 0 && (
+                        <div className="col-span-1 text-center py-12 opacity-50 border-2 border-dashed border-black/10 dark:border-white/10 rounded-2xl dark:text-white font-bold italic">
+                          No website FAQs added yet.
+                        </div>
+                      )}
+                    </div>
+                    
+                    <button type="submit" disabled={saving} className="min-h-[64px] w-full max-w-sm ml-auto block px-12 bg-pink-500 text-white font-black uppercase tracking-widest italic rounded-[2rem] shadow-xl shadow-pink-500/30">
+                      Sync FAQs to Live
                     </button>
                   </form>
                 </div>

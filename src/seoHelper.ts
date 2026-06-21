@@ -675,6 +675,7 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
   // Default fallback image if none provided
   if (!ogImage) ogImage = "https://res.cloudinary.com/dq34n0ncz/image/upload/v1713280000/default_og_image.png";
   let author = siteTitle || "Platform Administrator";
+  let canonicalUrlOverride: string | null = null;
   
   if (urlPath.startsWith('/app/')) {
     const slug = decodeURIComponent(urlPath.split('/app/')[1].split('/')[0].split('?')[0]);
@@ -690,6 +691,7 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
       description = cleanSeoDescription(getField(app, 'seo_description')) || (descHtml ? stripHtml(descHtml).substring(0, 160) : '') || description;
       keywords = getField(app, 'seo_keywords') || keywords;
       ogImage = getField(app, 'og_image_url') || getField(app, 'icon_url') || ogImage;
+      canonicalUrlOverride = getField(app, 'canonical_url');
     }
   } else if (urlPath.startsWith('/info/') || urlPath.startsWith('/gateway/')) {
     const prefix = urlPath.startsWith('/info/') ? '/info/' : '/gateway/';
@@ -706,6 +708,7 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
       description = cleanSeoDescription(getField(app, 'seo_description')) || (descHtml ? stripHtml(descHtml).substring(0, 160) : '') || description;
       keywords = getField(app, 'seo_keywords') || keywords;
       ogImage = getField(app, 'og_image_url') || getField(app, 'icon_url') || ogImage;
+      canonicalUrlOverride = getField(app, 'canonical_url');
     }
   } else if (urlPath.startsWith('/news/') && urlPath.length > 6) {
     const slug = decodeURIComponent(urlPath.split('/news/')[1].split('/')[0].split('?')[0]);
@@ -776,6 +779,7 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
         description = cleanSeoDescription(getField(app, 'seo_description')) || (descHtml ? stripHtml(descHtml).substring(0, 160) : fallbackDesc);
         keywords = getField(app, 'seo_keywords');
         ogImage = getField(app, 'og_image_url') || getField(app, 'icon_url') || ogImage;
+        canonicalUrlOverride = getField(app, 'canonical_url');
       }
     }
   }
@@ -834,7 +838,7 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
          "operatingSystem": "Android, iOS",
          "applicationCategory": "GameApplication",
          "description": description,
-         "url": absoluteUrl,
+         "url": canonicalUrlOverride || absoluteUrl,
          "offers": {
            "@type": "Offer",
            "price": "0",
@@ -863,7 +867,26 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
     }
   }
 
-  const schemaScript = schemaOrg ? `<script type="application/ld+json">${JSON.stringify(schemaOrg).replace(/</g, '\\u003c')}</script>` : '';
+  let schemaScript = schemaOrg ? `<script type="application/ld+json">${JSON.stringify(schemaOrg).replace(/</g, '\\u003c')}</script>` : '';
+
+  if (urlPath === '/' || urlPath === '') {
+    const defaultFaqs = getField(settings, 'website_faqs');
+    if (defaultFaqs && Array.isArray(defaultFaqs) && defaultFaqs.length > 0) {
+      const faqSchema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": defaultFaqs.map((faq: any) => ({
+          "@type": "Question",
+          "name": faq.question,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": faq.answer
+          }
+        }))
+      };
+      schemaScript += `\n    <script type="application/ld+json">${JSON.stringify(faqSchema).replace(/</g, '\\u003c')}</script>`;
+    }
+  }
 
   // Construct replacement tags
   const tags = isAdmin ? `
@@ -882,14 +905,14 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="${escapeHtml(absoluteUrl)}" />
+    <meta property="og:url" content="${escapeHtml(canonicalUrlOverride || absoluteUrl)}" />
     ${absoluteOgImage ? `<meta property="og:image" content="${escapeHtml(absoluteOgImage)}" />` : ''}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     ${absoluteOgImage ? `<meta name="twitter:image" content="${escapeHtml(absoluteOgImage)}" />` : ''}
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-    <link rel="canonical" href="${escapeHtml(absoluteUrl)}" />
+    <link rel="canonical" href="${escapeHtml(canonicalUrlOverride || absoluteUrl)}" />
     ${absoluteFaviconUrl ? `
     <link rel="icon" type="image/x-icon" href="${escapeHtml(absoluteFaviconUrl)}" />
     <link rel="shortcut icon" href="${escapeHtml(absoluteFaviconUrl)}" />
@@ -901,8 +924,8 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
 
   // Regex to remove any existing <title>, OpenGraph and favicon tags
   let newTemplate = template.replace(/<title>.*?<\/title>/ims, '');
-  newTemplate = newTemplate.replace(/<link[^>]*rel=["']?(icon|shortcut icon|apple-touch-icon)["']?[^>]*>/gims, '');
-  newTemplate = newTemplate.replace(/<meta[^>]*(name|property)=["'](description|keywords|og:title|og:description|og:image|og:type|og:url|twitter:.*?)["'][^>]*>/gims, '');
+  newTemplate = newTemplate.replace(/<link[^>]*rel=["']?(icon|shortcut icon|apple-touch-icon|canonical)["']?[^>]*>/gims, '');
+  newTemplate = newTemplate.replace(/<meta[^>]*(name|property)=["'](description|keywords|author|robots|og:title|og:description|og:image|og:type|og:url|twitter:.*?)["'][^>]*>/gims, '');
   
   // Inject the safe/dynamic Firebase configuration into the window object to keep it entirely out of compiled JS assets.
   const safeFirebaseConfig = getSafeFirebaseConfig();
@@ -914,7 +937,13 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
   `;
 
   // Insert new tags and configuration before head close
-  newTemplate = newTemplate.replace('</head>', `${configScript}${tags}</head>`);
+  // We add data-rh="true" to allow react-helmet-async to cleanly replace/hydrate these tags
+  const helmetTags = tags
+    .replace(/<(meta|link) /g, '<$1 data-rh="true" ')
+    .replace(/<title>/g, '<title data-rh="true">')
+    .replace(/<script type="application\/ld\+json"/g, '<script data-rh="true" type="application/ld+json"');
+
+  newTemplate = newTemplate.replace('</head>', `${configScript}${helmetTags}</head>`);
 
   // Dynamically inject fully pre-rendered body content robustly for ALL users and bots.
   // This allows Edge Caching (Vercel) to cache a single version of the HTML while maintaining 100% SEO capability.

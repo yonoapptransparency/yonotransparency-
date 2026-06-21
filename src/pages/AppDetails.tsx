@@ -356,7 +356,7 @@ export default function AppDetails() {
         <meta property="og:title" content={title} />
         <meta property="og:description" content={desc} />
         <meta property="og:image" content={ogImage} />
-        <meta property="og:url" content={window.location.href} />
+        <meta property="og:url" content={app.canonical_url || window.location.href} />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />

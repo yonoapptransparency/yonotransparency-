@@ -165,6 +165,22 @@ export default function Home() {
             }
           })}
         </script>
+        {mockSettings.website_faqs && mockSettings.website_faqs.length > 0 && (
+          <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": mockSettings.website_faqs.map(faq => ({
+              "@type": "Question",
+              "name": faq.question,
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer
+              }
+            }))
+          })}
+          </script>
+        )}
       </Helmet>
       {!searchTerm && (
         <WebsiteTitleHero settings={mockSettings} />
@@ -446,6 +462,31 @@ export default function Home() {
       {!loading && filteredApps.length === 0 && searchTerm && (
         <div className="text-center py-20 text-slate-400">
           <p className="text-lg">No results found for "{searchTerm}"</p>
+        </div>
+      )}
+
+      {/* Website FAQs Section */}
+      {!searchTerm && mockSettings.website_faqs && mockSettings.website_faqs.length > 0 && (
+        <div className="mt-16 mb-8 px-4 animate-fade-in relative z-10 w-full">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-black mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+              Frequently Asked Questions
+            </h2>
+            <div className="space-y-4">
+              {mockSettings.website_faqs.map((faq, index) => (
+                <div key={index} className="bg-white/70 dark:bg-zinc-900/70 border border-black/5 dark:border-white/5 rounded-2xl p-6 backdrop-blur-md shadow-sm transition-all hover:shadow-md hover:border-black/10 dark:hover:border-white/10">
+                  <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2 flex items-start gap-3">
+                    <span className="text-blue-500 font-black mt-px">Q.</span>
+                    {faq.question}
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium pl-[-4px]">
+                    <span className="text-indigo-500 font-black mr-2">A.</span>
+                    {faq.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

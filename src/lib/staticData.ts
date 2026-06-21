@@ -45,6 +45,7 @@ export interface GlobalSettings {
   hero_title_visible?: boolean;
   ga_tracking_id?: string;
   quick_links?: Array<{ title: string; subtitle?: string; icon?: string; color?: string; url: string }>;
+  website_faqs?: Array<{ question: string; answer: string }>;
 }
 
 export interface NewsItem {
