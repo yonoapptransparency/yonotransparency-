@@ -6,10 +6,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, setDoc, getDoc, getDocFromServer } from 'firebase/firestore';
-import { db, auth, isFirebaseConfigured, OperationType, FirestoreErrorInfo, handleFirestoreError } from '../lib/firebase';
+import { db, auth, OperationType, FirestoreErrorInfo, handleFirestoreError } from '../lib/firebase';
 import { AppConfig, GlobalSettings, NewsItem, BlogPost, VideoItem } from '../lib/staticData';
 import { GitConfig, generateStaticDataFileCode, commitFileToGitHub } from '../lib/githubSync';
 import { secureStorage } from '../lib/secureStorage';
+
+const isFirebaseConfigured = false;
 
 // Providing fallback data immediately helps avoid layout shifts
 import { mockApps, mockSettings, mockNews, mockBlogs, mockVideos } from '../lib/staticData';

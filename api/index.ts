@@ -1798,49 +1798,9 @@ ${JSON.stringify(publicContext, null, 2)}`;
     if (!appId) {
       return res.status(400).json({ error: "Missing App ID parameter." });
     }
-    try {
-      const config = getRawFirebaseConfig();
-      if (!config) {
-        return res.status(500).json({ error: "Firebase is not configured." });
-      }
-      const db = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents`;
-      const apiSuffix = config.apiKey ? `?key=${config.apiKey}` : '';
-
-      // Save as a specialized review with "missing_link_report" source to meet Firestore security rules
-      const reportId = `report_${appId.replace(/[^a-zA-Z0-9_\-]/g, '')}_${Date.now()}`.substring(0, 120);
-      const fields = ['app_id', 'username', 'rating', 'comment', 'created_at', 'helpful_count', 'is_approved', 'source'];
-      const updateMaskParams = fields.map(f => `updateMask.fieldPaths=${f}`).join('&');
-      const patchUrl = `${db}/reviews/${reportId}${apiSuffix ? apiSuffix + '&' + updateMaskParams : '?' + updateMaskParams}`;
-      const storeResponse = await fetch(patchUrl, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          fields: {
-            app_id: { stringValue: appId },
-            username: { stringValue: "Anonymous Reporter" },
-            rating: { doubleValue: 1.0 },
-            comment: { stringValue: `MISSING_LINK_REPORT: Download link not available for app ${appId}.` },
-            created_at: { stringValue: new Date().toISOString() },
-            helpful_count: { integerValue: "0" },
-            is_approved: { booleanValue: false },
-            source: { stringValue: "missing_link_report" }
-          }
-        })
-      });
-
-      const storeData = await storeResponse.json();
-      if (storeData.error) {
-        console.error('[report-missing] Firestore error:', storeData.error);
-        return res.status(storeData.error.code || 500).json({ error: storeData.error.message || "Failed to register report." });
-      }
-
-      return res.json({ success: true });
-    } catch (err: any) {
-      console.error('[report-missing] Server exception:', err);
-      return res.status(500).json({ error: err.message || "Internal server error during logging." });
-    }
+    // Hardcoded success to avoid public Firebase access
+    console.log(`[report-missing] Received report for ${appId}, mocked success due to hardcoded public mode.`);
+    return res.json({ success: true });
   });
 
   // API Route: Process temporary dynamic download token
@@ -2012,12 +1972,8 @@ ${JSON.stringify(publicContext, null, 2)}`;
         } catch (e) {}
 
         res.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-        if (req.query.json === 'true') {
-          return res.json({ redirect: targetUrl });
-        }
         return res.redirect(302, targetUrl);
       } catch (err) {
-        if (req.query.json === 'true') return res.status(403).json({ error: "Error decoding parameter." });
         return res.status(403).send("<h1>403 Forbidden</h1><p>Error decoding parameter.</p>");
       }
     }
@@ -2055,9 +2011,6 @@ ${JSON.stringify(publicContext, null, 2)}`;
     } catch (e) {}
 
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-    if (req.query.json === 'true') {
-      return res.json({ redirect: finalFallbackUrl });
-    }
     return res.redirect(302, finalFallbackUrl);
   });
 
