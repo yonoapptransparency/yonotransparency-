@@ -12,7 +12,7 @@ import PublicChatbot from './components/PublicChatbot';
 import React, { useState, useEffect, useMemo, Suspense, lazy, ComponentType, LazyExoticComponent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Polished, high-performance loading screen that can be referenced by the preloader system
+// Polished, high-performance loading screen
 function LoadingScreen() {
   return (
     <div className="flex flex-col items-center justify-center py-20 min-h-[40vh]">
@@ -22,159 +22,25 @@ function LoadingScreen() {
   );
 }
 
-// --- HIGH PERFORMANCE CUSTOM ROUTE PRELOADER ENGINE ---
-// Caches resolved ES modules to bypass React Suspense triggers and provide completely synchronous, zero-lag rendering.
-const resolvedComponents: Record<string, ComponentType<any>> = {};
-const loadingPromises: Record<string, Promise<any>> = {};
-
-export function preloadComponent(name: string, importFn: () => Promise<{ default: ComponentType<any> }>) {
-  if (resolvedComponents[name]) {
-    return Promise.resolve(resolvedComponents[name]);
-  }
-  if (loadingPromises[name]) {
-    return loadingPromises[name];
-  }
-  const promise = importFn()
-    .then((mod) => {
-      resolvedComponents[name] = mod.default;
-      return mod.default;
-    })
-    .catch((err) => {
-      console.error(`[Preloader] Failed to resolve chunk for ${name}:`, err);
-      // If it is a chunk load failure (which happens after structural deployment), auto-reload the window to fetch fresh scripts.
-      if (err?.message?.includes('Failed to fetch dynamically imported module')) {
-        const hasReloaded = sessionStorage.getItem(`reloaded_chunk_${name}`);
-        if (!hasReloaded) {
-          sessionStorage.setItem(`reloaded_chunk_${name}`, 'true');
-          window.location.reload();
-        }
-      }
-      delete loadingPromises[name];
-      throw err;
-    });
-  loadingPromises[name] = promise;
-  return promise;
-}
-
-function getPreloadedComponent(
-  name: string,
-  importFn: () => Promise<{ default: ComponentType<any> }>,
-  Fallback: ComponentType<any>
-) {
-  return function PreloadedComponentWrapper(props: any) {
-    const [Comp, setComp] = useState<ComponentType<any> | null>(() => resolvedComponents[name] || null);
-
-    useEffect(() => {
-      let active = true;
-      if (!Comp) {
-        preloadComponent(name, importFn)
-          .then((resolved) => {
-            if (active) {
-              setComp(() => resolved);
-            }
-          })
-          .catch(() => {});
-      }
-      return () => {
-        active = false;
-      };
-    }, [Comp]);
-
-    if (Comp) {
-      return <Comp {...props} />;
-    }
-    return <Fallback {...props} />;
-  };
-}
-
-// Helper utility to make lazy imports bulletproof against redeployment chunk-load/fetch errors
-function lazyRetry<T extends ComponentType<any>>(
-  componentImport: () => Promise<{ default: T }>
-): LazyExoticComponent<T> {
-  return lazy(async () => {
-    try {
-      return await componentImport();
-    } catch (error: any) {
-      console.warn("Chunk loading/network anomaly detected. Reloading viewport payload...", error);
-      // Automatically refresh the page to pull the latest production build from the server.
-      window.location.reload();
-      return new Promise(() => {}) as Promise<{ default: T }>;
-    }
-  });
-}
-
-// Code-Splitting Loaders: Registered explicitly so both lazy routers and smart background prefetch workers can invoke them
-const loaders = {
-  Home: () => import('./pages/Home'),
-  AppDetails: () => import('./pages/AppDetails'),
-  GatewayPage: () => import('./pages/GatewayPage'),
-  About: () => import('./pages/About'),
-  Contact: () => import('./pages/Contact'),
-  Privacy: () => import('./pages/Privacy'),
-  Terms: () => import('./pages/Terms'),
-  Responsibility: () => import('./pages/Responsibility'),
-  Notice: () => import('./pages/Notice'),
-  Ethics: () => import('./pages/Ethics'),
-  Disclaimer: () => import('./pages/Disclaimer'),
-  NewApps: () => import('./pages/NewApps'),
-  NewsPage: () => import('./pages/NewsPage'),
-  NewsDetailPage: () => import('./pages/NewsDetailPage'),
-  Blogs: () => import('./pages/Blogs'),
-  BlogDetailPage: () => import('./pages/BlogDetailPage'),
-  VideosPage: () => import('./pages/VideosPage'),
-  VideoDetailPage: () => import('./pages/VideoDetailPage'),
-  AdminLogin: () => import('./pages/AdminLogin'),
-  AdminDashboard: () => import('./pages/AdminDashboard'),
-};
-
-// Start prefetching page assets at parse-time before React bundle initialization even finishes!
-const initialPath = window.location.pathname;
-
-function prefetchOtherRoutes() {
-  const routes = [
-    'AppDetails', 'GatewayPage', 'NewApps', 'NewsPage', 'VideosPage',
-    'About', 'Contact', 'Privacy', 'Terms', 'Responsibility', 'Notice', 'Ethics', 'Disclaimer',
-    'NewsDetailPage', 'Blogs', 'BlogDetailPage', 'VideoDetailPage'
-  ];
-  let delay = 500;
-  routes.forEach((route) => {
-    setTimeout(() => {
-      // @ts-ignore
-      preloadComponent(route, loaders[route]).catch(() => {});
-    }, delay);
-    delay += 300;
-  });
-}
-
-if (initialPath === '/' || initialPath === '') {
-  setTimeout(prefetchOtherRoutes, 800);
-} else if (initialPath.startsWith('/app/')) {
-  preloadComponent('AppDetails', loaders.AppDetails).catch(() => {});
-  setTimeout(prefetchOtherRoutes, 1000);
-} else {
-  setTimeout(prefetchOtherRoutes, 500);
-}
-
-const AppDetails = lazyRetry(loaders.AppDetails);
-const GatewayPage = lazyRetry(loaders.GatewayPage);
-const NewApps = lazyRetry(loaders.NewApps);
-const NewsPage = lazyRetry(loaders.NewsPage);
-const VideosPage = lazyRetry(loaders.VideosPage);
-const About = lazyRetry(loaders.About);
-const Contact = lazyRetry(loaders.Contact);
-const Privacy = lazyRetry(loaders.Privacy);
-const Terms = lazyRetry(loaders.Terms);
-const Responsibility = lazyRetry(loaders.Responsibility);
-const Notice = lazyRetry(loaders.Notice);
-const Ethics = lazyRetry(loaders.Ethics);
-const Disclaimer = lazyRetry(loaders.Disclaimer);
-const NewsDetailPage = lazyRetry(loaders.NewsDetailPage);
-const Blogs = lazyRetry(loaders.Blogs);
-const BlogDetailPage = lazyRetry(loaders.BlogDetailPage);
-const VideoDetailPage = lazyRetry(loaders.VideoDetailPage);
-const AdminLogin = lazyRetry(loaders.AdminLogin);
-const AdminDashboard = lazyRetry(loaders.AdminDashboard);
-
+import AppDetails from './pages/AppDetails';
+import GatewayPage from './pages/GatewayPage';
+import NewApps from './pages/NewApps';
+import NewsPage from './pages/NewsPage';
+import VideosPage from './pages/VideosPage';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import Responsibility from './pages/Responsibility';
+import Notice from './pages/Notice';
+import Ethics from './pages/Ethics';
+import Disclaimer from './pages/Disclaimer';
+import NewsDetailPage from './pages/NewsDetailPage';
+import Blogs from './pages/Blogs';
+import BlogDetailPage from './pages/BlogDetailPage';
+import VideoDetailPage from './pages/VideoDetailPage';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 import FallbackRouteMatcher from './components/FallbackRouteMatcher';
 
 import { getAdminPath } from './lib/utils';
@@ -730,84 +596,6 @@ function BackToTop() {
   );
 }
 
-function BackgroundPrefetcher() {
-  const location = useLocation();
-  const { apps = [], news = [] } = useData();
-
-  useEffect(() => {
-    const path = location.pathname;
-    const isHome = path === '/' || path === '';
-    const isAppPage = path.startsWith('/app/');
-
-    // Helper functions for smart prefetching with modern idle triggers
-    const triggerPrefetch = (prefetchFn: () => void) => {
-      if ('requestIdleCallback' in window) {
-        window.requestIdleCallback(prefetchFn, { timeout: 3500 });
-      } else {
-        setTimeout(prefetchFn, 800);
-      }
-    };
-
-    const preloadImage = (url: string) => {
-      if (!url) return;
-      const img = new Image();
-      img.src = url;
-    };
-
-    if (isHome) {
-      console.log("[Prefetcher] User is on Homepage. Preloading AppDetails code chunk & top apps' branding...");
-      
-      // 1. Immediately request the main app details page bundle chunk and populate synchronous preloader cache
-      triggerPrefetch(() => {
-        preloadComponent('AppDetails', loaders.AppDetails).catch(() => {});
-        preloadComponent('NewApps', loaders.NewApps).catch(() => {});
-        preloadComponent('GatewayPage', loaders.GatewayPage).catch(() => {});
-      });
-
-      // 2. Preload primary image assets for the top apps so they render list items and pages instantly on click
-      triggerPrefetch(() => {
-        apps.slice(0, 10).forEach(app => {
-          if (app.icon_url) preloadImage(app.icon_url);
-          if (app.og_image_url) preloadImage(app.og_image_url);
-        });
-      });
-    } else if (isAppPage) {
-      // Find current app slug from pathname
-      const slug = decodeURIComponent(path.split('/app/')[1]?.split('/')[0]?.split('?')[0] || '');
-      console.log(`[Prefetcher] User is on App Details page (${slug}). Preloading Home code chunk & other apps' assets...`);
-
-      // 1. Immediately request the primary dashboard bundle chunk and cache synchronously
-      triggerPrefetch(() => {
-        preloadComponent('Home', loaders.Home).catch(() => {});
-        preloadComponent('GatewayPage', loaders.GatewayPage).catch(() => {});
-      });
-
-      // 2. Preload assets of OTHER apps in our catalog so navigating between them is completely seamless
-      triggerPrefetch(() => {
-        const otherApps = apps.filter(app => app.slug?.toLowerCase() !== slug.toLowerCase());
-        otherApps.slice(0, 8).forEach(app => {
-          if (app.icon_url) preloadImage(app.icon_url);
-          if (app.og_image_url) preloadImage(app.og_image_url);
-        });
-
-        if (news && news.length > 0) {
-          news.slice(0, 2).forEach(n => {
-            if (n.logo_url) preloadImage(n.logo_url);
-          });
-        }
-      });
-    } else {
-      // Other pages: prefetch critical Home and AppDetails views
-      triggerPrefetch(() => {
-        preloadComponent('Home', loaders.Home).catch(() => {});
-        preloadComponent('AppDetails', loaders.AppDetails).catch(() => {});
-      });
-    }
-  }, [location.pathname, apps, news]);
-
-  return null;
-}
-
 function AppContent() {
   const { settings, apps = [], news = [], blogs = [], videos = [], quotaExceeded } = useData();
   const location = useLocation();
@@ -1083,7 +871,6 @@ function AppContent() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <BackgroundPrefetcher />
       <ScrollToTop />
       {memoizedHeader}
 
@@ -1112,48 +899,37 @@ function AppContent() {
       
       <main className="flex-1 w-full max-w-[1550px] mx-auto px-3 sm:px-6 md:px-10 py-3 pb-16 sm:pb-24 overflow-x-hidden relative">
         <Suspense fallback={<LoadingScreen />}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1, ease: "linear" }}
-              className="will-change-[opacity]"
-            >
-              <Routes location={location}>
-                <Route path="/" element={<Home />} />
-                <Route path="/new-apps" element={<NewApps />} />
-                <Route path="/app/:slug" element={<AppDetails />} />
-                <Route path="/info/:slug" element={<GatewayPage />} />
-                <Route path="/gateway/:slug" element={<GatewayPage />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/responsibility" element={<Responsibility />} />
-                <Route path="/notice" element={<Notice />} />
-                <Route path="/ethics" element={<Ethics />} />
-                <Route path="/disclaimer" element={<Disclaimer />} />
-                <Route path="/news" element={<NewsPage />} />
-                <Route path="/news/:slug" element={<NewsDetailPage />} />
-                <Route path="/videos" element={<VideosPage />} />
-                <Route path="/videos/:slug" element={<VideoDetailPage />} />
-                <Route path="/blogs" element={<Blogs />} />
-                <Route path="/blog/:slug" element={<BlogDetailPage />} />
-                <Route path="/wp-admin" element={<Navigate to="/" replace />} />
-                <Route path="/dashboard" element={<Navigate to="/" replace />} />
-                <Route path="/panel" element={<Navigate to="/" replace />} />
-                
-                {/* Keep obfuscated paths as fallback mapping */}
-                <Route path={`/${adminPath}`} element={<Navigate to={`/${adminPath}/dashboard`} replace />} />
-                <Route path={`/${adminPath}/login`} element={<Suspense fallback={<div className="flex h-screen items-center justify-center p-8"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>}><AdminLogin /></Suspense>} />
+          <Routes location={location}>
+            <Route path="/" element={<Home />} />
+            <Route path="/new-apps" element={<NewApps />} />
+            <Route path="/app/:slug" element={<AppDetails />} />
+            <Route path="/info/:slug" element={<GatewayPage />} />
+            <Route path="/gateway/:slug" element={<GatewayPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/responsibility" element={<Responsibility />} />
+            <Route path="/notice" element={<Notice />} />
+            <Route path="/ethics" element={<Ethics />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/news/:slug" element={<NewsDetailPage />} />
+            <Route path="/videos" element={<VideosPage />} />
+            <Route path="/videos/:slug" element={<VideoDetailPage />} />
+            <Route path="/blogs" element={<Blogs />} />
+            <Route path="/blog/:slug" element={<BlogDetailPage />} />
+            <Route path="/wp-admin" element={<Navigate to="/" replace />} />
+            <Route path="/dashboard" element={<Navigate to="/" replace />} />
+            <Route path="/panel" element={<Navigate to="/" replace />} />
+            
+            {/* Keep obfuscated paths as fallback mapping */}
+            <Route path={`/${adminPath}`} element={<Navigate to={`/${adminPath}/dashboard`} replace />} />
+            <Route path={`/${adminPath}/login`} element={<Suspense fallback={<div className="flex h-screen items-center justify-center p-8"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>}><AdminLogin /></Suspense>} />
                 <Route path={`/${adminPath}/*`} element={<Suspense fallback={<div className="flex h-screen items-center justify-center p-8"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>}><AdminDashboard /></Suspense>} />
                 
                 <Route path="*" element={<FallbackRouteMatcher />} />
               </Routes>
-            </motion.div>
-          </AnimatePresence>
         </Suspense>
       </main>
       

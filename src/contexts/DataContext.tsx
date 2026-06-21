@@ -347,9 +347,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const timeout = setTimeout(() => {
       setLoading(false);
       setLoadedFromServer(true);
-    }, 400);
+    }, 10);
 
-    // Fast sync fallback for deep links (especially new apps not in cache) - set to 400ms for snappy visual performance
+    // Fast sync fallback for deep links (especially new apps not in cache) - set to snappy visual performance
     const syncTimeout = setTimeout(() => {
       setLoadedFromServer(true);
       setAppsSyncedWithServer(true);
@@ -363,7 +363,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setServerBlogsFetched(true);
       setServerVideosFetched(true);
       setLoading(false);
-    }, 400);
+    }, 10);
 
     const checkConnection = async () => {
       if (!isFirebaseConfigured || (typeof window !== 'undefined' && !(window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin'))))) {
