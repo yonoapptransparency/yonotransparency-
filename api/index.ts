@@ -1117,6 +1117,24 @@ const SESSION_SECRET = process.env.SESSION_SECRET || String("fallback-" + "sessi
       const mergedItems = Array.from(finalMap.values());
       const plainText = JSON.stringify(mergedItems);
       const ciphertext = safeEncrypt(plainText, AES_SECRET);
+
+      // Auto-seal the offline vault immediately so no Firestore is required by frontend
+      try {
+        const vaultMap: Record<string, string> = {};
+        mergedItems.forEach((item: any) => {
+          if (item && item.id && item.url) {
+             vaultMap[item.id] = item.url;
+          }
+        });
+        const vaultMapEncrypted = String(safeEncrypt(JSON.stringify(vaultMap), AES_SECRET));
+        const vaultTsContent = `// SECURE VAULT - DO NOT EDIT MANUALLY\nexport const IS_SEALED = true;\nexport const ENCRYPTED_LINKS = "${vaultMapEncrypted}";\n`;
+        const fs = require('fs');
+        const path = require('path');
+        fs.writeFileSync(path.join(process.cwd(), 'src/lib/secureVault.ts'), vaultTsContent);
+      } catch (vaultErr) {
+        console.warn('Failed to auto-seal secureVault.ts from encrypt-links:', vaultErr);
+      }
+
       res.json({ encrypted: ciphertext });
     } catch (err) {
       res.status(500).json({ error: 'Links encryption failed' });
@@ -1589,19 +1607,13 @@ const rateLimitMap = new Map<string, number[]>();
         }
         if (dec) {
            const map = JSON.parse(dec);
-           if (map[appId]) return res.json({ configured: true, debug: 'decrypted_ok' });
-        } else {
-           return res.json({ configured: false, debug: 'decryption_failed', has_secret: !!AES_SECRET });
+           if (map[appId]) return res.json({ configured: true });
         }
-    } else {
-       return res.json({ configured: false, debug: 'no_vault_found' });
     }
   } catch(e: any) {
-    return res.json({ configured: false, debug: 'error_' + e.message });
+    console.warn("Vault check failed:", e);
   }
 
-  
-  
   // Lookup 3: Local Offline Backup directly
   try {
     const backupPath = require('path').join(process.cwd(), 'src/lib/secure_links_backup.json');

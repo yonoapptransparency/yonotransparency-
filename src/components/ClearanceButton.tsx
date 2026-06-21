@@ -505,30 +505,19 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
       const { token } = await tokenResponse.json();
       if (!token) throw new Error('No token received. Please try again.');
 
-      // Step 4: Fetch the final URL via the JSON endpoint to bypass iframe/window.open restrictions
-      const params = new URLSearchParams({ t: token, id: appId, json: 'true' });
+      // Step 4: Construct the final clearance URL that resolves to the target via 302 redirect.
+      const params = new URLSearchParams({ t: token, id: appId });
       if (sid) params.set('sid', sid);
       const payloadUrl = `${_EP.payload}?${params.toString()}`;
       
-      const payloadResponse = await fetch(payloadUrl);
-      if (!payloadResponse.ok) {
-        const errorData = await payloadResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to retrieve the final destination.');
-      }
-      
-      const payloadData = await payloadResponse.json();
-      if (!payloadData.redirect) {
-        throw new Error('Destination link not found in response.');
-      }
-
-      setDynamicLink(payloadData.redirect);
+      setDynamicLink(payloadUrl);
       setPhase('ready');
       setTokenCountdown(600);
 
       if (targetWin) {
-        targetWin.location.href = payloadData.redirect;
+        targetWin.location.href = payloadUrl;
       } else {
-        window.location.href = payloadData.redirect;
+        window.location.href = payloadUrl;
       }
 
     } catch (err: any) {
@@ -558,7 +547,7 @@ export default function ClearanceButton({ appId, status, variant = 'default' }: 
     try {
       targetWin = window.open('', '_blank');
       if (targetWin) {
-        targetWin.document.write('<html><head><title>Loading...</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="background:#18181b; color:#18181b; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; font-family:sans-serif;"><i>Generating dynamic connection...</i></body></html>');
+        targetWin.document.write('<html><head><title>Loading...</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="background:#18181b; color:#18181b; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; font-family:sans-serif;"><i>Generating secure connection...</i></body></html>');
         targetWin.document.close();
       }
     } catch(e) {}

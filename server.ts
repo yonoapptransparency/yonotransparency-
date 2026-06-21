@@ -1117,6 +1117,24 @@ async function startServer() {
       const mergedItems = Array.from(finalMap.values());
       const plainText = JSON.stringify(mergedItems);
       const ciphertext = safeEncrypt(plainText, AES_SECRET);
+
+      // Auto-seal the offline vault immediately so no Firestore is required by frontend
+      try {
+        const vaultMap: Record<string, string> = {};
+        mergedItems.forEach((item: any) => {
+          if (item && item.id && item.url) {
+             vaultMap[item.id] = item.url;
+          }
+        });
+        const vaultMapEncrypted = String(safeEncrypt(JSON.stringify(vaultMap), AES_SECRET));
+        const vaultTsContent = `// SECURE VAULT - DO NOT EDIT MANUALLY\nexport const IS_SEALED = true;\nexport const ENCRYPTED_LINKS = "${vaultMapEncrypted}";\n`;
+        const fs = require('fs');
+        const path = require('path');
+        fs.writeFileSync(path.join(process.cwd(), 'src/lib/secureVault.ts'), vaultTsContent);
+      } catch (vaultErr) {
+        console.warn('Failed to auto-seal secureVault.ts from encrypt-links:', vaultErr);
+      }
+
       res.json({ encrypted: ciphertext });
     } catch (err) {
       res.status(500).json({ error: 'Links encryption failed' });
