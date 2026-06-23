@@ -2028,15 +2028,15 @@ export default function AdminDashboard() {
         isInitializedRef.current = true;
       }
       
-      if (!settingsInitializedRef.current && mockSettings && mockNews && mockBlogs && mockVideos) {
-        setNewsList(mockNews);
-        setBanners(mockSettings.banners || []);
-        setBlogs(mockBlogs);
-        setVideosList(mockVideos);
-        setCategoriesList(mockSettings.categories || []);
-        setQuickLinksList(mockSettings.quick_links || []);
-        setWebsiteFaqsList(mockSettings.website_faqs || []);
-        setDevelopersList(mockSettings.developers || []);
+      if (mockSettings && mockNews && mockBlogs && mockVideos) {
+        setNewsList(prev => JSON.stringify(prev) !== JSON.stringify(mockNews) ? mockNews : prev);
+        setBanners(prev => JSON.stringify(prev) !== JSON.stringify(mockSettings.banners || []) ? (mockSettings.banners || []) : prev);
+        setBlogs(prev => JSON.stringify(prev) !== JSON.stringify(mockBlogs) ? mockBlogs : prev);
+        setVideosList(prev => JSON.stringify(prev) !== JSON.stringify(mockVideos) ? mockVideos : prev);
+        setCategoriesList(prev => JSON.stringify(prev) !== JSON.stringify(mockSettings.categories || []) ? (mockSettings.categories || []) : prev);
+        setQuickLinksList(prev => JSON.stringify(prev) !== JSON.stringify(mockSettings.quick_links || []) ? (mockSettings.quick_links || []) : prev);
+        setWebsiteFaqsList(prev => JSON.stringify(prev) !== JSON.stringify(mockSettings.website_faqs || []) ? (mockSettings.website_faqs || []) : prev);
+        setDevelopersList(prev => JSON.stringify(prev) !== JSON.stringify(mockSettings.developers || []) ? (mockSettings.developers || []) : prev);
         settingsInitializedRef.current = true;
       }
     }
