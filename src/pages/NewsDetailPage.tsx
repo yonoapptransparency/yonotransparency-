@@ -3,6 +3,7 @@
  * Shows layout announcements, system patches logs, and live interactive user commentaries.
  */
 
+import DOMPurify from 'dompurify';
 import { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -206,7 +207,7 @@ export default function NewsDetailPage() {
             <p className="text-xl sm:text-2xl font-medium mb-12 text-zinc-700 dark:text-zinc-300 leading-relaxed">{newsItem.description}</p>
             <div 
               className="font-normal text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-none prose prose-zinc dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: newsItem.content || newsItem.description_html || '' }} 
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(newsItem.content || newsItem.description_html || '')) }} 
             />
         </div>
 

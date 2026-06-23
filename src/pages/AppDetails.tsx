@@ -3,6 +3,7 @@
  * Renders technical and design features of individual applications with peer user reviews.
  */
 
+import DOMPurify from 'dompurify';
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useData } from '../contexts/DataContext';
@@ -566,7 +567,7 @@ export default function AppDetails() {
              )}
              <div 
                className="w-full text-zinc-800 dark:text-zinc-200"
-               dangerouslySetInnerHTML={{ __html: app.custom_admin_box_html }}
+               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(app.custom_admin_box_html || '')) }}
              />
            </div>
         )}
@@ -577,7 +578,7 @@ export default function AppDetails() {
            </h2>
           <div 
              className="w-full text-base text-zinc-700 dark:text-zinc-300 [&_strong]:font-semibold [&_p]:mb-4 [&_p]:leading-relaxed [&_a]:text-blue-500 [&_a]:hover:underline [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-4 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
-            dangerouslySetInnerHTML={{ __html: app.description_html || '<p>No details available.</p>' }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(app.description_html || '<p>No details available.</p>')) }}
           />
 
           {app.features_html && (
@@ -587,7 +588,7 @@ export default function AppDetails() {
                </h2>
                <div 
                  className="w-full text-base text-zinc-700 dark:text-zinc-300 [&_strong]:font-semibold [&_p]:mb-4 [&_p]:leading-relaxed [&_a]:text-blue-500 [&_a]:hover:underline [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-4 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-2"
-                 dangerouslySetInnerHTML={{ __html: app.features_html }}
+                 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(app.features_html || '')) }}
                />
             </div>
           )}
@@ -625,7 +626,7 @@ export default function AppDetails() {
                     </summary>
                     <div 
                        className="px-4 pb-4 pt-0 text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed"
-                      dangerouslySetInnerHTML={{ __html: faq.answer }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(faq.answer || '')) }}
                     />
                   </details>
                 </div>

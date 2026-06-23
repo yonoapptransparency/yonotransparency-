@@ -1,6 +1,9 @@
 declare global { var AES_SECRET_GLOBAL: string; }
-const getFallbackSecret = (name: string) => process.env[name] ? process.env[name]! : `fallback-${name.toLowerCase().replace('_secret', '')}-for-vercel`;
-global.AES_SECRET_GLOBAL = getFallbackSecret('AES_SECRET');
+if (!process.env.AES_SECRET) {
+  console.error("CRITICAL ERROR: AES_SECRET environment variable is missing.");
+  process.exit(1);
+}
+global.AES_SECRET_GLOBAL = process.env.AES_SECRET;
 import express from "express";
 import cookieParser from "cookie-parser";
 import { createServer as createViteServer } from "vite";
@@ -336,16 +339,19 @@ function verifyToken(token: string, ip: string, sessionId: string, fingerprint: 
   }
 }
 
-const TOKEN_SECRET = process.env.TOKEN_SECRET || String("fallback-" + "token" + "-key");
-const SESSION_SECRET = process.env.SESSION_SECRET || String("fallback-" + "session" + "-key");
+const TOKEN_SECRET = process.env.TOKEN_SECRET;
+if (!TOKEN_SECRET) {
+  console.error("CRITICAL ERROR: TOKEN_SECRET environment variable is missing.");
+  process.exit(1);
+}
+
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) {
+  console.error("CRITICAL ERROR: SESSION_SECRET environment variable is missing.");
+  process.exit(1);
+}
 
 async function startServer() {
-  if (!process.env.AES_SECRET) {
-    console.warn('WARNING: AES_SECRET is not set. Download links cannot be decrypted securely. Using a fallback secret.');
-  }
-  if (!process.env.TOKEN_SECRET) {
-    console.warn('WARNING: TOKEN_SECRET is not set. Tokens are not secure. Using fallback secret.');
-  }
   const app = express();
   const PORT = 3000;
 
@@ -356,7 +362,8 @@ async function startServer() {
       const logFile = path.join(process.cwd(), 'server_requests.log');
       const duration = Date.now() - startTime;
       const contentType = res.getHeader('content-type') || 'unknown';
-      const logLine = `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - Duration: ${duration}ms - Type: ${contentType} - IP: ${req.headers['x-forwarded-for'] || req.socket.remoteAddress} - UA: ${req.headers['user-agent']} - Accept: ${req.headers['accept']}\n`;
+      const safeUrl = req.originalUrl.replace(/([?&])(token|sid|fingerprint)=[^&]+/ig, '$1$2=REDACTED');
+      const logLine = `[${new Date().toISOString()}] ${req.method} ${safeUrl} - Status: ${res.statusCode} - Duration: ${duration}ms - Type: ${contentType} - IP: ${req.headers['x-forwarded-for'] || req.socket.remoteAddress} - UA: ${req.headers['user-agent']} - Accept: ${req.headers['accept']}\n`;
       try {
         fs.appendFileSync(logFile, logLine, 'utf8');
       } catch (e) {}
@@ -390,7 +397,9 @@ async function startServer() {
     res.setHeader("Vary", "Origin");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PATCH, PUT, DELETE");
     res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Accept,Authorization,X-Forwarded-For");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
+    if (origin !== "*") {
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    }
 
     if (req.method === 'OPTIONS') {
       res.sendStatus(200);

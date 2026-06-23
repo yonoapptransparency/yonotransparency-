@@ -3,6 +3,7 @@
  * Secure countdown and verification interface before serving high-priority mirror links.
  */
 
+import DOMPurify from 'dompurify';
 import { useParams, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useData } from '../contexts/DataContext';
@@ -354,7 +355,7 @@ export default function GatewayPage() {
                     </summary>
                     <div 
                       className="px-0 pb-6 pt-2 prose prose-zinc dark:prose-invert max-w-none text-zinc-600 dark:text-zinc-400"
-                      dangerouslySetInnerHTML={{ __html: faq.answer }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(faq.answer || '')) }}
                     />
                   </details>
                 </div>
@@ -397,7 +398,7 @@ export default function GatewayPage() {
         <h2 className="text-3xl sm:text-4xl font-bold mb-10 tracking-tight text-zinc-900 dark:text-zinc-100 px-1 sm:px-0">Technical Details</h2>
         <div 
           className="w-full text-base text-zinc-700 dark:text-zinc-300 [&_strong]:font-semibold [&_p]:mb-4 [&_p]:leading-relaxed [&_a]:text-blue-500 [&_a]:hover:underline [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-4 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
-          dangerouslySetInnerHTML={{ __html: app.description_html || '<p>App details and technical specifications.</p>' }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(app.description_html || '<p>App details and technical specifications.</p>')) }}
         />
 
         {app.features_html && (
@@ -405,7 +406,7 @@ export default function GatewayPage() {
               <h2 className="text-3xl sm:text-4xl font-bold mb-10 tracking-tight text-zinc-900 dark:text-zinc-100 px-1 sm:px-0">App Features</h2>
               <div 
                 className="w-full text-base text-zinc-700 dark:text-zinc-300 [&_strong]:font-semibold [&_p]:mb-4 [&_p]:leading-relaxed [&_a]:text-blue-500 [&_a]:hover:underline [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-4 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-2"
-                dangerouslySetInnerHTML={{ __html: app.features_html }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(app.features_html || '')) }}
               />
            </div>
         )}
@@ -490,7 +491,7 @@ export default function GatewayPage() {
       <div className="w-full mb-20 text-center">
           <h2 
             className="text-3xl sm:text-5xl font-bold mb-12 tracking-tight text-zinc-900 dark:text-zinc-100"
-            dangerouslySetInnerHTML={{ __html: mockSettings.portal_heading || mockSettings.site_title || 'Platform Review' }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(mockSettings.portal_heading || mockSettings.site_title || 'Platform Review')) }}
           />
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 w-full text-left">
@@ -500,7 +501,7 @@ export default function GatewayPage() {
               </h3>
               <div 
                 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 prose prose-zinc dark:prose-invert prose-sm"
-                dangerouslySetInnerHTML={{ __html: mockSettings.disclaimer_text }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(mockSettings.disclaimer_text || '')) }}
               />
             </div>
             
@@ -510,7 +511,7 @@ export default function GatewayPage() {
               </h3>
               <div 
                 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 prose prose-zinc dark:prose-invert prose-sm"
-                dangerouslySetInnerHTML={{ __html: mockSettings.ethics_discrimination_text }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(mockSettings.ethics_discrimination_text || '')) }}
               />
             </div>
 
@@ -520,7 +521,7 @@ export default function GatewayPage() {
               </h3>
               <div 
                 className="text-sm font-medium text-zinc-600 dark:text-zinc-300 prose prose-zinc dark:prose-invert prose-sm"
-                dangerouslySetInnerHTML={{ __html: mockSettings.important_notice || '' }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(mockSettings.important_notice || '')) }}
               />
             </div>
           </div>

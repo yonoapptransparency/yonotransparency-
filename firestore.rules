@@ -11,16 +11,13 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-@.]+$');
     }
 
-    // Helper to verify if user is authorized as an admin (via database index lookup or owner fallback)
+    // Helper to verify if user is authorized as an admin (via database index lookup)
     // Checks that the email is verified to prevent unverified email spoofing attacks
     function isAdmin() {
       return request.auth != null && 
-             (
-               request.auth.token.email == 'defentechscholar@gmail.com' ||
-               (request.auth.token.email_verified == true &&
-                (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) || 
-                 exists(/databases/$(database)/documents/admins/$(request.auth.token.email))))
-             );
+             (request.auth.token.email_verified == true &&
+              (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) || 
+               exists(/databases/$(database)/documents/admins/$(request.auth.token.email))));
     }
 
     // Comprehensive payload validation for reviews

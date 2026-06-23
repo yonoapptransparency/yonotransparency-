@@ -1,6 +1,9 @@
 declare global { var AES_SECRET_GLOBAL: string; }
-const getFallbackSecret = (name: string) => process.env[name] ? process.env[name]! : `fallback-${name.toLowerCase().replace('_secret', '')}-for-vercel`;
-global.AES_SECRET_GLOBAL = getFallbackSecret('AES_SECRET');
+if (!process.env.AES_SECRET) {
+  console.error("CRITICAL ERROR: AES_SECRET environment variable is missing.");
+  process.exit(1);
+}
+global.AES_SECRET_GLOBAL = process.env.AES_SECRET;
 import express from "express";
 import cookieParser from "cookie-parser";
 import { createServer as createViteServer } from "vite";
@@ -336,16 +339,18 @@ function verifyToken(token: string, ip: string, sessionId: string, fingerprint: 
   }
 }
 
-const TOKEN_SECRET = process.env.TOKEN_SECRET || String("fallback-" + "token" + "-key");
-const SESSION_SECRET = process.env.SESSION_SECRET || String("fallback-" + "session" + "-key");
+const TOKEN_SECRET = process.env.TOKEN_SECRET;
+if (!TOKEN_SECRET) {
+  console.error("CRITICAL ERROR: TOKEN_SECRET environment variable is missing.");
+  process.exit(1);
+}
 
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) {
+  console.error("CRITICAL ERROR: SESSION_SECRET environment variable is missing.");
+  process.exit(1);
+}
 
-  if (!process.env.AES_SECRET) {
-    console.warn('WARNING: AES_SECRET is not set. Download links cannot be decrypted securely. Using a fallback secret.');
-  }
-  if (!process.env.TOKEN_SECRET) {
-    console.warn('WARNING: TOKEN_SECRET is not set. Tokens are not secure. Using fallback secret.');
-  }
   const app = express();
   const PORT = 3000;
 
@@ -356,7 +361,8 @@ const SESSION_SECRET = process.env.SESSION_SECRET || String("fallback-" + "sessi
       const logFile = path.join(process.cwd(), 'server_requests.log');
       const duration = Date.now() - startTime;
       const contentType = res.getHeader('content-type') || 'unknown';
-      const logLine = `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - Status: ${res.statusCode} - Duration: ${duration}ms - Type: ${contentType} - IP: ${req.headers['x-forwarded-for'] || req.socket.remoteAddress} - UA: ${req.headers['user-agent']} - Accept: ${req.headers['accept']}\n`;
+      const safeUrl = req.originalUrl.replace(/([?&])(token|sid|fingerprint)=[^&]+/ig, '$1$2=REDACTED');
+      const logLine = `[${new Date().toISOString()}] ${req.method} ${safeUrl} - Status: ${res.statusCode} - Duration: ${duration}ms - Type: ${contentType} - IP: ${req.headers['x-forwarded-for'] || req.socket.remoteAddress} - UA: ${req.headers['user-agent']} - Accept: ${req.headers['accept']}\n`;
       try {
         fs.appendFileSync(logFile, logLine, 'utf8');
       } catch (e) {}
@@ -658,7 +664,10 @@ const SESSION_SECRET = process.env.SESSION_SECRET || String("fallback-" + "sessi
       
       // Admin access check via firestore (strictly requires verified email to prevent hijack/spoofing attempts)
       let isDbAdmin = false;
-      const configuredAdminEmail = (process.env.ADMIN_EMAIL || 'defentechscholar@gmail.com').toLowerCase();
+      const configuredAdminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase();
+      if (!configuredAdminEmail) {
+        throw new Error('Admin privileges misconfigured: missing ADMIN_EMAIL environment variable.');
+      }
       
       if (email === configuredAdminEmail && user.emailVerified === true) {
         isDbAdmin = true;
@@ -1357,22 +1366,6 @@ const SESSION_SECRET = process.env.SESSION_SECRET || String("fallback-" + "sessi
   
   
   // Admin API: Seal Vault (AES encrypt target URLs for git commit)
-  app.get("/api/v1/admin/system-files", verifyAdminToken, (req, res) => {
-    try {
-      const serverTs = fs.readFileSync(path.join(process.cwd(), "server.ts"), "utf-8");
-      const apiTs = fs.readFileSync(path.join(process.cwd(), "api/index.ts"), "utf-8");
-      const replaceTs = fs.existsSync(path.join(process.cwd(), "scripts/replace.ts")) ? fs.readFileSync(path.join(process.cwd(), "scripts/replace.ts"), "utf-8") : "";
-      
-      res.json({ files: {
-        "server.ts": serverTs,
-        "api/index.ts": apiTs,
-        "scripts/replace.ts": replaceTs
-      }});
-    } catch(err: any) {
-      res.status(500).json({ error: err.message });
-    }
-  });
-
   app.post("/api/v1/admin/seal-vault", verifyAdminToken, (req, res) => {
     try {
       const { items } = req.body;
