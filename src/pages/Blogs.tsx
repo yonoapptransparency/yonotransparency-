@@ -20,8 +20,8 @@ export default function Blogs() {
   return (
     <div className="animate-fade-in max-w-[1550px] mx-auto py-12 plain-content px-3 sm:px-6 md:px-10">
       <Helmet>
-        <title>Intelligence Logs & Stories - {mockSettings.site_title}</title>
-        <meta name="description" content="In-depth logs, stories, and articles about our secure ecosystem." />
+        <title>Latest App Updates - {mockSettings.site_title}</title>
+        <meta name="description" content="Read the latest updates, features, and release notes for our secure applications." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={window.location.origin + "/blogs"} />
       </Helmet>
@@ -42,12 +42,12 @@ export default function Blogs() {
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl text-blue-500 shadow-sm border border-blue-100 dark:border-blue-500/20">
           <FileText className="w-8 h-8" />
         </div>
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 m-0">Editorial</h1>
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 m-0">App Updates</h1>
       </div>
 
       {mockBlogs.length === 0 ? (
         <div className="text-center py-24 text-zinc-500 font-medium text-lg">
-          No logs available
+          No updates available
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-12 sm:gap-16">
@@ -63,7 +63,7 @@ export default function Blogs() {
               </Link>
               <div className="flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">Article</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">Update</span>
                   <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                     <Calendar className="w-3 h-3" />
                     {new Date(blog.published_at).toLocaleDateString()}
@@ -74,10 +74,18 @@ export default function Blogs() {
                 </Link>
                 <div className="flex items-center gap-2 mb-4">
                   <div className="text-xs font-semibold text-zinc-500">By {blog.author}</div>
+                  {blog.related_app_name && blog.related_app_slug && (
+                    <>
+                      <span className="text-zinc-300">•</span>
+                      <Link to={`/app/${blog.related_app_slug}`} className="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors">
+                        {blog.related_app_name}
+                      </Link>
+                    </>
+                  )}
                 </div>
-                <p className="text-base text-zinc-500 mb-6 line-clamp-3 leading-relaxed">{blog.content.substring(0, 150)}...</p>
+                <p className="text-base text-zinc-500 mb-6 line-clamp-3 leading-relaxed">{blog.content.substring(0, 150).replace(/<[^>]+>/g, '')}...</p>
                 <Link to={`/blog/${encodeURIComponent(blog.slug || blog.id)}`} className="inline-flex items-center gap-2 text-blue-600 font-semibold text-sm group-hover:gap-3 transition-all">
-                  Read Article <ArrowRight className="w-4 h-4" />
+                  Read Update <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </motion.div>

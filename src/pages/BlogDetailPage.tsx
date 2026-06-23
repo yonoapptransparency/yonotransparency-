@@ -127,7 +127,7 @@ export default function BlogDetailPage() {
           <div className="p-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 group-hover:-translate-x-1 transition-transform">
             <ArrowLeft className="w-4 h-4" />
           </div>
-          Editorials
+          App Updates
         </Link>
       </div>
 
@@ -152,6 +152,11 @@ export default function BlogDetailPage() {
                 <div className="flex items-center gap-2 py-1 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-700 dark:text-zinc-300">
                     {blog.author}
                 </div>
+                {blog.related_app_name && blog.related_app_slug && (
+                  <div className="flex items-center gap-2 py-1 px-3 bg-blue-50 dark:bg-blue-900/20 rounded-full text-blue-600 dark:text-blue-400 font-medium">
+                      Related: <Link to={`/app/${blog.related_app_slug}`} className="hover:underline">{blog.related_app_name}</Link>
+                  </div>
+                )}
             </div>
         </header>
 
@@ -159,6 +164,18 @@ export default function BlogDetailPage() {
             <div className="w-full aspect-video mb-12 rounded-[24px] overflow-hidden shadow-sm border border-black/5 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900">
                 <img src={blog.cover_url} alt={blog.title} className="w-full h-full object-cover" />
             </div>
+        )}
+        
+        {blog.related_app_name && blog.related_app_slug && (
+          <div className="mb-12 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-[24px] border border-blue-100 dark:border-blue-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-1">Get the App</h3>
+              <p className="text-zinc-600 dark:text-zinc-400 text-sm">Download {blog.related_app_name} to experience these new features.</p>
+            </div>
+            <Link to={`/app/${blog.related_app_slug}`} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold transition-all shadow-sm shrink-0 whitespace-nowrap">
+              View {blog.related_app_name}
+            </Link>
+          </div>
         )}
         
         <div className="prose prose-zinc dark:prose-invert max-w-none mb-20 font-normal text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">

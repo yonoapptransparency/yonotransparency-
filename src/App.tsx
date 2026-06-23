@@ -179,7 +179,7 @@ function Header() {
                     {[
                       { action: () => window.dispatchEvent(new Event('open-public-chatbot')), label: 'AI Assistant', icon: Bot },
                       { to: '/videos', label: 'Videos', icon: Video },
-                      { to: '/blogs', label: 'Blogs', icon: LayoutGrid },
+                      { to: '/blogs', label: 'App Updates', icon: LayoutGrid },
                       { to: '/about', label: 'About Us', icon: Info },
                       { to: '/developers', label: 'Our Team', icon: Users },
                       { to: '/contact', label: 'Contact', icon: Send },
@@ -319,7 +319,7 @@ function Header() {
                 { to: '/new-apps', label: 'New Apps', icon: Sparkles, hot: true },
                 { to: '/news', label: 'News', icon: Newspaper },
                 { to: '/videos', label: 'Videos', icon: Video },
-                { to: '/blogs', label: 'Blogs', icon: Menu },
+                { to: '/blogs', label: 'App Updates', icon: Menu },
                 { to: '/responsibility', label: 'Safety', icon: ShieldCheck },
                 { to: '/about', label: 'About Us', icon: Info },
                 { to: '/developers', label: 'Our Team', icon: Users },
@@ -424,7 +424,7 @@ function Footer() {
         <h4 className="text-slate-900 font-bold mb-1">Discover</h4>
         <Link to="/new-apps" className="text-slate-600 hover:text-blue-600 font-medium transition-colors text-sm">New Apps</Link>
         <Link to="/videos" className="text-slate-600 hover:text-blue-600 font-medium transition-colors text-sm">Apps</Link>
-        <Link to="/blogs" className="text-slate-600 hover:text-blue-600 font-medium transition-colors text-sm">Blog</Link>
+        <Link to="/blogs" className="text-slate-600 hover:text-blue-600 font-medium transition-colors text-sm">App Updates</Link>
         <Link to="/news" className="text-slate-600 hover:text-blue-600 font-medium transition-colors text-sm">News</Link>
       </div>
       

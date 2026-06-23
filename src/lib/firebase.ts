@@ -73,14 +73,29 @@ export const app = isFirebaseConfigured ? initializeApp(firebaseConfig) : null a
 
 export const auth = app ? getAuth(app) : null as any;
 
-import { getFirestore, initializeFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
 
 let firestoreInstance: any = null;
 if (app) {
-    firestoreInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId === '(default)' ? undefined : firebaseConfig.firestoreDatabaseId);
+  const dbId = firebaseConfig.firestoreDatabaseId === '(default)' ? undefined : firebaseConfig.firestoreDatabaseId;
+  firestoreInstance = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+  }, dbId);
 }
 
 export const db = firestoreInstance;
+
+async function testConnection() {
+  if (!db) return;
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && (error.message.includes('the client is offline') || error.message.includes('offline') || error.message.includes('unavailable'))) {
+      console.warn("Firestore connection check: Please check your Firebase configuration or network.");
+    }
+  }
+}
+testConnection();
 
 export enum OperationType {
   CREATE = 'create',

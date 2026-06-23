@@ -180,6 +180,8 @@ export interface BlogPost {
   author: string;
   cover_url: string;
   published_at: string;
+  related_app_slug?: string;
+  related_app_name?: string;
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string;

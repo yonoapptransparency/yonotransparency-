@@ -98,7 +98,7 @@ export function AppDetailsSkeleton() {
 }
 
 export default function AppDetails() {
-  const { apps: mockApps, settings: mockSettings, loading, appsSyncedWithServer, serverAppsFetched, refreshAll } = useData();
+  const { apps: mockApps, settings: mockSettings, blogs: mockBlogs, loading, appsSyncedWithServer, serverAppsFetched, refreshAll } = useData();
   const { slug: routeSlug, "*": splat } = useParams();
   const decodedSplat = splat ? decodeURIComponent(splat) : '';
   const slug = routeSlug || decodedSplat.replace(/^\/|\/$/g, '').split('/')[0];
@@ -286,6 +286,10 @@ export default function AppDetails() {
         return appCats.some(cat => currentCats.includes(cat));
       });
   }, [mockApps, app.category, app.id]);
+
+  const relatedUpdates = useMemo(() => {
+    return mockBlogs?.filter(b => b.related_app_slug?.toLowerCase() === slug?.toLowerCase()) || [];
+  }, [mockBlogs, slug]);
 
   const [shareToast, setShareToast] = useState(false);
 
@@ -600,6 +604,31 @@ export default function AppDetails() {
                <div className="bg-zinc-50 dark:bg-zinc-900 rounded-2xl p-6 text-sm text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap border border-black/5 dark:border-white/5 line-clamp-4 hover:line-clamp-none transition-all">
                 {app.release_notes}
               </div>
+            </div>
+          )}
+          
+          {relatedUpdates && relatedUpdates.length > 0 && (
+            <div className="mt-8 pt-8 border-t border-black/5 dark:border-white/5">
+               <h2 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100 px-1 sm:px-0">
+                 Latest App Updates
+               </h2>
+               <div className="space-y-4">
+                 {relatedUpdates.map((update, idx) => (
+                   <Link key={idx} to={`/blog/${update.slug || update.id}`} className="block p-4 sm:p-6 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-500/10 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group">
+                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-600 mb-2">
+                       <span>Update</span>
+                       <span className="text-zinc-300">•</span>
+                       <span className="text-zinc-500 dark:text-zinc-400">{new Date(update.published_at).toLocaleDateString()}</span>
+                     </div>
+                     <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2 group-hover:text-blue-600 transition-colors">
+                       {update.title}
+                     </h3>
+                     <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2">
+                       {update.content.replace(/<[^>]+>/g, '').substring(0, 150)}...
+                     </p>
+                   </Link>
+                 ))}
+               </div>
             </div>
           )}
         </div>

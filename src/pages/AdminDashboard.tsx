@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { getAdminPath } from '../lib/utils';
-import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, Shield, LogOut, Save, Upload, Type, Link as LinkIcon, ToggleLeft, Layers, Newspaper, Plus, Trash2, Video as VideoIcon, Github, GitBranch, RefreshCw, CheckCircle2, AlertTriangle, Search, MessageSquare, CheckSquare, Sparkles, Compass, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, ShieldAlert, Shield, LogOut, Save, Upload, Type, Link as LinkIcon, ToggleLeft, Layers, Newspaper, Plus, Trash2, Video as VideoIcon, Github, GitBranch, RefreshCw, CheckCircle2, AlertTriangle, Search, MessageSquare, CheckSquare, Sparkles, Compass, HelpCircle, Edit2, ChevronRight } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { db, auth } from '../lib/firebase';
 import { AppConfig, GlobalSettings, NewsItem, BlogPost, VideoItem } from '../lib/staticData';
@@ -14,6 +14,7 @@ import { AppConfig, GlobalSettings, NewsItem, BlogPost, VideoItem } from '../lib
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { generateStaticDataFileCode } from '../lib/githubSync';
+import AppsTab from '../components/AppsTab';
 
 function FaqEditor({ initialFaqs }: { initialFaqs: {question: string, answer: string}[] }) {
   const [faqs, setFaqs] = React.useState(initialFaqs || []);
@@ -71,13 +72,13 @@ const SidebarItem = React.memo(({
   return (
     <button 
       onClick={() => onClick(id)}
-      className={`flex items-center gap-4 w-full text-left px-5 py-4 rounded-2xl transition-all min-h-[56px] font-black uppercase tracking-widest text-[10px] italic group ${
+      className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all min-h-[48px] font-semibold text-sm group border-0 cursor-pointer ${
         active 
-          ? 'bg-pink-500 text-white shadow-xl shadow-pink-500/30' 
-          : 'text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-pink-500'
+          ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/15' 
+          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white'
       }`}
     >
-      <Icon className={`w-5 h-5 transition-transform group-active:scale-90 ${active ? 'animate-pulse' : ''}`} /> 
+      <Icon className={`w-4 h-4 transition-transform group-active:scale-95 ${active ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'}`} /> 
       {label}
     </button>
   );
@@ -85,31 +86,59 @@ const SidebarItem = React.memo(({
 
 // Extraction of Tab Content Components for better performance
 const DashboardTab = React.memo(({ apps, news }: { apps: any[], news: any[] }) => (
-  <div className="animate-fade-in">
-    <h2 className="text-xl font-bold mb-6 border-b border-black/10 pb-4">Platform Overview</h2>
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div className="bg-black/5 p-4 rounded-xl border border-black/10">
-        <div className="opacity-60 text-sm mb-1">Total Apps</div>
-        <div className="text-2xl font-bold">{apps.length}</div>
+  <div className="animate-fade-in space-y-6">
+    <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+      <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Platform Overview</h2>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Real-time stats and platform health metrics.</p>
+    </div>
+    
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/85 p-6 rounded-2xl shadow-sm flex items-center justify-between">
+        <div>
+          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Apps</div>
+          <div className="text-3xl font-bold text-slate-900 dark:text-white">{apps.length}</div>
+        </div>
+        <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+          <FileText className="w-6 h-6" />
+        </div>
       </div>
-      <div className="bg-black/5 p-4 rounded-xl border border-black/10">
-        <div className="opacity-60 text-sm mb-1">Total News</div>
-        <div className="text-2xl font-bold">{news.length}</div>
+      
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/85 p-6 rounded-2xl shadow-sm flex items-center justify-between">
+        <div>
+          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total News</div>
+          <div className="text-3xl font-bold text-slate-900 dark:text-white">{news.length}</div>
+        </div>
+        <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+          <Newspaper className="w-6 h-6" />
+        </div>
       </div>
-      <div className="bg-black/5 p-4 rounded-xl border border-black/10">
-        <div className="opacity-60 text-sm mb-1">Pending Reviews</div>
-        <div className="text-2xl font-bold text-amber-500">12</div>
+
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/85 p-6 rounded-2xl shadow-sm flex items-center justify-between">
+        <div>
+          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Pending Reviews</div>
+          <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">12</div>
+        </div>
+        <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+          <ShieldAlert className="w-6 h-6" />
+        </div>
       </div>
-      <div className="bg-black/5 p-4 rounded-xl border border-black/10">
-        <div className="opacity-60 text-sm mb-1">Safe Links Secured</div>
-        <div className="text-2xl font-bold text-pink-500">100%</div>
+
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/85 p-6 rounded-2xl shadow-sm flex items-center justify-between">
+        <div>
+          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gateway Health</div>
+          <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">100%</div>
+        </div>
+        <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+          <Compass className="w-6 h-6" />
+        </div>
       </div>
     </div>
   </div>
 ));
 
-// Memoized Tab Components
-const AppsTab = React.memo(({ appsList, editingAppId, setEditingAppId, handleDeleteApp, handleSaveApp, categories, saving, faqsJson }: any) => {
+// Redefined AppsTab to use the new modular component.
+/*
+const OldAppsTabUnused = React.memo(({ appsList, editingAppId, setEditingAppId, handleDeleteApp, handleSaveApp, categories, saving, faqsJson }: any) => {
   const editApp = editingAppId ? appsList.find((a: any) => a.id === editingAppId) : null;
 
   // Form Fields State
@@ -226,170 +255,188 @@ const AppsTab = React.memo(({ appsList, editingAppId, setEditingAppId, handleDel
 
   if (editingAppId !== null) {
     return (
-      <div className="animate-fade-in">
-        <div className="flex justify-between items-center mb-6 border-b border-black/10 dark:border-white/10 pb-4">
-          <h2 className="text-xl font-bold dark:text-white">{editingAppId ? 'Edit Application' : 'Add New Application'}</h2>
-          <button onClick={() => setEditingAppId(null)} className="text-sm font-medium opacity-60 hover:opacity-100 px-4 py-2 dark:text-white">Cancel</button>
+      <div className="animate-fade-in bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-2xl p-8 shadow-sm">
+        <div className="flex justify-between items-center mb-8 border-b border-black/10 dark:border-white/10 pb-4">
+          <div>
+            <h2 className="text-xl font-bold dark:text-white flex items-center gap-2">
+              <LayoutDashboard className="w-5 h-5 text-blue-500" />
+              {editingAppId ? 'Edit Application' : 'Add New Application'}
+            </h2>
+            {editingAppId && <p className="text-xs text-slate-500 font-mono mt-1">ID: {editingAppId}</p>}
+          </div>
+          <button onClick={() => setEditingAppId(null)} className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-white px-4 py-2 transition-all">Cancel</button>
         </div>
 
-        <form onSubmit={handleSaveApp} className="space-y-6">
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">App Name</label>
-              <input type="text" name="name" value={formFields.name} onChange={e => handleFieldChange('name', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Custom App Slug (URL Part)</label>
-              <input type="text" name="slug" value={formFields.slug} onChange={e => handleFieldChange('slug', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" placeholder="Leave blank to auto-generate from name" />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">App Icon / Logo URL</label>
-              <input type="text" name="icon_url" value={formFields.icon_url} onChange={e => handleFieldChange('icon_url', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" placeholder="Link to the app logo image" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-black uppercase tracking-widest text-[10px] opacity-60 mb-2 dark:text-white">Categories</label>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {categories?.map((cat: string) => (
-                  <label key={cat} className="flex items-center gap-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 px-3 py-2 rounded-lg cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
-                    <input 
-                      type="checkbox" 
-                      name="category_list" 
-                      value={cat} 
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        const list = [...formFields.category_list];
-                        if (checked) {
-                          if (!list.includes(cat)) list.push(cat);
-                        } else {
-                          const idx = list.indexOf(cat);
-                          if (idx > -1) list.splice(idx, 1);
-                        }
-                        handleFieldChange('category_list', list);
-                      }}
-                      checked={formFields.category_list.includes(cat)}
-                      className="rounded border-black/20 bg-black/5 text-pink-500 focus:ring-pink-500 w-4 h-4"
-                    />
-                    <span className="text-sm opacity-80 dark:text-white">{cat}</span>
-                  </label>
-                ))}
-              </div>
-              <div className="mt-2">
-                <label className="block text-xs font-bold text-pink-500/70 mb-1 uppercase tracking-wider">Or Add Extra Customized Categories (separated by commas)</label>
-                <input 
-                  type="text" 
-                  name="custom_category" 
-                  placeholder="e.g. Action, Featured, Live" 
-                  value={formFields.custom_category}
-                  onChange={e => handleFieldChange('custom_category', e.target.value)}
-                  className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 text-sm dark:text-white font-bold"
-                />
-              </div>
-            </div>
-            
-            {/* RESTORED SEO FIELDS */}
-            <div>
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">SEO Title</label>
-              <input type="text" name="seo_title" value={formFields.seo_title} onChange={e => handleFieldChange('seo_title', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" placeholder="Custom SEO Title" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">SEO Description</label>
-              <textarea name="seo_description" value={formFields.seo_description} onChange={e => handleFieldChange('seo_description', e.target.value)} rows={2} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" placeholder="Custom SEO Description (auto-generated from HTML if left blank)"></textarea>
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">SEO Keywords (Comma Separated)</label>
-              <input type="text" name="seo_keywords" value={formFields.seo_keywords} onChange={e => handleFieldChange('seo_keywords', e.target.value)} placeholder="e.g., vpn, privacy, util app" className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">SEO OG Image URL (Social Sharing)</label>
-              <input type="text" name="og_image_url" value={formFields.og_image_url} onChange={e => handleFieldChange('og_image_url', e.target.value)} placeholder="Image URL for social media shares" className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
-            </div>
-            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <form onSubmit={handleSaveApp} className="space-y-8">
+          <div className="space-y-6">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">General Information</h3>
+            <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Canonical URL</label>
-                <input type="url" name="canonical_url" value={formFields.canonical_url} onChange={e => handleFieldChange('canonical_url', e.target.value)} placeholder="Original URL to prevent SEO penalty" className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">App Name</label>
+                <input type="text" name="name" value={formFields.name} onChange={e => handleFieldChange('name', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" required />
               </div>
               <div>
-                <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Target Region (GEO Optimization)</label>
-                <input type="text" name="target_region" value={formFields.target_region} onChange={e => handleFieldChange('target_region', e.target.value)} placeholder="e.g., Global, India, USA" className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Custom App Slug</label>
+                <input type="text" name="slug" value={formFields.slug} onChange={e => handleFieldChange('slug', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" placeholder="Leave blank to auto-generate" />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Traffic Light Status</label>
-              <select name="safety_status" value={formFields.safety_status} onChange={e => handleFieldChange('safety_status', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white dark:bg-slate-900 font-bold">
-                <option value="Verified">🟢 Verified (Green)</option>
-                <option value="Caution">🟡 Caution (Yellow)</option>
-                <option value="Unsafe">🔴 Unsafe (Red)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Serial Number (Sort Order)</label>
-              <input type="number" name="serial_number" value={formFields.serial_number} onChange={e => handleFieldChange('serial_number', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">App Version</label>
-              <input type="text" name="version" value={formFields.version} onChange={e => handleFieldChange('version', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">File Size</label>
-              <input type="text" name="file_size" value={formFields.file_size} onChange={e => handleFieldChange('file_size', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Developer</label>
-              <input type="text" name="developer" value={formFields.developer} onChange={e => handleFieldChange('developer', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">App Rating (0.0 to 10.0)</label>
-              <input type="number" step="0.1" min="0.0" max="10.0" name="rating" value={formFields.rating} onChange={e => handleFieldChange('rating', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" required />
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">App Icon URL</label>
+                <input type="text" name="icon_url" value={formFields.icon_url} onChange={e => handleFieldChange('icon_url', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" placeholder="https://..." />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Categories</label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {categories?.map((cat: string) => (
+                    <label key={cat} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                      <input 
+                        type="checkbox" 
+                        name="category_list" 
+                        value={cat} 
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          const list = [...formFields.category_list];
+                          if (checked) {
+                            if (!list.includes(cat)) list.push(cat);
+                          } else {
+                            const idx = list.indexOf(cat);
+                            if (idx > -1) list.splice(idx, 1);
+                          }
+                          handleFieldChange('category_list', list);
+                        }}
+                        checked={formFields.category_list.includes(cat)}
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                      />
+                      <span className="text-sm font-medium dark:text-white">{cat}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-3">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Custom Categories (Comma separated)</label>
+                  <input 
+                    type="text" 
+                    name="custom_category" 
+                    placeholder="e.g. Action, Featured, Live" 
+                    value={formFields.custom_category}
+                    onChange={e => handleFieldChange('custom_category', e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-pink-500/30">
-              <div className="flex-1">
-                <div className="font-semibold text-pink-500">New App Tag</div>
-                <div className="text-sm opacity-60 dark:text-white/60">Display "New" or "Major Update" badge.</div>
+          <div className="space-y-6">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">SEO & Discovery</h3>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Title</label>
+                <input type="text" name="seo_title" value={formFields.seo_title} onChange={e => handleFieldChange('seo_title', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
               </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" name="is_new" checked={formFields.is_new} onChange={e => handleFieldChange('is_new', e.target.checked)} className="w-5 h-5 accent-pink-500" />
-                <span className="text-sm font-bold dark:text-white">Show Tag</span>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Description</label>
+                <textarea name="seo_description" value={formFields.seo_description} onChange={e => handleFieldChange('seo_description', e.target.value)} rows={2} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Keywords</label>
+                <input type="text" name="seo_keywords" value={formFields.seo_keywords} onChange={e => handleFieldChange('seo_keywords', e.target.value)} placeholder="Comma separated" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">OG Image URL (Social Sharing)</label>
+                <input type="text" name="og_image_url" value={formFields.og_image_url} onChange={e => handleFieldChange('og_image_url', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Canonical URL</label>
+                <input type="url" name="canonical_url" value={formFields.canonical_url} onChange={e => handleFieldChange('canonical_url', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Target Region</label>
+                <input type="text" name="target_region" value={formFields.target_region} onChange={e => handleFieldChange('target_region', e.target.value)} placeholder="Global" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">App Details & Metadata</h3>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Status</label>
+                <select name="safety_status" value={formFields.safety_status} onChange={e => handleFieldChange('safety_status', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all">
+                  <option value="Verified">🟢 Verified (Green)</option>
+                  <option value="Caution">🟡 Caution (Yellow)</option>
+                  <option value="Unsafe">🔴 Unsafe (Red)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Sort Order</label>
+                <input type="number" name="serial_number" value={formFields.serial_number} onChange={e => handleFieldChange('serial_number', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Version</label>
+                <input type="text" name="version" value={formFields.version} onChange={e => handleFieldChange('version', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">File Size</label>
+                <input type="text" name="file_size" value={formFields.file_size} onChange={e => handleFieldChange('file_size', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Developer</label>
+                <input type="text" name="developer" value={formFields.developer} onChange={e => handleFieldChange('developer', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Rating</label>
+                <input type="number" step="0.1" min="0.0" max="10.0" name="rating" value={formFields.rating} onChange={e => handleFieldChange('rating', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" required />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="flex flex-col gap-3 bg-slate-50 dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="font-semibold text-slate-900 dark:text-white text-sm">New App Badge</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Display "New" or "Major Update" badge.</div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" name="is_new" checked={formFields.is_new} onChange={e => handleFieldChange('is_new', e.target.checked)} className="sr-only peer" />
+                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-blue-600"></div>
+                </label>
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-amber-500/30">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <div className="font-semibold text-amber-500">Coming Soon Phase</div>
-                  <div className="text-sm opacity-60 dark:text-white/60">Suspend gateway clearance on the frontend for this app.</div>
+            <div className="flex flex-col gap-4 bg-amber-50 dark:bg-amber-900/10 p-5 rounded-xl border border-amber-200 dark:border-amber-800/30">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="font-semibold text-amber-900 dark:text-amber-400 text-sm">Coming Soon Phase</div>
+                  <div className="text-xs text-amber-700 dark:text-amber-500/70 mt-1">Suspend gateway clearance on the frontend.</div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" name="is_coming_soon" checked={formFields.is_coming_soon} onChange={e => handleFieldChange('is_coming_soon', e.target.checked)} className="w-5 h-5 accent-amber-500" />
-                  <span className="text-sm font-bold dark:text-white">Enable</span>
-                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" name="is_coming_soon" checked={formFields.is_coming_soon} onChange={e => handleFieldChange('is_coming_soon', e.target.checked)} className="sr-only peer" />
+                  <div className="w-11 h-6 bg-amber-200/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 dark:peer-focus:ring-amber-800 rounded-full peer dark:bg-amber-900/30 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-amber-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-amber-600 peer-checked:bg-amber-500"></div>
+                </label>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-amber-500 mb-1">Publish Launch Timer (Local Time)</label>
-                <input type="datetime-local" name="publish_date" value={formFields.publish_date} onChange={e => handleFieldChange('publish_date', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-amber-500/30 rounded-lg p-3 dark:text-white" />
-                <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1 font-medium">When this timer finishes, the "Coming Soon" tag is dropped and secure gateway access is unlocked.</p>
+              <div className="pt-2 border-t border-amber-200/50 dark:border-amber-800/30">
+                <label className="block text-xs font-semibold text-amber-800 dark:text-amber-500 mb-1">Publish Launch Timer (Local Time)</label>
+                <input type="datetime-local" name="publish_date" value={formFields.publish_date} onChange={e => handleFieldChange('publish_date', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/50 rounded-lg p-2.5 text-sm dark:text-white focus:ring-2 focus:ring-amber-500 transition-all" />
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-pink-500 mb-1 uppercase italic font-black">Release Notes (What's New)</label>
-            <textarea name="release_notes" value={formFields.release_notes} onChange={e => handleFieldChange('release_notes', e.target.value)} rows={3} placeholder="* Fixed bugs&#10;* Added new features" className="w-full bg-black/5 dark:bg-white/5 border border-pink-500/30 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 dark:text-white"></textarea>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Release Notes (What's New)</label>
+            <textarea name="release_notes" value={formFields.release_notes} onChange={e => handleFieldChange('release_notes', e.target.value)} rows={3} placeholder="* Fixed bugs&#10;* Added new features" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
           </div>
 
-          <div className="border border-black/10 dark:border-white/10 rounded-xl p-4 bg-black/5 dark:bg-white/5 space-y-4">
-             <h3 className="font-bold text-lg dark:text-white flex items-center gap-2"><LinkIcon className="w-4 h-4 text-pink-500"/> File Access Config</h3>
-             <label className="block text-sm font-medium opacity-60 dark:text-white">More Information URL (Secured string shown - input new http URL to change)</label>
-             <div className="flex gap-2">
-               <input type="text" name="more_information_url" value={formFields.more_information_url} onChange={e => handleFieldChange('more_information_url', e.target.value)} placeholder="https://..." className="flex-1 bg-white dark:bg-slate-900 border border-pink-500/30 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
-               {formFields.more_information_url.startsWith('U2FsdGVkX1') && (
-                 <button
-                   type="button"
-                   onClick={async () => {
-                     try {
+          <div className="space-y-6 pt-4">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2 flex items-center gap-2"><LinkIcon className="w-4 h-4 text-blue-500"/> File Access Config</h3>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Target URL (Input new HTTP URL to encrypt)</label>
+              <div className="flex gap-2">
+                <input type="text" name="more_information_url" value={formFields.more_information_url} onChange={e => handleFieldChange('more_information_url', e.target.value)} placeholder="https://..." className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
+                {formFields.more_information_url.startsWith('U2FsdGVkX1') && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
                         const token = await auth.currentUser?.getIdToken();
                         const res = await fetch('/api/v1/admin/decrypt-url', {
                           method: 'POST',
@@ -402,157 +449,230 @@ const AppsTab = React.memo(({ appsList, editingAppId, setEditingAppId, handleDel
                         } else {
                           alert('Failed to decrypt URL.');
                         }
-                     } catch(e) {
+                      } catch(e) {
                         alert('Error decrypting URL.');
-                     }
-                   }}
-                   className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition whitespace-nowrap"
-                 >
-                   Reveal
-                 </button>
-               )}
+                      }
+                    }}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg font-medium text-sm transition-all whitespace-nowrap"
+                  >
+                    Reveal
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6 pt-4">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2 flex items-center gap-2"><Layers className="w-4 h-4 text-blue-500"/> Custom Information Boxes</h3>
+            <div className="grid gap-6 sm:grid-cols-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Red Alert Box (Markdown)</label>
+                <textarea name="red_box_msg" value={formFields.red_box_msg} onChange={e => handleFieldChange('red_box_msg', e.target.value)} rows={3} className="w-full bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/30 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-rose-500 transition-all"></textarea>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Yellow Warning Box (Markdown)</label>
+                <textarea name="yellow_box_msg" value={formFields.yellow_box_msg} onChange={e => handleFieldChange('yellow_box_msg', e.target.value)} rows={3} className="w-full bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-amber-500 transition-all"></textarea>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Idea/Tip Box (Markdown)</label>
+                <textarea name="idea_box_msg" value={formFields.idea_box_msg} onChange={e => handleFieldChange('idea_box_msg', e.target.value)} rows={3} className="w-full bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-emerald-500 transition-all"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6 pt-4">
+             <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">Content & Description (HTML Supported)</h3>
+             <div className="grid gap-6 sm:grid-cols-2">
+               <div>
+                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Features HTML</label>
+                 <textarea name="features_html" value={formFields.features_html} onChange={e => handleFieldChange('features_html', e.target.value)} rows={6} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 font-mono text-xs dark:text-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
+               </div>
+               <div>
+                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Admin Custom Box Heading</label>
+                 <input type="text" name="custom_admin_box_heading" value={formFields.custom_admin_box_heading} onChange={e => handleFieldChange('custom_admin_box_heading', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all mb-4" />
+                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Admin Custom Box HTML</label>
+                 <textarea name="custom_admin_box_html" value={formFields.custom_admin_box_html} onChange={e => handleFieldChange('custom_admin_box_html', e.target.value)} rows={2} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 font-mono text-xs dark:text-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
+               </div>
+             </div>
+             
+             <div>
+               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Full Description HTML</label>
+               <textarea name="description_html" value={formFields.description_html} onChange={e => handleFieldChange('description_html', e.target.value)} rows={12} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 font-mono text-xs dark:text-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
              </div>
           </div>
 
-          {/* RESTORED UI ADMIN BOXES */}
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg dark:text-white border-b border-black/10 dark:border-white/10 pb-2 flex items-center gap-2"><Layers className="w-4 h-4 text-pink-500"/> Custom Interaction UI</h3>
-            <div>
-              <label className="block text-sm font-medium text-rose-500 mb-1">Red Box Warning Message</label>
-              <input type="text" name="red_box_msg" value={formFields.red_box_msg} onChange={e => handleFieldChange('red_box_msg', e.target.value)} className="w-full bg-rose-500/10 border border-rose-500/30 rounded-lg p-3 focus:ring-2 focus:ring-rose-500 min-h-[48px] dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-amber-500 mb-1">Yellow Box Notice Message</label>
-              <input type="text" name="yellow_box_msg" value={formFields.yellow_box_msg} onChange={e => handleFieldChange('yellow_box_msg', e.target.value)} className="w-full bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 min-h-[48px] dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-pink-500 mb-1">Idea / Tip Message</label>
-              <input type="text" name="idea_box_msg" value={formFields.idea_box_msg} onChange={e => handleFieldChange('idea_box_msg', e.target.value)} className="w-full bg-pink-500/10 border border-pink-500/30 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px] dark:text-white" />
+          <div className="space-y-6 pt-4">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2 flex items-center gap-2"><MessageSquare className="w-4 h-4 text-blue-500"/> FAQs Configuration</h3>
+            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 sm:p-6 overflow-hidden">
+              <FaqEditor key={(editApp?.id || 'new') + '_' + (formFields.faqs?.length || 0)} initialFaqs={formFields.faqs || []} />
             </div>
           </div>
 
-          <div className="grid gap-4">
-            <div>
-              <label className="block text-sm font-medium text-purple-500 mb-1">Features Section (HTML)</label>
-              <textarea name="features_html" value={formFields.features_html} onChange={e => handleFieldChange('features_html', e.target.value)} rows={6} className="w-full bg-purple-500/5 border border-purple-500/20 rounded-sm p-1.5 dark:text-white font-mono text-sm" placeholder="<ul class='list-disc pl-5'><li>Feature 1</li></ul>"></textarea>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-purple-500 mb-1">Extended Info Box Heading</label>
-              <input type="text" name="custom_admin_box_heading" value={formFields.custom_admin_box_heading} onChange={e => handleFieldChange('custom_admin_box_heading', e.target.value)} className="w-full bg-purple-500/5 border border-purple-500/20 rounded-lg p-3 dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-purple-500 mb-1">Extended Info Content (HTML)</label>
-              <textarea name="custom_admin_box_html" value={formFields.custom_admin_box_html} onChange={e => handleFieldChange('custom_admin_box_html', e.target.value)} rows={10} className="w-full bg-purple-500/5 border border-purple-500/20 rounded-sm p-1.5 dark:text-white font-mono text-sm"></textarea>
-            </div>
+          <div className="pt-6 border-t border-black/10 dark:border-white/10 flex justify-end">
+            <button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm transition-all min-w-[200px] justify-center">
+              {saving ? 'Saving...' : <><Save className="w-5 h-5"/> Save Application</>}
+            </button>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium opacity-60 mb-1 dark:text-white">Full Application Description (HTML)</label>
-            <textarea name="description_html" value={formFields.description_html} onChange={e => handleFieldChange('description_html', e.target.value)} rows={16} placeholder="<h1>Title</h1><p>Description here...</p>" className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-sm p-1.5 focus:ring-2 focus:ring-pink-500 dark:text-white font-mono text-sm"></textarea>
-          </div>
-
-          <div className="border border-black/10 dark:border-white/10 rounded-xl p-4 bg-black/5 dark:bg-white/5">
-            <FaqEditor key={(editApp?.id || 'new') + '_' + (formFields.faqs?.length || 0)} initialFaqs={formFields.faqs || []} />
-          </div>
-          <button type="submit" disabled={saving} className="min-h-[48px] w-full sm:w-auto px-8 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-lg transition-all flex justify-center items-center gap-2 shadow-lg shadow-pink-500/20">
-            {saving ? 'Saving...' : <><Save className="w-5 h-5"/> Save Application</>}
-          </button>
         </form>
       </div>
     )
   }
   return (
-    <div className="animate-fade-in">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold border-b border-black/10 dark:border-white/10 pb-4 flex-1 dark:text-white uppercase italic tracking-tighter">System Applications</h2>
-        <button onClick={() => setEditingAppId("")} className="flex items-center gap-2 bg-pink-500 hover:bg-pink-600 px-4 py-2 rounded-lg text-sm font-bold text-white transition-colors ml-4 shadow-lg shadow-pink-500/20">
-          <Plus className="w-4 h-4"/> Add New
+    <div className="animate-fade-in space-y-6">
+      <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm">
+        <div>
+          <h2 className="text-xl font-bold flex items-center gap-2 dark:text-white">
+            <LayoutDashboard className="w-5 h-5 text-blue-500" /> System Applications
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage app catalog, visibility, and configuration.</p>
+        </div>
+        <button onClick={() => setEditingAppId("")} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors shadow-sm">
+          <Plus className="w-4 h-4"/> Add New App
         </button>
       </div>
-      <div className="space-y-4">
-        {appsList.map((app: any) => (
-          <div key={app.id} className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl p-4 flex gap-4 items-center hover:border-pink-500/30 transition-all group">
-            <img src={app.icon_url || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=128&h=128&fit=crop'} className="w-16 h-16 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform" alt="" />
-            <div className="flex-1">
-              <h4 className="font-bold dark:text-white group-hover:text-pink-500 transition-colors">{app.name}</h4>
-              <div className="text-xs opacity-60 dark:text-white/60 font-medium uppercase tracking-widest">{app.category} • {app.is_new ? <span className="text-pink-500">NEW</span> : 'ACTIVE'}</div>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => setEditingAppId(app.id)} className="px-4 py-2 bg-black/10 dark:bg-white/10 hover:bg-pink-500 hover:text-white rounded-lg text-sm font-bold transition-all dark:text-white">Edit</button>
-              <button onClick={() => handleDeleteApp(app.id)} className="px-3 py-2 bg-rose-500/10 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all"><Trash2 className="w-4 h-4" /></button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-});
 
-const CategoriesTab = React.memo(({ categoriesList, newCatInput, setNewCatInput, handleAddCategory, handleRemoveCategory, handleSaveCategories, saving }: any) => (
-  <div className="animate-fade-in">
-    <h2 className="text-xl font-bold mb-6 border-b border-black/10 pb-4">Manage Global Categories</h2>
-    <form onSubmit={handleSaveCategories} className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium opacity-60 mb-1">Available Categories</label>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {categoriesList.map((cat: string, index: number) => (
-            <div key={index} className="flex items-center gap-2 bg-black/5 border border-black/10 px-3 py-2 rounded-lg">
-              <span className="text-sm font-bold">{cat}</span>
-              <button type="button" onClick={() => handleRemoveCategory(cat)} className="text-rose-500 hover:text-rose-600 p-1">
-                <Trash2 className="w-4 h-4" />
-              </button>
+      {appsList.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-2xl shadow-sm">
+          <LayoutDashboard className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">No applications found</h3>
+          <p className="text-slate-500 dark:text-slate-400 mt-2">Get started by creating your first app.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {appsList.map((app: any) => (
+            <div key={app.id} className="bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-xl p-5 flex flex-col gap-4 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+              <div className="flex gap-4 items-start">
+                <img src={app.icon_url || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=128&h=128&fit=crop'} className="w-16 h-16 object-cover rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800" alt="" />
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-slate-900 dark:text-white text-base truncate pr-2" title={app.name}>{app.name}</h4>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">{app.category}</div>
+                  <div className="flex items-center gap-2 mt-2">
+                    {app.is_new ? (
+                      <span className="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-400/20">NEW</span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-md bg-slate-50 dark:bg-slate-800 px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-400 ring-1 ring-inset ring-slate-500/10 dark:ring-slate-400/20">ACTIVE</span>
+                    )}
+                    {app.safety_status === 'Verified' ? (
+                      <span className="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400 ring-1 ring-inset ring-emerald-600/10 dark:ring-emerald-400/20">Verified</span>
+                    ) : app.safety_status === 'Caution' ? (
+                      <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-900/30 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-600/10 dark:ring-amber-400/20">Caution</span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-md bg-rose-50 dark:bg-rose-900/30 px-2 py-1 text-xs font-medium text-rose-700 dark:text-rose-400 ring-1 ring-inset ring-rose-600/10 dark:ring-rose-400/20">Unsafe</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto">
+                <button onClick={() => setEditingAppId(app.id)} className="flex-1 flex justify-center items-center gap-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg font-medium text-sm transition-all"><Edit2 className="w-4 h-4" /> Edit</button>
+                <button onClick={() => handleDeleteApp(app.id)} className="flex-none flex justify-center items-center p-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/20 text-rose-600 rounded-lg transition-all" title="Delete App"><Trash2 className="w-4 h-4" /></button>
+              </div>
             </div>
           ))}
         </div>
-        <div className="flex gap-2">
-          <input 
-            type="text" 
-            value={newCatInput}
-            onChange={(e) => setNewCatInput(e.target.value)}
-            className="flex-1 bg-black/5 border border-black/10 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 min-h-[48px]"
-            placeholder="New Category Name (e.g., Tools)"
-          />
-          <button 
-            type="button" 
-            onClick={handleAddCategory}
-            className="px-6 bg-black/10 hover:bg-black/20 font-bold rounded-lg transition-colors border border-black/10"
-          >
-            Add
+      )}
+    </div>
+  );
+});
+*/
+
+const CategoriesTab = React.memo(({ categoriesList, newCatInput, setNewCatInput, handleAddCategory, handleRemoveCategory, handleSaveCategories, saving }: any) => (
+  <div className="animate-fade-in space-y-6">
+    <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm">
+      <div>
+        <h2 className="text-xl font-bold dark:text-white flex items-center gap-2">
+          <LayoutDashboard className="w-5 h-5 text-blue-500" /> Manage Global Categories
+        </h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Add or remove categories for your applications.</p>
+      </div>
+    </div>
+    
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+      <form onSubmit={handleSaveCategories} className="space-y-6">
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Available Categories</label>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {categoriesList.map((cat: string, index: number) => (
+              <div key={index} className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-200 dark:border-slate-700">
+                <span>{cat}</span>
+                <button type="button" onClick={() => handleRemoveCategory(cat)} className="text-slate-400 hover:text-rose-500 transition-colors focus:outline-none">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            {categoriesList.length === 0 && <span className="text-sm text-slate-500 italic">No categories added yet.</span>}
+          </div>
+          
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Add New Category</label>
+          <div className="flex gap-3">
+            <input 
+              type="text" 
+              value={newCatInput}
+              onChange={(e) => setNewCatInput(e.target.value)}
+              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"
+              placeholder="e.g., Finance, Gaming, Utilities"
+            />
+            <button 
+              type="button" 
+              onClick={handleAddCategory}
+              className="px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
+          <button type="submit" disabled={saving} className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all flex items-center gap-2 shadow-sm disabled:opacity-50">
+            {saving ? 'Saving...' : <><Save className="w-4 h-4"/> Save Categories</>}
           </button>
         </div>
-      </div>
-      <button type="submit" disabled={saving} className="min-h-[48px] px-8 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-lg transition-all flex items-center gap-2">
-        {saving ? 'Saving...' : <><Save className="w-5 h-5"/> Save Categories</>}
-      </button>
-    </form>
+      </form>
+    </div>
   </div>
 ));
 
 const BannersTab = React.memo(({ banners, handleAddBanner, handleRemoveBanner, handleUpdateBanner, handleSaveBanners, saving }: any) => (
-  <div className="animate-fade-in">
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-bold border-b border-black/10 pb-4 flex-1">Home Page Banners</h2>
-      <button onClick={handleAddBanner} className="flex items-center gap-2 bg-pink-500 hover:bg-pink-600 px-4 py-2 rounded-lg text-sm font-bold text-white transition-colors ml-4">
+  <div className="animate-fade-in space-y-6">
+    <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm">
+      <div>
+        <h2 className="text-xl font-bold dark:text-white flex items-center gap-2">
+          <LayoutDashboard className="w-5 h-5 text-blue-500" /> Home Page Banners
+        </h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage promotional banners on the homepage.</p>
+      </div>
+      <button onClick={handleAddBanner} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors shadow-sm">
         <Plus className="w-4 h-4"/> Add Banner
       </button>
     </div>
+    
     <div className="grid gap-6">
-      {banners.map((banner: any, index: number) => (
-        <div key={index} className="bg-black/5 border border-black/10 rounded-xl p-6 border-l-4 border-l-pink-500 space-y-4">
-          <div className="flex justify-between items-start">
-            <h4 className="font-bold uppercase text-xs opacity-50">Banner #{index + 1}</h4>
+      {banners.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+          <p className="text-slate-500 dark:text-slate-400">No banners added yet.</p>
+        </div>
+      ) : (
+        banners.map((banner: any, index: number) => (
+          <div key={index} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
+              <h4 className="font-semibold text-slate-700 dark:text-slate-300 text-sm">Banner #{index + 1}</h4>
             <button onClick={() => handleRemoveBanner(index)} className="text-rose-500 hover:text-rose-600 p-1"><Trash2 className="w-4 h-4" /></button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <input type="text" value={banner.image_url} onChange={(e) => handleUpdateBanner(index, 'image_url', e.target.value)} placeholder="Image URL" className="w-full bg-white border border-black/10 rounded-lg p-3 text-sm" />
-            <input type="text" value={banner.link} onChange={(e) => handleUpdateBanner(index, 'link', e.target.value)} placeholder="Link URL" className="w-full bg-white border border-black/10 rounded-lg p-3 text-sm" />
+            <input type="text" value={banner.image_url} onChange={(e) => handleUpdateBanner(index, 'image_url', e.target.value)} placeholder="Image URL" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
+            <input type="text" value={banner.link} onChange={(e) => handleUpdateBanner(index, 'link', e.target.value)} placeholder="Link URL" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
         </div>
-      ))}
+        ))
+      )}
     </div>
-    <button onClick={handleSaveBanners} disabled={saving} className="mt-8 min-h-[48px] px-8 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-lg transition-all flex items-center gap-2">
-      {saving ? 'Saving...' : <><Save className="w-5 h-5"/> Save Banners</>}
-    </button>
+    
+    {banners.length > 0 && (
+      <div className="flex justify-end mt-6">
+        <button onClick={handleSaveBanners} disabled={saving} className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all flex items-center gap-2 shadow-sm disabled:opacity-50">
+          {saving ? 'Saving...' : <><Save className="w-4 h-4"/> Save Banners</>}
+        </button>
+      </div>
+    )}
   </div>
 ));
 
@@ -608,60 +728,64 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, gener
 
   return (
     <div className="animate-fade-in space-y-8">
-      <h2 className="text-2xl font-black mb-8 border-b-4 border-pink-500/20 pb-4 dark:text-white uppercase italic tracking-tighter flex items-center gap-2">
-        <Github className="w-8 h-8" /> Source Control & External Sync
-      </h2>
+      <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm">
+        <div>
+          <h2 className="text-xl font-bold flex items-center gap-2 dark:text-white">
+            <Github className="w-5 h-5 text-blue-500" /> Source Control & External Sync
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage static site generation and GitHub synchronization.</p>
+        </div>
+      </div>
       
-      <div className="bg-rose-500/10 border-2 border-rose-500/20 rounded-2xl p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/20 rounded-full blur-3xl"></div>
-        <h3 className="text-xl font-bold text-rose-600 mb-2 font-mono flex items-center gap-2">
+      <div className="bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/30 rounded-2xl p-6 relative overflow-hidden">
+        <h3 className="text-base font-bold text-rose-700 dark:text-rose-400 mb-2 flex items-center gap-2">
            <ShieldAlert className="w-5 h-5" /> Security Notice
         </h3>
-        <p className="text-sm font-bold text-rose-700/80 mb-2">
+        <p className="text-sm text-rose-700/80 dark:text-rose-400/80 mb-2">
           The more_information_url (your private clearance redirect gateways) are encrypted before being pushed to GitHub to keep them secure.
         </p>
-        <p className="text-sm font-bold text-rose-700/80">
-          ⚠️ WARNING: You must configure the <code className="bg-black/10 px-1 py-0.5 rounded">AES_SECRET</code> environment variable in your Vercel/production deployment exactly as it is set here, or secure links will fail to decrypt.
+        <p className="text-sm text-rose-700/80 dark:text-rose-400/80">
+          ⚠️ WARNING: You must configure the <code className="bg-rose-100 dark:bg-rose-900/30 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-800/50">AES_SECRET</code> environment variable in your Vercel/production deployment exactly as it is set here, or secure links will fail to decrypt.
         </p>
       </div>
 
-      <div className="bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-6">
-        <h3 className="font-black text-slate-800 dark:text-white border-b border-black/10 dark:border-white/10 pb-2 mb-6 uppercase tracking-widest text-xs italic">Repository Configuration</h3>
-        <form onSubmit={handleSaveConfig} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+        <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2 mb-6">Repository Configuration</h3>
+        <form onSubmit={handleSaveConfig} className="space-y-6">
+          <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Repository Owner</label>
-              <input type="text" value={localConfig.owner || ''} onChange={e => setLocalConfig({...localConfig, owner: e.target.value})} className="w-full bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-xl p-3 focus:border-pink-500 font-mono text-sm dark:text-white" required />
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Repository Owner</label>
+              <input type="text" value={localConfig.owner || ''} onChange={e => setLocalConfig({...localConfig, owner: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all font-mono" required />
             </div>
             <div>
-              <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Repository Name</label>
-              <input type="text" value={localConfig.repo || ''} onChange={e => setLocalConfig({...localConfig, repo: e.target.value})} className="w-full bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-xl p-3 focus:border-pink-500 font-mono text-sm dark:text-white" required />
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Repository Name</label>
+              <input type="text" value={localConfig.repo || ''} onChange={e => setLocalConfig({...localConfig, repo: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all font-mono" required />
             </div>
             <div>
-              <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Branch</label>
-              <input type="text" value={localConfig.branch || ''} onChange={e => setLocalConfig({...localConfig, branch: e.target.value})} placeholder="main" className="w-full bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-xl p-3 focus:border-pink-500 font-mono text-sm dark:text-white" required />
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Branch</label>
+              <input type="text" value={localConfig.branch || ''} onChange={e => setLocalConfig({...localConfig, branch: e.target.value})} placeholder="main" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all font-mono" required />
             </div>
             <div>
-              <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">GitHub Fine-grained PAT</label>
-              <input type="password" value={localConfig.token || ''} onChange={e => setLocalConfig({...localConfig, token: e.target.value})} placeholder="github_pat_..." className="w-full bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-xl p-3 focus:border-pink-500 font-mono text-sm dark:text-white" required />
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">GitHub Fine-grained PAT</label>
+              <input type="password" value={localConfig.token || ''} onChange={e => setLocalConfig({...localConfig, token: e.target.value})} placeholder="github_pat_..." className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all font-mono" required />
             </div>
           </div>
-          <button type="submit" className="mt-4 px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-lg transition-all flex items-center gap-2">
-            <Save className="w-5 h-5" /> Save Configuration
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
+            <Save className="w-4 h-4" /> Save Configuration
           </button>
         </form>
       </div>
 
-      <div className="bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-6 space-y-6">
-        <h3 className="font-black text-slate-800 dark:text-white border-b border-black/10 dark:border-white/10 pb-2 uppercase tracking-widest text-xs italic">Live Synchronization Logs</h3>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
+        <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">Live Synchronization Logs</h3>
         
-        <div className="bg-slate-900 border-2 border-slate-700 rounded-xl p-4 h-[250px] overflow-y-auto font-mono text-xs text-green-400 space-y-1 shadow-inner">
+        <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 h-[250px] overflow-y-auto font-mono text-xs text-emerald-400 space-y-1 shadow-inner">
           {logs.length === 0 ? (
-            <p className="opacity-50 italic">System ready to synchronize target repository...</p>
+            <p className="text-slate-500">System ready to synchronize target repository...</p>
           ) : (
             logs.map((log, i) => (
               <div key={i} className="flex gap-2">
-                <span className="opacity-50">[{new Date().toLocaleTimeString()}]</span>
+                <span className="text-slate-600">[{new Date().toLocaleTimeString()}]</span>
                 <span>{log}</span>
               </div>
             ))
@@ -672,24 +796,24 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, gener
           <button 
             onClick={handleManualSync} 
             disabled={syncing || !gitConfig?.token} 
-            className="flex-1 min-h-[60px] bg-indigo-600 disabled:bg-indigo-600/50 hover:bg-indigo-700 text-white font-black rounded-xl uppercase tracking-widest italic shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 active:scale-95"
+            className="flex-1 min-h-[48px] bg-blue-600 disabled:bg-blue-600/50 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-sm"
           >
-            {syncing ? <RefreshCw className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
+            {syncing ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
             {syncing ? 'Synchronizing Repository...' : 'Trigger Full Static Build Sync'}
           </button>
           <button 
             onClick={handleTogglePreview} 
-            className="flex-none px-6 min-h-[60px] bg-slate-800 hover:bg-slate-700 text-white font-black rounded-xl uppercase tracking-widest italic shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95"
+            className="flex-none px-6 min-h-[48px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
           >
-            <FileText className="w-6 h-6" />
+            <FileText className="w-5 h-5" />
             {showPreview ? 'Hide Payload' : 'Preview Payload'}
           </button>
         </div>
 
         {showPreview && (
           <div className="mt-6">
-            <h3 className="font-black text-slate-800 dark:text-white border-b border-black/10 dark:border-white/10 pb-2 uppercase tracking-widest text-xs italic">Generated Payload (staticData.ts)</h3>
-            <div className="bg-slate-950 border-2 border-slate-800 rounded-xl p-4 h-[400px] overflow-y-auto font-mono text-xs text-slate-300 shadow-inner whitespace-pre-wrap">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2 mb-4">Generated Payload (staticData.ts)</h3>
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 h-[400px] overflow-y-auto font-mono text-xs text-slate-300 shadow-inner whitespace-pre-wrap">
               {previewContent}
             </div>
           </div>
@@ -700,147 +824,152 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, gener
 });
 
 const SettingsTab = React.memo(({ mockSettings, handleSaveSettings, saving }: any) => (
-  <div className="animate-fade-in">
-    <h2 className="text-2xl font-black mb-8 border-b-4 border-pink-500/20 pb-4 dark:text-white uppercase italic tracking-tighter">Global Identity Settings (God-Mode)</h2>
-    <form onSubmit={handleSaveSettings} className="space-y-12">
+  <div className="animate-fade-in space-y-8">
+    <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm">
+      <div>
+        <h2 className="text-xl font-bold dark:text-white">Global Settings</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage global identity, content, and legal text.</p>
+      </div>
+    </div>
+    <form onSubmit={handleSaveSettings} className="space-y-8">
       
-      <div className="space-y-6">
-        <h3 className="font-black text-pink-500 border-b border-pink-500/10 pb-2 uppercase tracking-widest text-xs italic">Branding & Identity</h3>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
+        <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">Branding & Identity</h3>
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Site Title</label>
-            <input type="text" name="site_title" defaultValue={mockSettings.site_title} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all dark:text-white font-bold" required />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Site Title</label>
+            <input type="text" name="site_title" defaultValue={mockSettings.site_title} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" required />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Global SEO Description</label>
-            <input type="text" name="meta_description" defaultValue={mockSettings.meta_description} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Global SEO Description</label>
+            <input type="text" name="meta_description" defaultValue={mockSettings.meta_description} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Global SEO Keywords (Comma Separated)</label>
-            <input type="text" name="seo_keywords" defaultValue={mockSettings.seo_keywords} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Global SEO Keywords (Comma Separated)</label>
+            <input type="text" name="seo_keywords" defaultValue={mockSettings.seo_keywords} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Google Analytics ID (e.g. G-XXXXXXX)</label>
-            <input type="text" name="ga_tracking_id" defaultValue={mockSettings.ga_tracking_id || mockSettings.google_analytics_id} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all dark:text-white font-bold" placeholder="G-XXXXXXXXXX" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Google Analytics ID</label>
+            <input type="text" name="ga_tracking_id" defaultValue={mockSettings.ga_tracking_id || mockSettings.google_analytics_id} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" placeholder="G-XXXXXXXXXX" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Main Logo URL</label>
-            <input type="text" name="logo_url" defaultValue={mockSettings.logo_url} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Main Logo URL</label>
+            <input type="text" name="logo_url" defaultValue={mockSettings.logo_url} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Favicon URL</label>
-            <input type="text" name="favicon_url" defaultValue={mockSettings.favicon_url} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Favicon URL</label>
+            <input type="text" name="favicon_url" defaultValue={mockSettings.favicon_url} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Main Index Heading</label>
-            <input type="text" name="secure_index_title" defaultValue={mockSettings.secure_index_title || 'Secure Index'} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Main Index Heading</label>
+            <input type="text" name="secure_index_title" defaultValue={mockSettings.secure_index_title || 'Secure Index'} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Main Index Subtitle</label>
-            <input type="text" name="secure_index_subtitle" defaultValue={mockSettings.secure_index_subtitle || 'Verified & Transparent App Marketplace'} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Main Index Subtitle</label>
+            <input type="text" name="secure_index_subtitle" defaultValue={mockSettings.secure_index_subtitle || 'Verified & Transparent App Marketplace'} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Trending Searches (Comma Separated)</label>
-            <input type="text" name="trending_searches" defaultValue={mockSettings.trending_searches ? (Array.isArray(mockSettings.trending_searches) ? mockSettings.trending_searches.join(', ') : mockSettings.trending_searches) : ''} placeholder="e.g. Yono, Rummy Game, Bingo 101" className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Trending Searches (Comma Separated)</label>
+            <input type="text" name="trending_searches" defaultValue={mockSettings.trending_searches ? (Array.isArray(mockSettings.trending_searches) ? mockSettings.trending_searches.join(', ') : mockSettings.trending_searches) : ''} placeholder="e.g. Yono, Rummy Game, Bingo 101" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h3 className="font-black text-pink-500 border-b border-pink-500/10 pb-2 uppercase tracking-widest text-xs italic">Legal Content (GOD-STRENGTH)</h3>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
+        <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">Legal Content</h3>
         <div className="grid gap-6">
           <div>
-            <label className="block text-[11px] font-black text-pink-500 mb-1 uppercase tracking-widest">About Us Page Content (HTML)</label>
-            <textarea name="about_content" rows={12} defaultValue={mockSettings.about_content} className="w-full bg-slate-900 border border-pink-500/20 rounded-sm p-1.5 text-pink-400 font-mono text-sm focus:border-pink-500 outline-none transition-all shadow-inner"></textarea>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">About Us Page Content (HTML)</label>
+            <textarea name="about_content" rows={12} defaultValue={mockSettings.about_content} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs font-mono dark:text-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
           </div>
           <div>
-            <label className="block text-[11px] font-black text-pink-500 mb-1 uppercase tracking-widest">Privacy Policy Body (HTML)</label>
-            <textarea name="privacy_content" rows={12} defaultValue={mockSettings.privacy_content} className="w-full bg-slate-900 border border-pink-500/20 rounded-sm p-1.5 text-pink-400 font-mono text-sm focus:border-pink-500 outline-none transition-all shadow-inner"></textarea>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Privacy Policy Body (HTML)</label>
+            <textarea name="privacy_content" rows={12} defaultValue={mockSettings.privacy_content} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs font-mono dark:text-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
           </div>
           <div>
-            <label className="block text-[11px] font-black text-pink-500 mb-1 uppercase tracking-widest">Terms & Conditions Body (HTML)</label>
-            <textarea name="terms_content" rows={12} defaultValue={mockSettings.terms_content} className="w-full bg-slate-900 border border-pink-500/20 rounded-sm p-1.5 text-pink-400 font-mono text-sm focus:border-pink-500 outline-none transition-all shadow-inner"></textarea>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Terms & Conditions Body (HTML)</label>
+            <textarea name="terms_content" rows={12} defaultValue={mockSettings.terms_content} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs font-mono dark:text-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
           </div>
           <div>
-            <label className="block text-[11px] font-black text-rose-500 mb-1 uppercase tracking-widest underline italic">Platform Responsibility Clause (HTML)</label>
-            <textarea name="responsibility_content" rows={12} defaultValue={mockSettings.responsibility_content} className="w-full bg-slate-900 border border-rose-500/30 rounded-sm p-1.5 text-rose-400 font-mono text-sm focus:border-rose-500 outline-none transition-all shadow-inner" placeholder="<p>Our commitment to user safety...</p>"></textarea>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Platform Responsibility Clause (HTML)</label>
+            <textarea name="responsibility_content" rows={12} defaultValue={mockSettings.responsibility_content} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs font-mono dark:text-slate-300 focus:ring-2 focus:ring-blue-500 transition-all" placeholder="<p>Our commitment to user safety...</p>"></textarea>
           </div>
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h3 className="font-black text-pink-500 border-b border-pink-500/10 pb-2 uppercase tracking-widest text-xs italic">App Store & Disclaimers</h3>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
+        <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">App Store & Disclaimers</h3>
         <div className="grid gap-6">
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Portal Main Heading</label>
-            <input type="text" name="portal_heading" defaultValue={mockSettings.portal_heading} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Portal Main Heading</label>
+            <input type="text" name="portal_heading" defaultValue={mockSettings.portal_heading} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Disclaimer Heading</label>
-              <input type="text" name="disclaimer_heading" defaultValue={mockSettings.disclaimer_heading} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" />
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Disclaimer Heading</label>
+              <input type="text" name="disclaimer_heading" defaultValue={mockSettings.disclaimer_heading} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
             </div>
             <div>
-              <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Ethics Heading</label>
-              <input type="text" name="ethics_heading" defaultValue={mockSettings.ethics_heading} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" />
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Ethics Heading</label>
+              <input type="text" name="ethics_heading" defaultValue={mockSettings.ethics_heading} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
             </div>
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Disclaimer Text (HTML supported)</label>
-            <textarea name="disclaimer_text" rows={3} defaultValue={mockSettings.disclaimer_text} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-medium"></textarea>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Disclaimer Text (HTML supported)</label>
+            <textarea name="disclaimer_text" rows={3} defaultValue={mockSettings.disclaimer_text} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Ethics Text (HTML supported)</label>
-            <textarea name="ethics_discrimination_text" rows={3} defaultValue={mockSettings.ethics_discrimination_text} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-medium"></textarea>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Ethics Text (HTML supported)</label>
+            <textarea name="ethics_discrimination_text" rows={3} defaultValue={mockSettings.ethics_discrimination_text} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Important Notice Heading (More Information URL Page)</label>
-            <input type="text" name="important_notice_heading" defaultValue={mockSettings.important_notice_heading} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Important Notice Heading (More Info URL Page)</label>
+            <input type="text" name="important_notice_heading" defaultValue={mockSettings.important_notice_heading} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Important Notice Content (More Information URL Page Body)</label>
-            <textarea name="important_notice" rows={2} defaultValue={mockSettings.important_notice} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-medium"></textarea>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Important Notice Content</label>
+            <textarea name="important_notice" rows={2} defaultValue={mockSettings.important_notice} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
           </div>
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h3 className="font-black text-pink-500 border-b border-pink-500/10 pb-2 uppercase tracking-widest text-xs italic">Custom Website Title Banner (Prominent Hero)</h3>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
+        <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">Custom Website Title Banner</h3>
         <div className="grid gap-6">
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Enable Title Banner</label>
-              <select name="hero_title_visible" defaultValue={mockSettings.hero_title_visible !== false ? 'true' : 'false'} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold">
-                <option value="true" className="dark:bg-zinc-900">Show Hero Banner</option>
-                <option value="false" className="dark:bg-zinc-900">Hide Hero Banner</option>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Enable Title Banner</label>
+              <select name="hero_title_visible" defaultValue={mockSettings.hero_title_visible !== false ? 'true' : 'false'} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all">
+                <option value="true">Show Hero Banner</option>
+                <option value="false">Hide Hero Banner</option>
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Banner Writing Style (Font Concept)</label>
-              <select name="hero_title_style" defaultValue={mockSettings.hero_title_style || 'modern'} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold">
-                <option value="modern" className="dark:bg-zinc-900">Modern Display (Space Grotesk - Extra Black)</option>
-                <option value="serif" className="dark:bg-zinc-900">Elegant Editorial (Playfair - High Contrast)</option>
-                <option value="mono" className="dark:bg-zinc-900">Cyber Industrial (JetBrains Mono - Tech Accent)</option>
-                <option value="elegant" className="dark:bg-zinc-900">Neo-Minimal (Inter - Balanced Sans-Serif)</option>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Banner Writing Style (Font Concept)</label>
+              <select name="hero_title_style" defaultValue={mockSettings.hero_title_style || 'modern'} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all">
+                <option value="modern">Modern Display (Space Grotesk - Extra Black)</option>
+                <option value="serif">Elegant Editorial (Playfair - High Contrast)</option>
+                <option value="mono">Cyber Industrial (JetBrains Mono - Tech Accent)</option>
+                <option value="elegant">Neo-Minimal (Inter - Balanced Sans-Serif)</option>
               </select>
             </div>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Gradient Color Palette</label>
-              <select name="hero_title_color" defaultValue={mockSettings.hero_title_color || 'classic-dark'} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold">
-                <option value="classic-dark" className="dark:bg-zinc-900">Classic High-Contrast (Black to Solid Slate / Charcoal)</option>
-                <option value="emerald-indigo" className="dark:bg-zinc-900">Emerald To Indigo (Deep Mint to Vivid Violet)</option>
-                <option value="neon-sky" className="dark:bg-zinc-900">Neon Sky (Electric Cyan to Royal Blue)</option>
-                <option value="sunset-fire" className="dark:bg-zinc-900">Sunset Fire (Blazing Orange to Golden Crimson)</option>
-                <option value="cosmic-purple" className="dark:bg-zinc-900">Nebula Pink (Intense Magenta to Velvet Purple)</option>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Gradient Color Palette</label>
+              <select name="hero_title_color" defaultValue={mockSettings.hero_title_color || 'classic-dark'} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all">
+                <option value="classic-dark">Classic High-Contrast</option>
+                <option value="emerald-indigo">Emerald To Indigo</option>
+                <option value="neon-sky">Neon Sky</option>
+                <option value="sunset-fire">Sunset Fire</option>
+                <option value="cosmic-purple">Nebula Pink</option>
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Animation Design</label>
-              <select name="hero_title_animation" defaultValue={mockSettings.hero_title_animation || 'fade-in'} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold">
-                <option value="fade-in" className="dark:bg-zinc-900">Fade In (Smooth Dissolve Transition)</option>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Animation Design</label>
+              <select name="hero_title_animation" defaultValue={mockSettings.hero_title_animation || 'fade-in'} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all">
+                <option value="fade-in">Fade In (Smooth Dissolve)</option>
                 <option value="slide-up" className="dark:bg-zinc-900">Slide Up (Sleek Bottom-Up Gliding)</option>
                 <option value="bounce-in" className="dark:bg-zinc-900">Bounce Zoom (Snapping Elastic Expansion)</option>
                 <option value="zoom-out" className="dark:bg-zinc-900">Cinematic Zoom Out (Slow Depth Entrance)</option>
@@ -851,68 +980,70 @@ const SettingsTab = React.memo(({ mockSettings, handleSaveSettings, saving }: an
           </div>
 
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Hero Banner Writing Text (Title)</label>
-            <input type="text" name="hero_title_text" defaultValue={mockSettings.hero_title_text || 'RUMMY STORE GAMING DIRECTORY'} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Hero Banner Writing Text (Title)</label>
+            <input type="text" name="hero_title_text" defaultValue={mockSettings.hero_title_text || 'RUMMY STORE GAMING DIRECTORY'} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
 
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Hero Tagline / Subtitle</label>
-            <input type="text" name="hero_title_subtitle" defaultValue={mockSettings.hero_title_subtitle || 'COMPREHENSIVE SOCIAL CASUAL E-SPORTS METRICS & UNBIASED INTEGRITY REVIEWS'} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Hero Tagline / Subtitle</label>
+            <input type="text" name="hero_title_subtitle" defaultValue={mockSettings.hero_title_subtitle || 'COMPREHENSIVE SOCIAL CASUAL E-SPORTS METRICS & UNBIASED INTEGRITY REVIEWS'} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h3 className="font-black text-pink-500 border-b border-pink-500/10 pb-2 uppercase tracking-widest text-xs italic">Support & Ticker</h3>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
+        <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">Support & Ticker</h3>
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Announcement Ticker Text</label>
-            <input type="text" name="ticker_text" defaultValue={mockSettings.ticker_text} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Announcement Ticker Text</label>
+            <input type="text" name="ticker_text" defaultValue={mockSettings.ticker_text} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Support Email</label>
-            <input type="email" name="support_email" defaultValue={mockSettings.support_email} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Support Email</label>
+            <input type="email" name="support_email" defaultValue={mockSettings.support_email} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Telegram Link</label>
-            <input type="text" name="helpline_telegram" defaultValue={mockSettings.helpline_telegram} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Telegram Link</label>
+            <input type="text" name="helpline_telegram" defaultValue={mockSettings.helpline_telegram} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">WhatsApp Link</label>
-            <input type="text" name="helpline_whatsapp" defaultValue={mockSettings.helpline_whatsapp} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">WhatsApp Link</label>
+            <input type="text" name="helpline_whatsapp" defaultValue={mockSettings.helpline_whatsapp} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h3 className="font-black text-pink-500 border-b border-pink-500/10 pb-2 uppercase tracking-widest text-xs italic">Social Media Links</h3>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
+        <h3 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">Social Media Links</h3>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Facebook URL</label>
-            <input type="text" name="social_facebook" defaultValue={mockSettings.social_links?.facebook} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-medium" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Facebook URL</label>
+            <input type="text" name="social_facebook" defaultValue={mockSettings.social_links?.facebook} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Instagram URL</label>
-            <input type="text" name="social_instagram" defaultValue={mockSettings.social_links?.instagram} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-medium" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Instagram URL</label>
+            <input type="text" name="social_instagram" defaultValue={mockSettings.social_links?.instagram} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">Twitter / X URL</label>
-            <input type="text" name="social_twitter" defaultValue={mockSettings.social_links?.twitter} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-medium" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Twitter / X URL</label>
+            <input type="text" name="social_twitter" defaultValue={mockSettings.social_links?.twitter} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">LinkedIn URL</label>
-            <input type="text" name="social_linkedin" defaultValue={mockSettings.social_links?.linkedin} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-medium" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">LinkedIn URL</label>
+            <input type="text" name="social_linkedin" defaultValue={mockSettings.social_links?.linkedin} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
           <div>
-            <label className="block text-[10px] font-black opacity-60 mb-1 uppercase tracking-widest italic dark:text-white">YouTube URL</label>
-            <input type="text" name="social_youtube" defaultValue={mockSettings.social_links?.youtube} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-medium" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">YouTube URL</label>
+            <input type="text" name="social_youtube" defaultValue={mockSettings.social_links?.youtube} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
           </div>
         </div>
       </div>
 
-      <button type="submit" disabled={saving} className="min-h-[64px] px-12 bg-pink-500 hover:bg-pink-600 text-white font-black uppercase tracking-widest italic rounded-[2rem] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-pink-500/30 hover:scale-[1.02] active:scale-95 disabled:opacity-50">
-        {saving ? 'Synchronizing Cloud...' : <><Shield className="w-6 h-6"/> Sync Global Identity Settings</>}
-      </button>
+      <div className="flex justify-end pt-4">
+        <button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 shadow-sm disabled:opacity-50">
+          {saving ? 'Saving...' : <><Save className="w-5 h-5"/> Save Settings</>}
+        </button>
+      </div>
     </form>
   </div>
 ));
@@ -922,284 +1053,412 @@ const NewsTab = React.memo(({ newsList, handleAddNews, handleDeleteNews, handleN
 
   return (
   <div className="animate-fade-in space-y-6">
-    <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 border-black/10 dark:border-white/10 shadow-xl shadow-pink-500/5">
-      <h2 className="text-2xl font-black flex items-center gap-2 dark:text-white uppercase italic tracking-tighter"><Newspaper className="w-6 h-6 text-pink-500 underline" /> Manage News System</h2>
+    <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm">
+      <h2 className="text-xl font-bold flex items-center gap-2 dark:text-white"><Newspaper className="w-5 h-5 text-blue-500" /> News System</h2>
       <button onClick={() => {
         const newId = handleAddNews();
         setEditingNewsId(newId);
-      }} className="flex items-center gap-2 bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest italic transition-all shadow-lg shadow-pink-500/30 active:scale-95"><Plus className="w-5 h-5" /> Add Empty Item</button>
+      }} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all"><Plus className="w-4 h-4" /> Add News Item</button>
     </div>
-    <div className="grid gap-6">
+    <div className="space-y-4">
       {newsList.map((item: any) => (
-        <div key={item.id} className="bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-white/10 rounded-[2rem] p-6 sm:p-8 relative shadow-xl overflow-hidden">
+        <div key={item.id} className="bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-2xl p-6 shadow-sm relative overflow-hidden">
           {editingNewsId === item.id ? (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-black/10 dark:border-white/10 pb-6 mb-6 gap-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-black/10 dark:border-white/10 pb-4 mb-4 gap-4">
                 <div>
-                  <h3 className="font-black text-xl uppercase tracking-widest italic text-pink-500 flex items-center gap-2"><LayoutDashboard className="w-5 h-5"/> News Editor</h3>
-                  <p className="text-[10px] font-bold opacity-50 uppercase tracking-[0.2em] dark:text-white mt-1">ID: {item.id}</p>
+                  <h3 className="font-bold text-lg text-blue-600 flex items-center gap-2"><LayoutDashboard className="w-4 h-4"/> Edit News</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">ID: {item.id}</p>
                 </div>
                 <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <button onClick={() => handleDeleteNews(item.id)} className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white px-5 py-3 rounded-xl font-black uppercase tracking-wider text-xs transition-all"><Trash2 className="w-4 h-4" /> Delete</button>
-                  <button onClick={() => setEditingNewsId(null)} className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-5 py-3 rounded-xl font-black uppercase tracking-wider text-xs transition-all">Close</button>
+                  <button onClick={() => handleDeleteNews(item.id)} className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/20 text-rose-600 px-4 py-2 rounded-lg font-semibold text-sm transition-all"><Trash2 className="w-4 h-4" /> Delete</button>
+                  <button onClick={() => setEditingNewsId(null)} className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all">Close</button>
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <div className="space-y-6">
-                  <h3 className="font-black text-xs uppercase tracking-[0.3em] text-pink-500 italic pb-2 border-b border-pink-500/10">General Information</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-5">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">General Information</h4>
                   <div>
-                    <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Title</label>
-                    <input type="text" value={item.title} onChange={e => handleNewsChange(item.id, 'title', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-bold" placeholder="News Title" />
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Title</label>
+                    <input type="text" value={item.title} onChange={e => handleNewsChange(item.id, 'title', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="News Title" />
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Slug (URL)</label>
-                      <input type="text" value={item.slug} onChange={e => handleNewsChange(item.id, 'slug', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-mono text-xs" />
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Slug (URL)</label>
+                      <input type="text" value={item.slug} onChange={e => handleNewsChange(item.id, 'slug', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Category</label>
-                      <input type="text" value={item.category || ''} onChange={e => handleNewsChange(item.id, 'category', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-mono text-xs" />
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Category</label>
+                      <input type="text" value={item.category || ''} onChange={e => handleNewsChange(item.id, 'category', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Logo/Thumb URL</label>
-                      <input type="text" value={item.logo_url} onChange={e => handleNewsChange(item.id, 'logo_url', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-mono text-xs" />
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Logo URL</label>
+                      <input type="text" value={item.logo_url} onChange={e => handleNewsChange(item.id, 'logo_url', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Short Description</label>
-                    <textarea value={item.description} onChange={e => handleNewsChange(item.id, 'description', e.target.value)} rows={3} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 focus:ring-4 focus:ring-pink-500/20 dark:text-white font-medium"></textarea>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Short Description</label>
+                    <textarea value={item.description} onChange={e => handleNewsChange(item.id, 'description', e.target.value)} rows={3} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></textarea>
                   </div>
 
-                  <h3 className="font-black text-xs uppercase tracking-[0.3em] text-pink-500 italic pb-2 border-b border-pink-500/10 mt-8">Leadership / CEO Config</h3>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2 mt-6">Leadership / CEO Config</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">CEO Name</label>
-                      <input type="text" value={item.ceo_name} onChange={e => handleNewsChange(item.id, 'ceo_name', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-bold" />
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">CEO Name</label>
+                      <input type="text" value={item.ceo_name} onChange={e => handleNewsChange(item.id, 'ceo_name', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">CEO Role/Title</label>
-                      <input type="text" value={item.ceo_description} onChange={e => handleNewsChange(item.id, 'ceo_description', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-bold" />
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">CEO Role/Title</label>
+                      <input type="text" value={item.ceo_description} onChange={e => handleNewsChange(item.id, 'ceo_description', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <h3 className="font-black text-xs uppercase tracking-[0.3em] text-pink-500 italic pb-2 border-b border-pink-500/10">SEO & Social Meta</h3>
+                <div className="space-y-5">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">SEO & Social Meta</h4>
                   <div className="grid gap-4">
                     <div>
-                      <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Optimized Title</label>
-                      <input type="text" value={item.seo_title} onChange={e => handleNewsChange(item.id, 'seo_title', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white" />
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Title</label>
+                      <input type="text" value={item.seo_title} onChange={e => handleNewsChange(item.id, 'seo_title', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Meta Description</label>
-                      <textarea value={item.seo_description} onChange={e => handleNewsChange(item.id, 'seo_description', e.target.value)} rows={2} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-medium"></textarea>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Description</label>
+                      <textarea value={item.seo_description} onChange={e => handleNewsChange(item.id, 'seo_description', e.target.value)} rows={2} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></textarea>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Social OG Image</label>
-                        <input type="text" value={item.og_image_url} onChange={e => handleNewsChange(item.id, 'og_image_url', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-mono text-[10px]" />
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Social OG Image</label>
+                        <input type="text" value={item.og_image_url} onChange={e => handleNewsChange(item.id, 'og_image_url', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Canonical URL</label>
-                        <input type="text" value={item.canonical_url} onChange={e => handleNewsChange(item.id, 'canonical_url', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-mono text-[10px]" />
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Canonical URL</label>
+                        <input type="text" value={item.canonical_url} onChange={e => handleNewsChange(item.id, 'canonical_url', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Target Region</label>
-                        <input type="text" value={item.target_region} onChange={e => handleNewsChange(item.id, 'target_region', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-bold text-[10px]" placeholder="Global" />
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Target Region</label>
+                        <input type="text" value={item.target_region} onChange={e => handleNewsChange(item.id, 'target_region', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="Global" />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Keywords</label>
-                        <input type="text" value={item.seo_keywords} onChange={e => handleNewsChange(item.id, 'seo_keywords', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-bold text-[10px]" placeholder="keyword1, keyword2" />
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Keywords</label>
+                        <input type="text" value={item.seo_keywords} onChange={e => handleNewsChange(item.id, 'seo_keywords', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="Comma separated" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
                       <div>
-                        <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Source Link</label>
-                        <input type="text" value={item.link} onChange={e => handleNewsChange(item.id, 'link', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-mono text-[10px]" />
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Source Link</label>
+                        <input type="text" value={item.link} onChange={e => handleNewsChange(item.id, 'link', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                       </div>
                     </div>
-                  </div>
+                    <div className="pt-4">
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Related Application ID (Optional)</label>
+                      <select 
+                        value={item.related_app_id || ''} 
+                        onChange={e => handleNewsChange(item.id, 'related_app_id', e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"
+                      >
+                        <option value="">No App Linked</option>
+                        {appsList && appsList.map((app: any) => (
+                          <option key={app.id} value={app.id}>{app.name} ({app.id})</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <h3 className="font-black text-xs uppercase tracking-[0.3em] text-pink-500 italic pb-2 border-b border-pink-500/10 mt-8">Full Content Editor</h3>
-                  <div>
-                    <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">News Body (Markdown/HTML)</label>
-                    <textarea value={item.content} onChange={e => handleNewsChange(item.id, 'content', e.target.value)} rows={16} className="w-full bg-slate-900 border border-pink-500/20 rounded-sm p-1.5 text-pink-500 font-mono text-sm focus:border-pink-500 outline-none shadow-inner"></textarea>
                   </div>
                 </div>
+              </div>
+              <div className="space-y-4 pt-4 border-t border-black/10 dark:border-white/10">
+                <h4 className="font-bold text-sm text-slate-900 dark:text-white">Full HTML / Markdown Content</h4>
+                <textarea value={item.content} onChange={e => handleNewsChange(item.id, 'content', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-4 text-slate-800 dark:text-slate-200 font-mono text-sm shadow-inner min-h-[400px] focus:ring-2 focus:ring-blue-500 transition-all" placeholder="HTML content here..."></textarea>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row gap-5 items-center justify-between">
-              <div className="flex items-center gap-6 flex-1 min-w-0 w-full sm:w-auto overflow-hidden">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center border-2 border-black/5 dark:border-white/5 shrink-0 overflow-hidden">
-                  {item.logo_url ? <img src={item.logo_url} alt="Logo" className="w-full h-full object-cover" /> : <Newspaper className="w-6 h-6 text-slate-400" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-black dark:text-white truncate" title={item.title || "Untitled"}>{item.title || "Untitled"}</h3>
-                  <div className="flex gap-4 items-center mt-2 flex-wrap text-slate-500 dark:text-slate-400">
-                    <p className="text-sm font-semibold truncate flex gap-1 items-center bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-md"><LinkIcon className="w-3 h-3"/> {item.slug || "no-slug"}</p>
-                    <p className="text-xs font-bold uppercase tracking-widest border border-slate-200 dark:border-slate-700 px-2 rounded-full">{item.category || "Uncategorized"}</p>
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-between items-start">
+                <div className="flex items-start gap-4">
+                  {item.logo_url ? (
+                    <img src={item.logo_url} className="w-16 h-16 object-cover rounded-xl border border-black/10 shadow-sm" alt={item.title} />
+                  ) : (
+                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700">
+                      <Newspaper className="w-6 h-6 text-slate-400" />
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-bold text-lg dark:text-white">{item.title || 'Untitled News'}</h3>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">{item.category || "Uncategorized"} • {new Date(item.date).toLocaleDateString()}</p>
+                    {item.slug && <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mt-1">{item.slug}</p>}
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 shrink-0 mt-4 sm:mt-0 w-full sm:w-auto">
-                <button onClick={() => setEditingNewsId(item.id)} className="flex-1 sm:flex-none justify-center bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-black px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs transition-all flex items-center gap-2"><Settings className="w-4 h-4"/> Modify</button>
+                <button onClick={() => setEditingNewsId(item.id)} className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 text-blue-600 px-4 py-2 rounded-lg font-semibold text-sm transition-all"><Edit2 className="w-4 h-4" /> Edit</button>
               </div>
             </div>
           )}
         </div>
       ))}
     </div>
-    <div className="mt-12 flex justify-center">
-      <button onClick={async () => { try { setSaving(true); await saveMockNews(newsList); alert('System Synced: News Published & Verified.'); } catch(e:any){ alert(e.message); } finally { setSaving(false); } }} className="bg-pink-500 hover:bg-pink-600 text-white px-20 py-5 rounded-[2.5rem] font-black uppercase tracking-[0.2em] italic flex items-center gap-3 shadow-2xl shadow-pink-500/40 transform hover:scale-[1.05] transition-all active:scale-95">
-        {saving ? 'Transmitting Data...' : <><Save className="w-6 h-6"/> Save News System</>}
+    <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 flex justify-end">
+      <button 
+        onClick={async () => {
+          setSaving(true);
+          try {
+            await saveMockNews(newsList);
+            alert('News successfully saved and synchronized.');
+          } catch(e) {
+            console.error(e);
+            alert('Failed to save news.');
+          }
+          setSaving(false);
+        }} 
+        disabled={saving} 
+        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
+      >
+        {saving ? 'Synchronizing News...' : <><Save className="w-5 h-5"/> Sync All News</>}
       </button>
     </div>
   </div>
   );
 });
 
-const BlogsTab = React.memo(({ blogs, handleAddBlog, handleDeleteBlog, handleBlogChange, handleSaveBlogs, saving }: any) => (
-  <div className="animate-fade-in space-y-6">
-    <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 border-black/10 dark:border-white/10 shadow-xl">
-      <h2 className="text-2xl font-black flex items-center gap-2 dark:text-white uppercase italic tracking-tighter"><FileText className="w-6 h-6 text-pink-500" /> System Blogs</h2>
-      <button onClick={handleAddBlog} className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest italic flex items-center gap-2 transition-all"><Plus className="w-5 h-5" /> Add Post</button>
-    </div>
-    <div className="space-y-8">
-      {blogs.map((blog: any) => (
-        <div key={blog.id} className="bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-white/10 p-8 rounded-[2rem] shadow-2xl relative">
-          <button onClick={() => handleDeleteBlog(blog.id)} className="absolute top-6 right-6 p-3 text-rose-500 hover:bg-rose-500/10 rounded-full transition-all border border-rose-500/20"><Trash2 className="w-5 h-5" /></button>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <div className="space-y-6">
-              <div>
-                <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Blog Title</label>
-                <input type="text" value={blog.title} onChange={(e) => handleBlogChange(blog.id, 'title', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl p-4 text-sm font-black dark:text-white" placeholder="Blog Title" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">URL Slug</label>
-                  <input type="text" value={blog.slug} onChange={(e) => handleBlogChange(blog.id, 'slug', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 text-xs dark:text-white font-mono" />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Author Name</label>
-                  <input type="text" value={blog.author} onChange={(e) => handleBlogChange(blog.id, 'author', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 text-xs dark:text-white font-bold" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Cover Image URL</label>
-                <input type="text" value={blog.cover_url} onChange={(e) => handleBlogChange(blog.id, 'cover_url', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 text-xs dark:text-white font-mono" />
-              </div>
+const BlogsTab = React.memo(({ blogs, handleAddBlog, handleDeleteBlog, handleBlogChange, handleSaveBlogs, saving }: any) => {
+  const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
 
-              <div className="pt-4 border-t border-black/5 dark:border-white/5 space-y-4">
-                <h4 className="text-[10px] font-black uppercase text-pink-500 italic tracking-widest">Blog SEO Matrix</h4>
+  return (
+  <div className="animate-fade-in space-y-6">
+    <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm">
+      <h2 className="text-xl font-bold flex items-center gap-2 dark:text-white"><FileText className="w-5 h-5 text-blue-500" /> App Updates</h2>
+      <button onClick={() => {
+        handleAddBlog();
+      }} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all"><Plus className="w-4 h-4" /> Add Update</button>
+    </div>
+    <div className="space-y-4">
+      {blogs.map((blog: any) => (
+        <div key={blog.id} className="bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+          {editingBlogId === blog.id ? (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-black/10 dark:border-white/10 pb-4 mb-4 gap-4">
                 <div>
-                  <label className="block text-[9px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Title</label>
-                  <input type="text" value={blog.seo_title || ''} onChange={(e) => handleBlogChange(blog.id, 'seo_title', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-2 text-[10px] dark:text-white" />
+                  <h3 className="font-bold text-lg text-blue-600 flex items-center gap-2"><LayoutDashboard className="w-4 h-4"/> Edit Update</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">ID: {blog.id}</p>
                 </div>
-                <div>
-                  <label className="block text-[9px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Keywords</label>
-                  <input type="text" value={blog.seo_keywords || ''} onChange={(e) => handleBlogChange(blog.id, 'seo_keywords', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-2 text-[10px] dark:text-white" placeholder="keyword1, keyword2" />
-                </div>
-                <div>
-                  <label className="block text-[9px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Canonical URL</label>
-                  <input type="text" value={blog.canonical_url || ''} onChange={(e) => handleBlogChange(blog.id, 'canonical_url', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-2 text-[10px] dark:text-white" placeholder="https://..." />
-                </div>
-                <div>
-                  <label className="block text-[9px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Target Region</label>
-                  <input type="text" value={blog.target_region || ''} onChange={(e) => handleBlogChange(blog.id, 'target_region', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-2 text-[10px] dark:text-white" placeholder="Global" />
-                </div>
-                <div>
-                  <label className="block text-[9px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Description</label>
-                  <textarea value={blog.seo_description || ''} onChange={(e) => handleBlogChange(blog.id, 'seo_description', e.target.value)} rows={2} className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-2 text-[10px] dark:text-white"></textarea>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <button onClick={() => handleDeleteBlog(blog.id)} className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/20 text-rose-600 px-4 py-2 rounded-lg font-semibold text-sm transition-all"><Trash2 className="w-4 h-4" /> Delete</button>
+                  <button onClick={() => setEditingBlogId(null)} className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all">Close</button>
                 </div>
               </div>
               
-              <div>
-                <img src={blog.cover_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80'} className="w-full h-40 object-cover rounded-2xl border-2 border-black/10 shadow-lg mt-4" alt="Preview" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-5">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">General Information</h4>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Update Title</label>
+                    <input type="text" value={blog.title} onChange={(e) => handleBlogChange(blog.id, 'title', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="Update Title" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">URL Slug</label>
+                      <input type="text" value={blog.slug} onChange={(e) => handleBlogChange(blog.id, 'slug', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Author Name</label>
+                      <input type="text" value={blog.author} onChange={(e) => handleBlogChange(blog.id, 'author', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Related App Slug</label>
+                      <input type="text" value={blog.related_app_slug || ''} onChange={(e) => handleBlogChange(blog.id, 'related_app_slug', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="app-slug" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Related App Name</label>
+                      <input type="text" value={blog.related_app_name || ''} onChange={(e) => handleBlogChange(blog.id, 'related_app_name', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="App Name" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Cover Image URL</label>
+                    <input type="text" value={blog.cover_url} onChange={(e) => handleBlogChange(blog.id, 'cover_url', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                  </div>
+
+                  <div className="pt-4 mt-2 border-t border-black/5 dark:border-white/5 space-y-4">
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">SEO Configuration</h4>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Title</label>
+                      <input type="text" value={blog.seo_title || ''} onChange={(e) => handleBlogChange(blog.id, 'seo_title', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Keywords</label>
+                      <input type="text" value={blog.seo_keywords || ''} onChange={(e) => handleBlogChange(blog.id, 'seo_keywords', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" placeholder="keyword1, keyword2" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Canonical URL</label>
+                        <input type="text" value={blog.canonical_url || ''} onChange={(e) => handleBlogChange(blog.id, 'canonical_url', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" placeholder="https://..." />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Target Region</label>
+                        <input type="text" value={blog.target_region || ''} onChange={(e) => handleBlogChange(blog.id, 'target_region', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all" placeholder="Global" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Description</label>
+                      <textarea value={blog.seo_description || ''} onChange={(e) => handleBlogChange(blog.id, 'seo_description', e.target.value)} rows={3} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
+                    </div>
+                  </div>
+                  
+                  {blog.cover_url && (
+                    <div className="pt-2">
+                      <img src={blog.cover_url} className="w-full h-48 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm" alt="Preview" />
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">Full HTML / Markdown Content</h4>
+                  <textarea value={blog.content} onChange={(e) => handleBlogChange(blog.id, 'content', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-4 text-slate-800 dark:text-slate-200 font-mono text-sm shadow-inner min-h-[600px] focus:ring-2 focus:ring-blue-500 transition-all" placeholder="Enter HTML or Markdown content..."></textarea>
+                </div>
               </div>
             </div>
-            <div className="space-y-6">
-              <label className="block text-[10px] font-black text-pink-500 mb-1 uppercase tracking-[0.3em] italic">Full HTML Content (Tiptap / Raw HTML)</label>
-              <textarea value={blog.content} onChange={(e) => handleBlogChange(blog.id, 'content', e.target.value)} className="w-full bg-slate-900 border border-pink-500/20 rounded-sm p-1.5 text-pink-500 font-mono text-sm shadow-inner min-h-[400px]" placeholder="Full HTML Content"></textarea>
+          ) : (
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                {blog.cover_url && (
+                  <img src={blog.cover_url} className="w-16 h-16 object-cover rounded-lg border border-slate-200 dark:border-slate-700" alt={blog.title} />
+                )}
+                <div>
+                  <h3 className="font-bold text-lg text-slate-900 dark:text-white">{blog.title || 'Untitled Update'}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{blog.author} • {new Date(blog.published_at).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <button onClick={() => setEditingBlogId(blog.id)} className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 text-blue-600 px-4 py-2 rounded-lg font-semibold text-sm transition-all"><Edit2 className="w-4 h-4" /> Edit</button>
             </div>
-          </div>
+          )}
         </div>
       ))}
     </div>
-    <div className="mt-12 flex justify-end">
-      <button onClick={handleSaveBlogs} disabled={saving} className="bg-pink-500 hover:bg-pink-600 text-white px-12 py-5 rounded-[2rem] font-black uppercase tracking-[0.25em] italic flex items-center justify-center gap-3 shadow-2xl shadow-pink-500/40">
-        {saving ? 'Synchronizing Blogs...' : <><Save className="w-6 h-6"/> Sync All Blogs</>}
+    <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 flex justify-end">
+      <button onClick={handleSaveBlogs} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all">
+        {saving ? 'Saving...' : <><Save className="w-5 h-5"/> Save Updates</>}
       </button>
     </div>
   </div>
-));
+  );
+});
 
-const VideosTab = React.memo(({ videosList, handleAddVideo, handleDeleteVideo, handleVideosChange, handleSaveVideos, saving }: any) => (
+const VideosTab = React.memo(({ videosList, handleAddVideo, handleDeleteVideo, handleVideosChange, handleSaveVideos, saving }: any) => {
+  const [editingVideoId, setEditingVideoId] = useState<string | null>(null);
+
+  return (
   <div className="animate-fade-in space-y-6">
-    <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl border-2 border-black/10 dark:border-white/10">
-      <h2 className="text-2xl font-black flex items-center gap-2 dark:text-white uppercase italic tracking-tighter"><VideoIcon className="w-6 h-6 text-pink-500" /> Video Matrix</h2>
-      <button onClick={handleAddVideo} className="flex items-center gap-2 bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest italic transition-all shadow-lg shadow-pink-500/30 active:scale-95"><Plus className="w-5 h-5" /> Add To Matrix</button>
+    <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm">
+      <h2 className="text-xl font-bold flex items-center gap-2 dark:text-white"><VideoIcon className="w-5 h-5 text-blue-500" /> Video Matrix</h2>
+      <button onClick={() => {
+        handleAddVideo();
+      }} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all"><Plus className="w-4 h-4" /> Add Video</button>
     </div>
-    <div className="grid gap-10">
+    <div className="space-y-4">
       {videosList.map((item: any) => (
-        <div key={item.id} className="bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-white/10 p-8 rounded-[2rem] shadow-2xl relative group overflow-hidden">
-          <button onClick={() => handleDeleteVideo(item.id)} className="absolute top-6 right-6 p-3 text-red-500 hover:bg-red-500 hover:text-white rounded-full opacity-0 group-hover:opacity-100 transition-all z-10 border border-red-500/30"><Trash2 className="w-5 h-5" /></button>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div key={item.id} className="bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+          {editingVideoId === item.id ? (
             <div className="space-y-6">
-              <h3 className="font-black text-xs uppercase tracking-[0.3em] text-pink-500 italic pb-2 border-b border-pink-500/10">Stream Config</h3>
-              <div>
-                <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Video Title</label>
-                <input type="text" value={item.title} onChange={e => handleVideosChange(item.id, 'title', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-bold" placeholder="Title" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-black/10 dark:border-white/10 pb-4 mb-4 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Slug (URL)</label>
-                  <input type="text" value={item.slug} onChange={e => handleVideosChange(item.id, 'slug', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-mono text-xs" />
+                  <h3 className="font-bold text-lg text-blue-600 flex items-center gap-2"><LayoutDashboard className="w-4 h-4"/> Edit Video</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">ID: {item.id}</p>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">YouTube URL</label>
-                  <input type="text" value={item.youtube_url} onChange={e => handleVideosChange(item.id, 'youtube_url', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white font-mono text-xs" />
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <button onClick={() => handleDeleteVideo(item.id)} className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/20 text-rose-600 px-4 py-2 rounded-lg font-semibold text-sm transition-all"><Trash2 className="w-4 h-4" /> Delete</button>
+                  <button onClick={() => setEditingVideoId(null)} className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all">Close</button>
                 </div>
               </div>
-              <div>
-                <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Video Description</label>
-                <textarea value={item.description} onChange={e => handleVideosChange(item.id, 'description', e.target.value)} rows={4} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white"></textarea>
-              </div>
-            </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-5">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">Stream Config</h4>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Video Title</label>
+                    <input type="text" value={item.title} onChange={e => handleVideosChange(item.id, 'title', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="Title" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Slug (URL)</label>
+                      <input type="text" value={item.slug} onChange={e => handleVideosChange(item.id, 'slug', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">YouTube URL</label>
+                      <input type="text" value={item.youtube_url} onChange={e => handleVideosChange(item.id, 'youtube_url', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Video Description</label>
+                    <textarea value={item.description} onChange={e => handleVideosChange(item.id, 'description', e.target.value)} rows={4} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></textarea>
+                  </div>
+                  
+                  {item.youtube_url && (() => {
+                    const videoIdMatch = item.youtube_url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                    const videoId = videoIdMatch ? videoIdMatch[1] : null;
+                    if (videoId) {
+                      return (
+                        <div className="pt-2">
+                          <img src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`} className="w-full h-48 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm" alt="Preview" />
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
 
-            <div className="space-y-6">
-              <h3 className="font-black text-xs uppercase tracking-[0.3em] text-pink-500 italic pb-2 border-b border-pink-500/10">Video SEO Armor</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Optimized Header</label>
-                  <input type="text" value={item.seo_title} onChange={e => handleVideosChange(item.id, 'seo_title', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white" />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">SEO Meta String</label>
-                  <textarea value={item.seo_description} onChange={e => handleVideosChange(item.id, 'seo_description', e.target.value)} rows={2} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white"></textarea>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black opacity-50 mb-1 uppercase tracking-widest italic dark:text-white">Search Keywords</label>
-                  <input type="text" value={item.seo_keywords || ''} onChange={e => handleVideosChange(item.id, 'seo_keywords', e.target.value)} className="w-full bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-xl py-3 px-5 dark:text-white" />
+                <div className="space-y-5">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">Video SEO Armor</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Optimized Header</label>
+                      <input type="text" value={item.seo_title} onChange={e => handleVideosChange(item.id, 'seo_title', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SEO Meta String</label>
+                      <textarea value={item.seo_description} onChange={e => handleVideosChange(item.id, 'seo_description', e.target.value)} rows={3} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></textarea>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Search Keywords</label>
+                      <input type="text" value={item.seo_keywords || ''} onChange={e => handleVideosChange(item.id, 'seo_keywords', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                {(() => {
+                  const videoIdMatch = item.youtube_url?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                  const videoId = videoIdMatch ? videoIdMatch[1] : null;
+                  return videoId ? (
+                    <img src={`https://img.youtube.com/vi/${videoId}/default.jpg`} className="w-16 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-700" alt={item.title} />
+                  ) : (
+                    <div className="w-16 h-12 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700">
+                      <VideoIcon className="w-5 h-5 text-slate-400" />
+                    </div>
+                  );
+                })()}
+                <div>
+                  <h3 className="font-bold text-lg text-slate-900 dark:text-white">{item.title || 'Untitled Video'}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{item.slug}</p>
+                </div>
+              </div>
+              <button onClick={() => setEditingVideoId(item.id)} className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 text-blue-600 px-4 py-2 rounded-lg font-semibold text-sm transition-all"><Edit2 className="w-4 h-4" /> Edit</button>
+            </div>
+          )}
         </div>
       ))}
     </div>
-    <div className="mt-12 flex justify-center">
-      <button onClick={handleSaveVideos} disabled={saving} className="bg-pink-500 hover:bg-pink-600 text-white px-20 py-5 rounded-[2.5rem] font-black uppercase tracking-[0.2em] italic flex items-center gap-3 shadow-2xl shadow-pink-500/40">
-        {saving ? 'Processing Stream...' : <><Save className="w-6 h-6"/> Publish Video Matrix</>}
+    <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 flex justify-end">
+      <button onClick={handleSaveVideos} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all">
+        {saving ? 'Processing Stream...' : <><Save className="w-5 h-5"/> Publish Video Matrix</>}
       </button>
     </div>
   </div>
-));
+  );
+});
 
 interface AdminReview {
   id: string;
@@ -2696,57 +2955,61 @@ export default function AdminDashboard() {
   return (
     <div className="animate-fade-in min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex flex-col md:flex-row justify-between items-center bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-rose-500/30 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent animate-pulse"></div>
-          <div className="flex items-center gap-6">
+        <div className="mb-8 flex flex-col md:flex-row justify-between items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-6 rounded-2xl shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-[3px] bg-blue-600"></div>
+          <div className="flex items-center gap-4">
             <div className="relative">
               {mockSettings.logo_url ? (
-                <img src={mockSettings.logo_url} className="w-16 h-16 object-contain drop-shadow-2xl grayscale" alt="Logo" />
+                <img src={mockSettings.logo_url} className="w-12 h-12 object-contain" alt="Logo" />
               ) : (
-                <Shield className="w-16 h-16 text-rose-500" />
+                <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center border border-blue-200/40 text-blue-600 dark:text-blue-400">
+                  <Shield className="w-6 h-6" />
+                </div>
               )}
-              <div className="absolute -top-2 -right-2 bg-rose-500 text-[8px] font-black text-white px-2 py-1 rounded-full uppercase tracking-tighter shadow-[0_0_10px_rgba(244,63,94,0.5)]">Secured Hub</div>
             </div>
             <div>
-              <h1 className="text-3xl font-black text-rose-500 uppercase tracking-widest italic">Restricted Admin Access</h1>
-              <div className="flex items-center gap-3 mt-1">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
-                <p className="opacity-80 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest font-mono text-emerald-600">AES-256 Connection Verified • V2.4.9</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">System Control Console</h1>
+                <span className="bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border border-blue-200/30">Secure Hub</span>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 font-mono">AES-256 Connection Verified • V2.4.9</p>
               </div>
             </div>
           </div>
-          <div className="flex gap-4 items-center flex-wrap mt-4 md:mt-0">
-            <div className="flex flex-col items-end mr-4">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 italic">Security Stopwatch</span>
-              <span className={`font-mono font-black text-xl tracking-tighter ${sessionTimeLeft < 60 ? 'text-rose-600 animate-pulse' : 'text-slate-800 dark:text-slate-200'}`}>
+          <div className="flex gap-3 items-center flex-wrap mt-4 md:mt-0">
+            <div className="flex flex-col items-end mr-2 bg-slate-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Session Timer</span>
+              <span className={`font-mono font-bold text-sm tracking-tight ${sessionTimeLeft < 60 ? 'text-rose-600 animate-pulse' : 'text-slate-700 dark:text-slate-300'}`}>
                 {Math.floor(sessionTimeLeft / 60).toString().padStart(2, '0')}:{(sessionTimeLeft % 60).toString().padStart(2, '0')}
               </span>
             </div>
             <button 
               onClick={handleReloadCloudData} 
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 bg-pink-500/10 hover:bg-pink-500/20 text-pink-500 border border-pink-500/30 rounded-2xl transition-all font-black uppercase tracking-widest italic shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl transition-all text-xs font-semibold shadow-sm cursor-pointer disabled:opacity-50"
               title="Reload and pull latest configurations directly from the Cloud database"
             >
-              <RefreshCw className={`w-5 h-5 ${saving ? 'animate-spin' : ''}`} /> Reload Cloud Data
+              <RefreshCw className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} /> Reload Cloud
             </button>
-            <button onClick={handleLogout} className="flex items-center gap-2 px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl transition-all font-black uppercase tracking-widest italic shadow-xl shadow-rose-500/20 active:scale-95">
-              <LogOut className="w-5 h-5" /> Sign Out Authority
+            <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-all text-xs font-semibold shadow-sm shadow-rose-600/10 cursor-pointer">
+              <LogOut className="w-4 h-4" /> Sign Out
             </button>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-[280px_1fr] gap-10">
-          <div className="bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-white/10 rounded-[2.5rem] p-6 flex flex-col gap-3 h-fit shadow-2xl">
-            <h3 className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em] italic mb-2 ml-4 dark:text-white">Navigation</h3>
+        <div className="grid md:grid-cols-[260px_1fr] gap-8">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-4 flex flex-col gap-1.5 h-fit shadow-sm">
+            <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-3">Navigation</h3>
             <SidebarItem id="dashboard" label="Dashboard" icon={LayoutDashboard} active={activeTab === 'dashboard'} onClick={handleTabChange} />
             <SidebarItem id="apps" label="Applications" icon={FileText} active={activeTab === 'apps'} onClick={handleTabChange} />
             <SidebarItem id="news" label="News System" icon={Newspaper} active={activeTab === 'news'} onClick={handleTabChange} />
-            <SidebarItem id="blogs" label="Global Blogs" icon={FileText} active={activeTab === 'blogs'} onClick={handleTabChange} />
+            <SidebarItem id="blogs" label="App Updates" icon={FileText} active={activeTab === 'blogs'} onClick={handleTabChange} />
             <SidebarItem id="videos" label="Video Matrix" icon={VideoIcon} active={activeTab === 'videos'} onClick={handleTabChange} />
             
-            <div className="h-px bg-black/10 dark:bg-white/10 my-4"></div>
-            <h3 className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em] italic mb-2 ml-4 dark:text-white">Frontend</h3>
+            <div className="h-px bg-slate-100 dark:bg-slate-800 my-3 mx-2"></div>
+            <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-3">Frontend</h3>
             
             <SidebarItem id="quicklinks" label="Quick Links" icon={Compass} active={activeTab === 'quicklinks'} onClick={handleTabChange} />
             <SidebarItem id="websitefaqs" label="Website FAQs" icon={HelpCircle} active={activeTab === 'websitefaqs'} onClick={handleTabChange} />
@@ -2754,16 +3017,15 @@ export default function AdminDashboard() {
             <SidebarItem id="categories" label="Categories" icon={Layers} active={activeTab === 'categories'} onClick={handleTabChange} />
             <SidebarItem id="banners" label="Ad Banners" icon={LayoutDashboard} active={activeTab === 'banners'} onClick={handleTabChange} />
             
-            <div className="h-px bg-black/10 dark:bg-white/10 my-4"></div>
-            <h3 className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em] italic mb-2 ml-4 dark:text-white">Authority</h3>
+            <div className="h-px bg-slate-100 dark:bg-slate-800 my-3 mx-2"></div>
+            <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-3">Authority</h3>
             
             <SidebarItem id="reviews" label="Support Desk" icon={ShieldAlert} active={activeTab === 'reviews'} onClick={handleTabChange} />
             <SidebarItem id="github" label="GitHub Sync" icon={Github} active={activeTab === 'github'} onClick={handleTabChange} />
             <SidebarItem id="settings" label="Global Config" icon={Settings} active={activeTab === 'settings'} onClick={handleTabChange} />
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-white/10 rounded-[3rem] p-8 sm:p-12 min-h-[800px] shadow-2xl relative overflow-hidden backdrop-blur-3xl">
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-pink-500/5 rounded-full blur-3xl"></div>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 sm:p-8 min-h-[750px] shadow-sm relative overflow-hidden">
             <div className="relative z-10">
               {activeTab === 'dashboard' && <DashboardTab apps={mockApps} news={newsList} />}
               {activeTab === 'apps' && (
@@ -2810,41 +3072,49 @@ export default function AdminDashboard() {
                 />
               )}
               {activeTab === 'quicklinks' && (
-                <div className="animate-fade-in">
-                  <div className="flex justify-between items-center mb-8 border-b-4 border-pink-500/20 pb-4 ">
-                    <h2 className="text-2xl font-black dark:text-white uppercase italic tracking-tighter">Navigation Hub Links</h2>
-                    <button onClick={handleAddQuickLink} className="bg-pink-500/10 text-pink-500 px-6 py-3 rounded-xl border-2 border-pink-500/20 flex items-center gap-2 font-black uppercase tracking-widest italic text-[10px]"><Plus className="w-4 h-4" /> Add Link</button>
+                <div className="animate-fade-in space-y-6">
+                  <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Navigation Hub Links</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure quick navigation links shown in the user dashboard.</p>
+                    </div>
+                    <button 
+                      onClick={handleAddQuickLink} 
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-semibold text-xs transition-all cursor-pointer border-0 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" /> Add Link
+                    </button>
                   </div>
                   
                   <form onSubmit={handleSaveQuickLinks} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {quickLinksList.map((link: any, index: number) => (
-                        <div key={index} className="bg-zinc-50 dark:bg-zinc-800/40 border-2 border-black/5 dark:border-white/5 rounded-2xl p-6 shadow-sm relative">
+                        <div key={index} className="bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-800/60 rounded-xl p-5 shadow-sm relative">
                           <button
                             type="button"
                             onClick={() => handleRemoveQuickLink(index)}
-                            className="absolute top-4 right-4 text-rose-500 bg-rose-500/10 p-2 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
+                            className="absolute top-4 right-4 text-rose-500 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-lg hover:bg-rose-500 hover:text-white transition-all border border-rose-100 dark:border-rose-900/30 cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                           
                           <div className="space-y-4 pt-2">
                             <div>
-                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Title</label>
-                              <input required type="text" value={link.title} onChange={(e) => handleQuickLinkChange(index, 'title', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Title</label>
+                              <input required type="text" value={link.title} onChange={(e) => handleQuickLinkChange(index, 'title', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Subtitle</label>
-                              <input required type="text" value={link.subtitle} onChange={(e) => handleQuickLinkChange(index, 'subtitle', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Subtitle</label>
+                              <input required type="text" value={link.subtitle} onChange={(e) => handleQuickLinkChange(index, 'subtitle', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">URL Path</label>
-                                <input required type="text" value={link.url} onChange={(e) => handleQuickLinkChange(index, 'url', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white" />
+                                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">URL Path</label>
+                                <input required type="text" value={link.url} onChange={(e) => handleQuickLinkChange(index, 'url', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Color Variant</label>
-                                <select value={link.color} onChange={(e) => handleQuickLinkChange(index, 'color', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white">
+                                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Color Variant</label>
+                                <select value={link.color} onChange={(e) => handleQuickLinkChange(index, 'color', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
                                   <option value="blue">Blue</option>
                                   <option value="emerald">Emerald</option>
                                   <option value="amber">Amber</option>
@@ -2854,8 +3124,8 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Icon Name</label>
-                                <select value={link.icon} onChange={(e) => handleQuickLinkChange(index, 'icon', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white">
+                                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Icon Name</label>
+                                <select value={link.icon} onChange={(e) => handleQuickLinkChange(index, 'icon', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
                                   <option value="compass">Compass (Explore)</option>
                                   <option value="newspaper">Newspaper (News)</option>
                                   <option value="video">Video (Media)</option>
@@ -2866,194 +3136,225 @@ export default function AdminDashboard() {
                         </div>
                       ))}
                       {quickLinksList.length === 0 && (
-                        <div className="col-span-1 md:col-span-2 text-center py-12 opacity-50 border-2 border-dashed border-black/10 dark:border-white/10 rounded-2xl dark:text-white font-bold italic">
-                          No quick links added. The unified hub will show defaults until you add one.
+                        <div className="col-span-1 md:col-span-2 text-center py-12 text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl font-medium italic text-sm">
+                          No quick links added yet.
                         </div>
                       )}
                     </div>
                     
-                    <button type="submit" disabled={saving} className="min-h-[64px] w-full max-w-sm ml-auto block px-12 bg-pink-500 text-white font-black uppercase tracking-widest italic rounded-[2rem] shadow-xl shadow-pink-500/30">
+                    <button type="submit" disabled={saving} className="min-h-[46px] px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm tracking-wide rounded-xl shadow-sm transition-all cursor-pointer border-0 ml-auto block">
                       Sync Links to Live
                     </button>
                   </form>
                 </div>
               )}
               {activeTab === 'websitefaqs' && (
-                <div className="animate-fade-in">
-                  <div className="flex justify-between items-center mb-8 border-b-4 border-pink-500/20 pb-4">
-                    <h2 className="text-2xl font-black dark:text-white uppercase italic tracking-tighter">Website FAQs Management</h2>
-                    <button onClick={handleAddWebsiteFaq} className="bg-pink-500/10 text-pink-500 px-6 py-3 rounded-xl border-2 border-pink-500/20 flex items-center gap-2 font-black uppercase tracking-widest italic text-[10px]"><Plus className="w-4 h-4" /> Add FAQ</button>
+                <div className="animate-fade-in space-y-6">
+                  <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Website FAQs Management</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Add, update, or remove Frequently Asked Questions on the homepage.</p>
+                    </div>
+                    <button 
+                      onClick={handleAddWebsiteFaq} 
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-semibold text-xs transition-all cursor-pointer border-0 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" /> Add FAQ
+                    </button>
                   </div>
                   
                   <form onSubmit={handleSaveWebsiteFaqs} className="space-y-6">
                     <div className="grid grid-cols-1 gap-6">
                       {websiteFaqsList.map((faq: any, index: number) => (
-                        <div key={index} className="bg-zinc-50 dark:bg-zinc-800/40 border-2 border-black/5 dark:border-white/5 rounded-2xl p-6 shadow-sm relative">
+                        <div key={index} className="bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-800/60 rounded-xl p-5 shadow-sm relative animate-fade-in">
                           <button
                             type="button"
                             onClick={() => handleRemoveWebsiteFaq(index)}
-                            className="absolute top-4 right-4 text-rose-500 bg-rose-500/10 p-2 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
+                            className="absolute top-4 right-4 text-rose-500 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-lg hover:bg-rose-500 hover:text-white transition-all border border-rose-100 dark:border-rose-900/30 cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                           
                           <div className="space-y-4 pt-2">
                             <div>
-                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Question</label>
-                              <input required type="text" value={faq.question} onChange={(e) => handleWebsiteFaqChange(index, 'question', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Question</label>
+                              <input required type="text" value={faq.question} onChange={(e) => handleWebsiteFaqChange(index, 'question', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Answer</label>
-                              <textarea required rows={3} value={faq.answer} onChange={(e) => handleWebsiteFaqChange(index, 'answer', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-medium dark:text-white resize-none"></textarea>
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Answer</label>
+                              <textarea required rows={3} value={faq.answer} onChange={(e) => handleWebsiteFaqChange(index, 'answer', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 resize-none"></textarea>
                             </div>
                           </div>
                         </div>
                       ))}
                       {websiteFaqsList.length === 0 && (
-                        <div className="col-span-1 text-center py-12 opacity-50 border-2 border-dashed border-black/10 dark:border-white/10 rounded-2xl dark:text-white font-bold italic">
+                        <div className="col-span-1 text-center py-12 text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl font-medium italic text-sm">
                           No website FAQs added yet.
                         </div>
                       )}
                     </div>
                     
-                    <button type="submit" disabled={saving} className="min-h-[64px] w-full max-w-sm ml-auto block px-12 bg-pink-500 text-white font-black uppercase tracking-widest italic rounded-[2rem] shadow-xl shadow-pink-500/30">
+                    <button type="submit" disabled={saving} className="min-h-[46px] px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm tracking-wide rounded-xl shadow-sm transition-all cursor-pointer border-0 ml-auto block">
                       Sync FAQs to Live
                     </button>
                   </form>
                 </div>
               )}
               {activeTab === 'developers' && (
-                <div className="animate-fade-in">
-                  <div className="flex justify-between items-center mb-8 border-b-4 border-pink-500/20 pb-4">
-                    <h2 className="text-2xl font-black dark:text-white uppercase italic tracking-tighter">Developers Management</h2>
-                    <button onClick={handleAddDeveloper} className="bg-pink-500/10 text-pink-500 px-6 py-3 rounded-xl border-2 border-pink-500/20 flex items-center gap-2 font-black uppercase tracking-widest italic text-[10px]"><Plus className="w-4 h-4" /> Add Developer</button>
+                <div className="animate-fade-in space-y-6">
+                  <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Developers Management</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure profile details of developers on the team page.</p>
+                    </div>
+                    <button 
+                      onClick={handleAddDeveloper} 
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-semibold text-xs transition-all cursor-pointer border-0 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" /> Add Developer
+                    </button>
                   </div>
                   
                   <form onSubmit={handleSaveDevelopers} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {developersList.map((dev: any, index: number) => (
-                        <div key={index} className="bg-zinc-50 dark:bg-zinc-800/40 border-2 border-black/5 dark:border-white/5 rounded-2xl p-6 shadow-sm relative">
+                        <div key={index} className="bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-800/60 rounded-xl p-5 shadow-sm relative animate-fade-in">
                           <button
                             type="button"
                             onClick={() => handleRemoveDeveloper(index)}
-                            className="absolute top-4 right-4 text-rose-500 bg-rose-500/10 p-2 rounded-xl hover:bg-rose-500 hover:text-white transition-all z-10"
+                            className="absolute top-4 right-4 text-rose-500 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-lg hover:bg-rose-500 hover:text-white transition-all border border-rose-100 dark:border-rose-900/30 cursor-pointer z-10"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                           
                           <div className="space-y-4 pt-2">
                             <div>
-                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Name</label>
-                              <input required type="text" value={dev.name} onChange={(e) => handleDeveloperChange(index, 'name', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-bold dark:text-white" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Name</label>
+                              <input required type="text" value={dev.name} onChange={(e) => handleDeveloperChange(index, 'name', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Role</label>
-                              <input required type="text" value={dev.role} onChange={(e) => handleDeveloperChange(index, 'role', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-medium dark:text-white" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Role</label>
+                              <input required type="text" value={dev.role} onChange={(e) => handleDeveloperChange(index, 'role', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Image URL (Avatar)</label>
-                              <input type="text" value={dev.image_url} onChange={(e) => handleDeveloperChange(index, 'image_url', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-medium dark:text-white" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Image URL (Avatar)</label>
+                              <input type="text" value={dev.image_url} onChange={(e) => handleDeveloperChange(index, 'image_url', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">GitHub URL (Optional)</label>
-                              <input type="text" value={dev.github} onChange={(e) => handleDeveloperChange(index, 'github', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-medium dark:text-white" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">GitHub URL (Optional)</label>
+                              <input type="text" value={dev.github} onChange={(e) => handleDeveloperChange(index, 'github', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Twitter URL (Optional)</label>
-                              <input type="text" value={dev.twitter} onChange={(e) => handleDeveloperChange(index, 'twitter', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-medium dark:text-white" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Twitter URL (Optional)</label>
+                              <input type="text" value={dev.twitter} onChange={(e) => handleDeveloperChange(index, 'twitter', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Bio (Optional)</label>
-                              <textarea rows={2} value={dev.bio} onChange={(e) => handleDeveloperChange(index, 'bio', e.target.value)} className="w-full bg-white dark:bg-zinc-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 font-medium dark:text-white resize-none"></textarea>
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Bio (Optional)</label>
+                              <textarea rows={2} value={dev.bio} onChange={(e) => handleDeveloperChange(index, 'bio', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 resize-none"></textarea>
                             </div>
                           </div>
                         </div>
                       ))}
                       {developersList.length === 0 && (
-                        <div className="col-span-1 md:col-span-2 text-center py-12 opacity-50 border-2 border-dashed border-black/10 dark:border-white/10 rounded-2xl dark:text-white font-bold italic">
+                        <div className="col-span-1 md:col-span-2 text-center py-12 text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl font-medium italic text-sm">
                           No developers added yet.
                         </div>
                       )}
                     </div>
                     
-                    <button type="submit" disabled={saving} className="min-h-[64px] w-full max-w-sm ml-auto block px-12 bg-pink-500 text-white font-black uppercase tracking-widest italic rounded-[2rem] shadow-xl shadow-pink-500/30">
+                    <button type="submit" disabled={saving} className="min-h-[46px] px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm tracking-wide rounded-xl shadow-sm transition-all cursor-pointer border-0 ml-auto block">
                       Sync Developers to Live
                     </button>
                   </form>
                 </div>
               )}
               {activeTab === 'categories' && (
-                <div className="animate-fade-in">
-                  <h2 className="text-2xl font-black mb-8 border-b-4 border-pink-500/20 pb-4 dark:text-white uppercase italic tracking-tighter">Global Categories</h2>
-                  <form onSubmit={handleSaveCategories} className="space-y-8">
+                <div className="animate-fade-in space-y-6">
+                  <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Global Categories</h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage global classification categories for all catalogued apps.</p>
+                  </div>
+                  
+                  <form onSubmit={handleSaveCategories} className="space-y-6">
                     <div>
-                      <label className="block text-[10px] font-black opacity-60 mb-2 uppercase tracking-widest italic dark:text-white">Active Management</label>
-                      <div className="flex flex-wrap gap-3 mb-6">
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">Active Categories</label>
+                      <div className="flex flex-wrap gap-2.5 mb-6">
                         {categoriesList.map((cat, index) => (
-                          <div key={cat} className="flex items-center gap-3 bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 px-4 py-3 rounded-2xl shadow-lg group">
-                            <span className="text-xs font-black dark:text-white tracking-widest">{index + 1}. {cat}</span>
-                            <button type="button" onClick={() => removeCategory(cat)} className="text-rose-500 hover:scale-125 transition-transform"><Trash2 className="w-4 h-4" /></button>
+                          <div key={cat} className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/60 px-3.5 py-2 rounded-xl shadow-sm group">
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wide">{index + 1}. {cat}</span>
+                            <button type="button" onClick={() => removeCategory(cat)} className="text-rose-500 hover:text-rose-600 hover:scale-110 transition-all border-0 bg-transparent p-0 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
                           </div>
                         ))}
                       </div>
-                      <div className="flex gap-3">
-                        <input type="text" value={newCatInput} onChange={(e) => setNewCatInput(e.target.value)} className="flex-1 bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-2xl p-4 font-bold dark:text-white" placeholder="Category Name..." />
-                        <button type="button" onClick={addCategory} className="px-10 bg-black/10 dark:bg-white/10 font-black uppercase text-[10px] tracking-widest rounded-2xl transition-all hover:bg-pink-500 hover:text-white dark:text-white">Add</button>
+                      
+                      <div className="flex gap-3 max-w-md">
+                        <input type="text" value={newCatInput} onChange={(e) => setNewCatInput(e.target.value)} className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" placeholder="New Category Name..." />
+                        <button type="button" onClick={addCategory} className="px-5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs tracking-wider rounded-xl transition-all border-0 cursor-pointer">Add Category</button>
                       </div>
                     </div>
-                    <button type="submit" disabled={saving} className="min-h-[64px] px-12 bg-pink-500 text-white font-black uppercase tracking-widest italic rounded-[2rem] shadow-xl shadow-pink-500/30">
+                    
+                    <button type="submit" disabled={saving} className="min-h-[46px] px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm tracking-wide rounded-xl shadow-sm transition-all cursor-pointer border-0 block">
                       Sync Categories
                     </button>
                   </form>
                 </div>
               )}
               {activeTab === 'banners' && (
-                <div className="animate-fade-in">
-                   <div className="flex justify-between items-center mb-8 border-b-4 border-pink-500/20 pb-4 ">
-                     <h2 className="text-2xl font-black dark:text-white uppercase italic tracking-tighter">Ad Banners (Marketing)</h2>
-                     <button onClick={handleAddBanner} className="bg-pink-500/10 text-pink-500 px-6 py-3 rounded-xl border-2 border-pink-500/20 flex items-center gap-2 font-black uppercase tracking-widest italic text-[10px]"><Plus className="w-4 h-4" /> Deploy Banner</button>
+                <div className="animate-fade-in space-y-6">
+                   <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
+                     <div>
+                       <h2 className="text-xl font-bold text-slate-900 dark:text-white">Ad Banners (Marketing)</h2>
+                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure advertising banners displayed dynamically on the homepage.</p>
+                     </div>
+                     <button 
+                       onClick={handleAddBanner} 
+                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-semibold text-xs transition-all cursor-pointer border-0 shadow-sm"
+                     >
+                       <Plus className="w-4 h-4" /> Deploy Banner
+                     </button>
                    </div>
+                   
                    <div className="grid gap-6">
                      {banners.map((banner) => (
-                       <div key={banner.id} className="bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10 rounded-[2.5rem] p-6 flex flex-col md:flex-row gap-6 hover:border-pink-500/30 transition-all shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
+                       <div key={banner.id} className="bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-800/60 rounded-xl p-5 flex flex-col md:flex-row gap-6 hover:border-blue-500/30 transition-all shadow-sm">
                         <div className="flex flex-col items-center gap-1.5 self-center md:self-stretch justify-center">
                           <img 
                             src={banner.image || "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80"} 
-                            className="w-48 h-28 object-cover rounded-2xl shadow-xl border-2 border-black/10 dark:border-white/10 bg-zinc-100" 
+                            className="w-48 h-28 object-cover rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 bg-slate-100" 
                             alt="Banner Preview" 
                             onError={(e) => {
                               // Fallback for broken image URLs
                               (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80";
                             }}
                           />
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Image Preview</span>
+                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider font-mono">Image Preview</span>
                         </div>
                         <div className="flex-1 space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Banner Heading</label>
-                              <input type="text" value={banner.title} onChange={(e) => handleBannerChange(banner.id, 'title', e.target.value)} className="w-full bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 text-sm font-bold dark:text-white" placeholder="Heading Text" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Banner Heading</label>
+                              <input type="text" value={banner.title} onChange={(e) => handleBannerChange(banner.id, 'title', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" placeholder="Heading Text" />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Banner Subtitle</label>
-                              <input type="text" value={banner.subtitle} onChange={(e) => handleBannerChange(banner.id, 'subtitle', e.target.value)} className="w-full bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 text-sm font-bold dark:text-white" placeholder="Subtitle Caption" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Banner Subtitle</label>
+                              <input type="text" value={banner.subtitle} onChange={(e) => handleBannerChange(banner.id, 'subtitle', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500" placeholder="Subtitle Caption" />
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Image Asset Path Or URL</label>
-                              <input type="text" value={banner.image} onChange={(e) => handleBannerChange(banner.id, 'image', e.target.value)} className="w-full bg-white dark:bg-slate-900 border-2 border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-mono dark:text-white" placeholder="Image URL Source" />
+                              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Image Asset Path Or URL</label>
+                              <input type="text" value={banner.image} onChange={(e) => handleBannerChange(banner.id, 'image', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none focus:border-blue-500" placeholder="Image URL Source" />
                             </div>
                             
                             <div>
                               <div className="flex justify-between items-center mb-1">
-                                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Target Redirect Link</label>
-                                <span className="text-[9px] font-black text-pink-500 uppercase tracking-wider">Quick Link Tool</span>
+                                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Target Redirect Link</label>
+                                <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Quick Link Tool</span>
                               </div>
-                              <input type="text" value={banner.link} onChange={(e) => handleBannerChange(banner.id, 'link', e.target.value)} className="w-full bg-white dark:bg-slate-900 border-2 border-pink-500/20 dark:border-pink-500/20 rounded-xl p-3 text-xs font-mono dark:text-white" placeholder="Link URL (/slug or http://...)" />
+                              <input type="text" value={banner.link} onChange={(e) => handleBannerChange(banner.id, 'link', e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none focus:border-blue-500" placeholder="Link URL (/slug or http://...)" />
                               
-                              <div className="mt-2 flex flex-wrap gap-2">
+                              <div className="mt-2.5 flex flex-wrap gap-2">
                                 <select 
                                   onChange={(e) => {
                                     if (e.target.value) {
@@ -3061,7 +3362,7 @@ export default function AdminDashboard() {
                                       e.target.value = "";
                                     }
                                   }}
-                                  className="bg-black/5 dark:bg-slate-800 border border-black/10 dark:border-white/10 rounded-lg py-1 px-2 text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-300 outline-none max-w-[140px]"
+                                  className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg py-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 outline-none max-w-[140px] focus:border-blue-500"
                                 >
                                   <option value="">Link to App...</option>
                                   {appsList.map((a: any) => (
@@ -3076,7 +3377,7 @@ export default function AdminDashboard() {
                                       e.target.value = "";
                                     }
                                   }}
-                                  className="bg-black/5 dark:bg-slate-800 border border-black/10 dark:border-white/10 rounded-lg py-1 px-2 text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-300 outline-none max-w-[140px]"
+                                  className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg py-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 outline-none max-w-[140px] focus:border-blue-500"
                                 >
                                   <option value="">Link to Blog...</option>
                                   {blogs.map((b: any) => (
@@ -3091,7 +3392,7 @@ export default function AdminDashboard() {
                                       e.target.value = "";
                                     }
                                   }}
-                                  className="bg-black/5 dark:bg-slate-800 border border-black/10 dark:border-white/10 rounded-lg py-1 px-2 text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-300 outline-none max-w-[140px]"
+                                  className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg py-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 outline-none max-w-[140px] focus:border-blue-500"
                                 >
                                   <option value="">Link to News...</option>
                                   {newsList.map((n: any) => (
@@ -3102,10 +3403,10 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           
-                          <div className="flex justify-end pt-2 border-t border-black/5 dark:border-white/5">
+                          <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
                             <button 
                               onClick={() => handleDeleteBanner(banner.id)} 
-                              className="flex items-center gap-1.5 px-4 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl transition-all border border-rose-500/20 text-[10px] font-bold uppercase tracking-widest"
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg transition-all border border-rose-100 dark:border-rose-900/30 text-xs font-semibold cursor-pointer"
                             >
                               <Trash2 className="w-3.5 h-3.5" /> Remove Banner
                             </button>
@@ -3114,14 +3415,14 @@ export default function AdminDashboard() {
                        </div>
                      ))}
                    </div>
-                   <div className="mt-12 flex justify-center">
+                   <div className="mt-8 flex justify-end">
                      <button onClick={async () => {
                        setSaving(true);
                        await saveMockSettings({ ...mockSettings, banners });
                        triggerHaptic();
                        setSaving(false);
                        alert('Banners Synced to Frontend System.');
-                     }} className="bg-pink-500 text-white px-20 py-5 rounded-[2.5rem] font-black uppercase tracking-widest italic shadow-2xl shadow-pink-500/40 animate-pulse">Sync Banners</button>
+                     }} className="min-h-[46px] px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm tracking-wide rounded-xl shadow-sm transition-all cursor-pointer border-0 block">Sync Banners</button>
                    </div>
                 </div>
               )}
