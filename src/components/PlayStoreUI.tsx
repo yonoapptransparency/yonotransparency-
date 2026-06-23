@@ -50,11 +50,11 @@ export const FeaturedBanner = React.memo(({ items }: BannerProps) => {
 
   return (
     <div 
-      className="w-full relative px-4 sm:px-0 max-w-4xl mx-auto mb-5 group/carousel select-none"
+      className="w-full relative px-0 sm:px-4 max-w-4xl mx-auto mb-5 group/carousel select-none"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="w-full overflow-hidden rounded-[20px] shadow-sm border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-950/40 relative h-[130px] sm:h-[160px] md:h-[185px]">
+      <div className="w-full overflow-hidden rounded-none sm:rounded-[20px] shadow-sm sm:border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-950/40 relative h-[130px] sm:h-[160px] md:h-[185px]">
         <motion.div
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
@@ -247,7 +247,7 @@ export const PlayStoreTabs = React.memo(({ activeTab, onTabChange, hideOnSearch 
   }
   
   return (
-    <div className="mb-6 sticky top-16 z-40 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md py-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+    <div className="mb-6 sticky top-[52px] sm:top-16 z-40 bg-[var(--bg-primary)]/80 backdrop-blur-md py-2 px-4 sm:px-0">
       <div className="flex overflow-x-auto no-scrollbar gap-2">
         {tabs.map((tab) => (
           <button
@@ -305,7 +305,7 @@ export const AppListItem = React.memo(({ app, index }: { app: any; index?: numbe
             window.navigator.vibrate(10);
           }
         }}
-        className="flex items-center gap-4 p-4 mb-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200 group rounded-2xl relative active:scale-[0.98]"
+        className="flex items-center gap-4 p-4 mb-0 sm:mb-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200 group rounded-none sm:rounded-2xl relative active:scale-[0.98]"
       >
         <div className="w-6 sm:w-8 text-sm font-bold text-zinc-400 dark:text-zinc-500 text-center shrink-0">
           {displayIndex}
@@ -397,7 +397,7 @@ export const TopChartItem = React.memo(({ rank, app }: TopChartItemProps) => {
             window.navigator.vibrate(10);
           }
         }}
-        className="flex items-center gap-4 p-4 mb-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200 group rounded-2xl relative active:scale-[0.98]"
+        className="flex items-center gap-4 p-4 mb-0 sm:mb-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200 group rounded-none sm:rounded-2xl relative active:scale-[0.98]"
       >
         <div className="w-6 sm:w-8 text-sm font-bold text-zinc-400 dark:text-zinc-500 text-center shrink-0">
           {rank}
@@ -457,7 +457,7 @@ export const TopChartItem = React.memo(({ rank, app }: TopChartItemProps) => {
 
 export const AppListItemSkeleton = () => {
   return (
-    <div className="flex items-center gap-4 p-4 mb-2 animate-pulse rounded-2xl relative select-none">
+    <div className="flex items-center gap-4 p-4 mb-0 sm:mb-2 animate-pulse rounded-none sm:rounded-2xl relative select-none">
       <div className="w-6 sm:w-8 text-center shrink-0">
         <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-4 mx-auto" />
       </div>
@@ -489,7 +489,7 @@ export const AppListItemSkeleton = () => {
 
 export const TopChartItemSkeleton = ({ rank }: { rank: number }) => {
   return (
-    <div className="flex items-center gap-4 p-4 mb-2 animate-pulse rounded-2xl relative select-none">
+    <div className="flex items-center gap-4 p-4 mb-0 sm:mb-2 animate-pulse rounded-none sm:rounded-2xl relative select-none">
       <div className="w-6 sm:w-8 text-sm font-bold text-zinc-300 dark:text-zinc-700 text-center shrink-0">
         {rank}
       </div>

@@ -6,7 +6,7 @@
 import { DataProvider, useData } from './contexts/DataContext';
 import { useLocation, BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { Menu, Shield, ShieldCheck, Info, ArrowRight, X, LayoutGrid, Newspaper, Sparkles, Send, MoreHorizontal, Search, Video, Star, Facebook, Instagram, Twitter, Linkedin, Youtube, Bot } from 'lucide-react';
+import { Menu, Shield, ShieldCheck, Info, ArrowRight, X, LayoutGrid, Newspaper, Sparkles, Send, MoreHorizontal, Search, Video, Star, Facebook, Instagram, Twitter, Linkedin, Youtube, Bot, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Home from './pages/Home';
 import PublicChatbot from './components/PublicChatbot';
@@ -181,6 +181,7 @@ function Header() {
                       { to: '/videos', label: 'Videos', icon: Video },
                       { to: '/blogs', label: 'Blogs', icon: LayoutGrid },
                       { to: '/about', label: 'About Us', icon: Info },
+                      { to: '/developers', label: 'Our Team', icon: Users },
                       { to: '/contact', label: 'Contact', icon: Send },
                       { to: '/responsibility', label: 'Safety', icon: ShieldCheck },
                       { to: '/privacy', label: 'Privacy', icon: ShieldCheck },
@@ -321,6 +322,7 @@ function Header() {
                 { to: '/blogs', label: 'Blogs', icon: Menu },
                 { to: '/responsibility', label: 'Safety', icon: ShieldCheck },
                 { to: '/about', label: 'About Us', icon: Info },
+                { to: '/developers', label: 'Our Team', icon: Users },
                 { to: '/contact', label: 'Contact', icon: Send },
                 { to: '/privacy', label: 'Privacy', icon: ShieldCheck },
                 { to: '/terms', label: 'Terms', icon: ShieldCheck },
@@ -959,7 +961,7 @@ function AppContent() {
         </div>
       )}
       
-      <main className="flex-1 w-full max-w-[1550px] mx-auto px-3 sm:px-6 md:px-10 py-3 pb-16 sm:pb-24 overflow-x-hidden relative">
+      <main className="flex-1 w-full max-w-full lg:max-w-[1550px] mx-auto px-0 sm:px-6 md:px-10 py-0 sm:py-3 pb-16 sm:pb-24 overflow-x-hidden relative">
         <Suspense fallback={<LoadingScreen />}>
           <Routes location={location}>
             <Route path="/" element={<Home />} />

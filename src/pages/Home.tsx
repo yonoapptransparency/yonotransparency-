@@ -202,11 +202,11 @@ export default function Home() {
                           activeTabLower === 'apps';
         const hasNewApps = loading ? true : filteredApps.some(app => app.is_new);
         return isHomeTab && hasNewApps && (
-          <div className="px-2 animate-fade-in">
-            <h2 className="text-xl font-bold mb-4 mt-6 text-zinc-900 dark:text-zinc-100 flex items-center px-2">
+          <div className="px-0 sm:px-2 animate-fade-in">
+            <h2 className="text-xl font-bold mb-4 mt-6 text-zinc-900 dark:text-zinc-100 flex items-center px-4 sm:px-2">
               Verified New Additions
             </h2>
-            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-3 px-1 mb-6">
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4 px-4 sm:px-1 mb-6">
               {loading ? (
                 Array.from({ length: 10 }).map((_, i) => (
                   <NewAdditionItemSkeleton key={i} />
@@ -256,7 +256,7 @@ export default function Home() {
       <PlayStoreTabs activeTab={activeTab} onTabChange={setActiveTab} hideOnSearch={!!searchTerm} />
 
       {activeTab.toLowerCase() !== 'categories' && (
-        <div className="px-4 mb-4 flex flex-wrap items-center justify-between gap-3 bg-zinc-50/40 dark:bg-zinc-950/40 py-2.5 rounded-2xl border border-black/[0.03] dark:border-white/[0.03]">
+        <div className="px-4 sm:px-4 mb-4 flex flex-wrap items-center justify-between gap-3 bg-zinc-50/40 dark:bg-zinc-950/40 py-2.5 rounded-none sm:rounded-2xl border-y sm:border border-black/[0.03] dark:border-white/[0.03]">
           <div className="flex items-center gap-2">
             <ListFilter className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
             <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 leading-none">
@@ -330,7 +330,7 @@ export default function Home() {
       )}
 
       {searchTerm && (
-        <div className="px-1">
+        <div className="px-0 sm:px-1">
           <h2 className="text-xl font-bold mb-4 mt-6 text-zinc-900 dark:text-zinc-100 px-4">
             Search Results
           </h2>
@@ -349,7 +349,7 @@ export default function Home() {
       )}
 
       {activeTab.toLowerCase() === 'top charts' && !searchTerm && (
-        <div className="space-y-1 px-1">
+        <div className="space-y-1 px-0 sm:px-1">
           <h2 className="text-xl font-bold mb-4 mt-6 text-zinc-900 dark:text-zinc-100 flex items-center gap-2 px-4">
             Top Charts
           </h2>
@@ -384,7 +384,7 @@ export default function Home() {
                           activeTabLower === 'home' || 
                           activeTabLower === 'apps';
         return isHomeTab && (
-          <div className="px-1">
+          <div className="px-0 sm:px-1">
             <h2 className="text-xl font-bold mb-4 mt-8 text-zinc-900 dark:text-zinc-100 px-4">
               Explore All
             </h2>
@@ -436,7 +436,7 @@ export default function Home() {
         const isExcluded = isHomeTab || activeTabLower === 'top charts' || activeTabLower === 'categories';
         
         return !isExcluded && (
-        <div className="animate-fade-in space-y-2 px-1">
+        <div className="animate-fade-in space-y-2 px-0 sm:px-1">
           {(() => {
             if (loading) {
               return Array.from({ length: 6 }).map((_, i) => (

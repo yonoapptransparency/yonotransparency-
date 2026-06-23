@@ -4,7 +4,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { Mail, MessageSquare, MapPin, ArrowLeft, ShieldCheck, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Mail, MessageSquare, MapPin, ArrowLeft, ShieldCheck, Loader2, Check, AlertCircle, Bot } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { Link } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
@@ -47,6 +47,21 @@ export default function Contact() {
           </div>
 
           <div className="space-y-6">
+            <button 
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('open-public-chatbot'))}
+              className="w-full relative overflow-hidden flex items-center gap-5 p-6 bg-blue-600 rounded-[24px] shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-transform text-left group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-blue-600 to-indigo-600 z-0"></div>
+              <div className="bg-white/20 p-3.5 rounded-xl border border-white/20 z-10 group-hover:-rotate-12 transition-transform">
+                <Bot className="w-7 h-7 text-white" />
+              </div>
+              <div className="z-10">
+                <h3 className="font-bold text-xs uppercase tracking-wider text-blue-100 mb-1">AI Chat Assistant</h3>
+                <p className="text-white font-semibold text-lg">Get instant answers 24/7</p>
+              </div>
+            </button>
+
             <div className="flex items-start gap-4 p-6 bg-white dark:bg-zinc-900 rounded-[24px] border border-black/5 dark:border-white/5 shadow-sm">
               <div className="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
                 <Mail className="w-6 h-6 text-blue-500" />
