@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useMemo, useDeferredValue } from 'react';
+import { safeHtml } from '../lib/safeHtml';
 import { Link, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useData } from '../contexts/DataContext';
@@ -474,15 +475,27 @@ export default function Home() {
             </h2>
             <div className="space-y-4">
               {mockSettings.website_faqs.map((faq, index) => (
-                <div key={index} className="bg-white/70 dark:bg-zinc-900/70 border border-black/5 dark:border-white/5 rounded-2xl p-6 backdrop-blur-md shadow-sm transition-all hover:shadow-md hover:border-black/10 dark:hover:border-white/10">
-                  <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2 flex items-start gap-3">
-                    <span className="text-blue-500 font-black mt-px">Q.</span>
-                    {faq.question}
-                  </h3>
-                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium pl-[-4px]">
-                    <span className="text-indigo-500 font-black mr-2">A.</span>
-                    {faq.answer}
-                  </p>
+                <div key={index} className="bg-white/70 dark:bg-zinc-900/70 border border-black/5 dark:border-white/5 rounded-2xl backdrop-blur-md shadow-sm transition-all hover:shadow-md hover:border-black/10 dark:hover:border-white/10 overflow-hidden">
+                  <details className="group">
+                    <summary className="font-bold py-5 px-6 cursor-pointer select-none flex items-center justify-between text-zinc-900 dark:text-white text-lg transition-colors overflow-hidden">
+                      <span className="flex items-start gap-3 flex-1 pr-4">
+                        <span className="text-blue-500 font-black mt-px shrink-0">Q.</span>
+                        <span>{faq.question}</span>
+                      </span>
+                      <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 group-open:rotate-45 transition-transform">
+                        +
+                      </div>
+                    </summary>
+                    <div className="px-6 pb-6 pt-0 text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                      <div className="flex items-start gap-3">
+                        <span className="text-indigo-500 font-black mt-px shrink-0">A.</span>
+                        <div 
+                          className="prose prose-zinc dark:prose-invert prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: safeHtml(faq.answer) }}
+                        />
+                      </div>
+                    </div>
+                  </details>
                 </div>
               ))}
             </div>

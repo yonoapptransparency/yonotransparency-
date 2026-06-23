@@ -2057,6 +2057,10 @@ ${JSON.stringify(publicContext, null, 2)}`;
     }));
     
     app.get('*', async (req, res) => {
+      // Basic WAF / Scanner Mitigation for SPA fallback
+      if (req.originalUrl.match(/\.(php|env|yml|yaml|ini|conf|log|sql|tar|gz|zip|bak|git|rsa)$/i) || req.originalUrl.includes('/etc/') || req.originalUrl.includes('/proc/') || req.originalUrl.includes('../') || req.originalUrl.includes('/.aws/')) {
+        return res.status(404).type('text/plain').send('Not found');
+      }
       let templatePath = path.join(distPath, 'index.html');
       if (!fs.existsSync(templatePath)) {
         templatePath = path.join(process.cwd(), 'index.html');
