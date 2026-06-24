@@ -332,6 +332,17 @@ export const AppListItem = React.memo(({ app, index }: { app: any; index?: numbe
                 </div>
               </div>
             )}
+            {app.is_new && (
+              <div className="absolute top-1 left-1 pointer-events-none z-20">
+                <span className="flex h-4 items-center justify-center rounded-full bg-zinc-950/85 backdrop-blur-[4px] px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest text-emerald-400 border border-emerald-500/40 shadow-[0_2px_10px_rgba(16,185,129,0.25)] gap-1">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+                  </span>
+                  NEW
+                </span>
+              </div>
+            )}
           </div>
         </div>
         
@@ -422,6 +433,17 @@ export const TopChartItem = React.memo(({ rank, app }: TopChartItemProps) => {
                 <div className="bg-amber-500/95 backdrop-blur-[1px] text-white text-[8px] font-black uppercase tracking-widest px-1.5 py-[1px] rounded shadow-sm border border-amber-400">
                   Soon
                 </div>
+              </div>
+            )}
+            {app.is_new && (
+              <div className="absolute top-1 left-1 pointer-events-none z-20">
+                <span className="flex h-4 items-center justify-center rounded-full bg-zinc-950/85 backdrop-blur-[4px] px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest text-emerald-400 border border-emerald-500/40 shadow-[0_2px_10px_rgba(16,185,129,0.25)] gap-1">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+                  </span>
+                  NEW
+                </span>
               </div>
             )}
           </div>

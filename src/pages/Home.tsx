@@ -206,10 +206,12 @@ export default function Home() {
             <h2 className="text-xl font-bold mb-4 mt-6 text-zinc-900 dark:text-zinc-100 flex items-center px-2 sm:px-2">
               Verified New Additions
             </h2>
-            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4 px-1 sm:px-1 mb-6">
+            <div className="flex overflow-x-auto gap-3.5 sm:gap-4 px-4 sm:px-1 pb-4 mb-6 scrollbar-none snap-x snap-mandatory scroll-smooth -mx-4 sm:-mx-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {loading ? (
                 Array.from({ length: 10 }).map((_, i) => (
-                  <NewAdditionItemSkeleton key={i} />
+                  <div key={i} className="flex-none w-[76px] sm:w-[92px] snap-start">
+                    <NewAdditionItemSkeleton />
+                  </div>
                 ))
               ) : (
                 filteredApps.filter(app => app.is_new).slice(0, 10).map((app) => {
@@ -217,6 +219,7 @@ export default function Home() {
                   return (
                   <motion.div
                     key={app.id}
+                    className="flex-none w-[76px] sm:w-[92px] snap-start"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.2 }}
@@ -232,6 +235,15 @@ export default function Home() {
                           height={128}
                           className="w-full h-full object-cover group-hover:-translate-y-0.5 transition-transform duration-300" 
                         />
+                        <div className="absolute top-1 left-1 pointer-events-none z-10">
+                          <span className="flex h-4 items-center justify-center rounded-full bg-zinc-950/85 backdrop-blur-[4px] px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest text-emerald-400 border border-emerald-500/40 shadow-[0_2px_10px_rgba(16,185,129,0.25)] gap-1">
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+                            </span>
+                            NEW
+                          </span>
+                        </div>
                         {isActuallyComingSoon && (
                           <div className="absolute top-1 right-1 pointer-events-none">
                             <div className="bg-amber-500/95 backdrop-blur-[1px] text-white text-[8px] font-black uppercase tracking-widest px-1.5 py-[1px] rounded shadow-sm border border-amber-400">

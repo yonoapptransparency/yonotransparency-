@@ -1247,28 +1247,59 @@ if (!process.env.SESSION_SECRET) console.error("WARNING: SESSION_SECRET missing,
     }
   });
 
-  // Admin API: Retrieve secure backup links for admin VIEW/EDIT mapping
+  // Admin API: Retrieve secure backup links for admin VIEW/EDIT mapping (with automatic secureVault.ts fallback and recovery)
   app.get("/api/v1/admin/backup-links-get", verifyAdminToken, (req, res) => {
     try {
-      const backupPath = path.join(process.cwd(), 'src/lib/secure_links_backup.json');
-      if (fs.existsSync(backupPath)) {
-        const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
-        const decryptedItems: { id: string, url: string }[] = [];
-        const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
-        for (const [appId, encUrl] of Object.entries(backupData)) {
-          let decryptedUrl = '';
-          if (typeof encUrl === 'string') {
-            if (encUrl.startsWith('U2FsdGVkX1')) {
-              decryptedUrl = safeDecrypt(encUrl, AES_SECRET);
-            } else {
-              decryptedUrl = encUrl;
+      const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
+      const mergedBackup: Record<string, string> = {};
+
+      // 1. Try to load and parse from the encrypted secureVault.ts file committed to GitHub
+      const vaultPath = path.join(process.cwd(), 'src/lib/secureVault.ts');
+      if (fs.existsSync(vaultPath)) {
+        try {
+          const vaultContent = fs.readFileSync(vaultPath, 'utf8');
+          const match = vaultContent.match(/export const ENCRYPTED_LINKS = "([^"]+)";/);
+          if (match && match[1]) {
+            const ciphertext = match[1];
+            const dec = safeDecrypt(ciphertext, AES_SECRET);
+            if (dec) {
+              const vaultMap = JSON.parse(dec);
+              Object.assign(mergedBackup, vaultMap);
+              console.log("backup-links-get: Loaded secure links from secureVault.ts");
             }
           }
-          decryptedItems.push({ id: appId, url: decryptedUrl });
+        } catch (vaultErr: any) {
+          console.warn("backup-links-get: Failed to parse secureVault.ts:", vaultErr.message);
         }
-        return res.json({ items: decryptedItems });
       }
-      res.json({ items: [] });
+
+      // 2. Try to overlay with the local secure_links_backup.json file (filesystem fallback)
+      const backupPath = path.join(process.cwd(), 'src/lib/secure_links_backup.json');
+      if (fs.existsSync(backupPath)) {
+        try {
+          const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+          Object.assign(mergedBackup, backupData);
+          console.log("backup-links-get: Overlaid secure links with local backup JSON");
+        } catch (backupErr: any) {
+          console.warn("backup-links-get: Failed to parse backup JSON:", backupErr.message);
+        }
+      }
+
+      // 3. Decrypt the individual app URLs back to plaintext for admin viewing
+      const decryptedItems: { id: string, url: string }[] = [];
+      for (const [appId, encUrl] of Object.entries(mergedBackup)) {
+        let decryptedUrl = '';
+        if (typeof encUrl === 'string') {
+          if (encUrl.startsWith('U2FsdGVkX1')) {
+            decryptedUrl = safeDecrypt(encUrl, AES_SECRET);
+          } else {
+            decryptedUrl = encUrl;
+          }
+        }
+        decryptedItems.push({ id: appId, url: decryptedUrl });
+      }
+
+      res.json({ items: decryptedItems });
     } catch (err: any) {
       console.error("backup-links-get failed:", err);
       res.status(500).json({ error: "Failed to read backup links: " + err.message });
