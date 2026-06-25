@@ -704,7 +704,7 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, gener
     setSyncing(true);
     setLogs(["Starting Manual GitHub Sync..."]);
     try {
-      await pushAllToGitHub(localConfig, (msg: string) => {
+      await pushAllToGitHub(undefined, (msg: string) => {
         setLogs(prev => [...prev, msg]);
       }, appsList);
       setLogs(prev => [...prev, "Sync completed successfully!"]);
@@ -796,7 +796,7 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, gener
         <div className="flex gap-4">
           <button 
             onClick={handleManualSync} 
-            disabled={syncing || !localConfig?.token || !localConfig?.owner || !localConfig?.repo} 
+            disabled={syncing || !gitConfig?.token} 
             className="flex-1 min-h-[48px] bg-blue-600 disabled:bg-blue-600/50 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-sm"
           >
             {syncing ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
