@@ -14,6 +14,7 @@ import { AppConfig, GlobalSettings, NewsItem, BlogPost, VideoItem } from '../lib
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { generateStaticDataFileCode } from '../lib/githubSync';
+import { secureStorage } from '../lib/secureStorage';
 import AppsTab from '../components/AppsTab';
 
 function FaqEditor({ initialFaqs }: { initialFaqs: {question: string, answer: string}[] }) {
@@ -703,7 +704,7 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, gener
     setSyncing(true);
     setLogs(["Starting Manual GitHub Sync..."]);
     try {
-      await pushAllToGitHub(undefined, (msg: string) => {
+      await pushAllToGitHub(localConfig, (msg: string) => {
         setLogs(prev => [...prev, msg]);
       }, appsList);
       setLogs(prev => [...prev, "Sync completed successfully!"]);
@@ -795,7 +796,7 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, gener
         <div className="flex gap-4">
           <button 
             onClick={handleManualSync} 
-            disabled={syncing || !gitConfig?.token} 
+            disabled={syncing || !localConfig?.token || !localConfig?.owner || !localConfig?.repo} 
             className="flex-1 min-h-[48px] bg-blue-600 disabled:bg-blue-600/50 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-sm"
           >
             {syncing ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
@@ -2251,6 +2252,19 @@ export default function AdminDashboard() {
               console.warn("Failed to overlay with local backup:", bkErr);
             }
 
+            // Merge any raw links recovered from Firestore console edits
+            try {
+              const recoveredStr = secureStorage.getItem('rummystore_recovered_links');
+              if (recoveredStr) {
+                const recovered = JSON.parse(recoveredStr);
+                Object.entries(recovered).forEach(([id, url]) => {
+                  if (url && typeof url === 'string' && !secureMap.has(id)) {
+                    secureMap.set(id, url);
+                  }
+                });
+              }
+            } catch (e) {}
+
             cachedSecureMapRef.current = secureMap;
             const mergedApps = mockApps.map(a => ({...a, more_information_url: secureMap.get(a.id) || a.more_information_url }));
             setAppsList(mergedApps);
@@ -2269,6 +2283,20 @@ export default function AdminDashboard() {
         } else {
           // If already initialized but mockApps changed (e.g. from background sync)
           const secureMap = cachedSecureMapRef.current || new Map();
+          
+          // Merge any raw links recovered from Firestore console edits
+          try {
+            const recoveredStr = secureStorage.getItem('rummystore_recovered_links');
+            if (recoveredStr) {
+              const recovered = JSON.parse(recoveredStr);
+              Object.entries(recovered).forEach(([id, url]) => {
+                if (url && typeof url === 'string' && !secureMap.has(id)) {
+                  secureMap.set(id, url);
+                }
+              });
+            }
+          } catch (e) {}
+
           const mergedApps = mockApps.map(a => ({...a, more_information_url: secureMap.get(a.id) || a.more_information_url }));
           
           setAppsList(prev => {

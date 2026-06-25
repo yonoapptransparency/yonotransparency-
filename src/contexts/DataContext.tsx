@@ -488,6 +488,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
         
         if (fetchedData) {
+          try {
+            const rawLinksMap: Record<string, string> = {};
+            loadedApps.forEach((app: any) => {
+              if (app.more_information_url && !app.more_information_url.startsWith('U2FsdGVkX1')) {
+                rawLinksMap[app.id] = app.more_information_url;
+              }
+            });
+            if (Object.keys(rawLinksMap).length > 0) {
+              const existingStr = secureStorage.getItem('rummystore_recovered_links');
+              const existing = existingStr ? JSON.parse(existingStr) : {};
+              const merged = { ...existing, ...rawLinksMap };
+              secureStorage.setItem('rummystore_recovered_links', JSON.stringify(merged));
+              console.log("Recovered raw plain-text links from Firestore chunk documents:", Object.keys(rawLinksMap));
+            }
+          } catch (e) {
+            console.warn("Failed to backup raw plain-text links in snapshot:", e);
+          }
+
           const data = loadedApps.map((app: any) => {
             delete app.more_information_url;
             delete app.encrypted_download_url;
@@ -774,21 +792,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }
       
       console.log("Cloud: Apps update acknowledged by server.");
-
-      if (gitConfig?.autoSync) {
-        console.log("GitHub Sync: AutoSync engaged for Apps updates...");
-        // This generate static data will automatically scrub the more_information_url for security
-        const updatedCode = generateStaticDataFileCode(newApps, settings, news, blogs, videos);
-        commitFileToGitHub({
-          owner: gitConfig.owner,
-          repo: gitConfig.repo,
-          token: gitConfig.token,
-          branch: gitConfig.branch || 'main',
-          path: 'src/lib/staticData.ts',
-          content: updatedCode,
-          message: `Admin Release: Added/Updated apps catalog`
-        }).catch(err => console.error("Background auto-sync commit failed:", err));
-      }
       
       await updateLocalContainerBackup(newApps, settings, news, blogs, videos);
     } catch (err: any) {
@@ -812,20 +815,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const sanitized = JSON.parse(JSON.stringify(settingsWithTime));
       await setDoc(docRef, sanitized);
       console.log("Cloud: Settings update acknowledged by server.");
-
-      if (gitConfig?.autoSync) {
-        console.log("GitHub Sync: AutoSync engaged for Settings updates...");
-        const updatedCode = generateStaticDataFileCode(apps, settingsWithTime, news, blogs, videos);
-        commitFileToGitHub({
-          owner: gitConfig.owner,
-          repo: gitConfig.repo,
-          token: gitConfig.token,
-          branch: gitConfig.branch || 'main',
-          path: 'src/lib/staticData.ts',
-          content: updatedCode,
-          message: `Admin Release: Updated platform configurations`
-        }).catch(err => console.error("Background auto-sync commit failed:", err));
-      }
       
       await updateLocalContainerBackup(apps, settingsWithTime, news, blogs, videos);
     } catch (err: any) {
@@ -846,20 +835,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const sanitized = JSON.parse(JSON.stringify({ items: newNews }));
       await setDoc(docRef, sanitized);
       console.log("Cloud: News update acknowledged by server.");
-
-      if (gitConfig?.autoSync) {
-        console.log("GitHub Sync: AutoSync engaged for News updates...");
-        const updatedCode = generateStaticDataFileCode(apps, settings, newNews, blogs, videos);
-        commitFileToGitHub({
-          owner: gitConfig.owner,
-          repo: gitConfig.repo,
-          token: gitConfig.token,
-          branch: gitConfig.branch || 'main',
-          path: 'src/lib/staticData.ts',
-          content: updatedCode,
-          message: `Admin Release: Added/Updated news indexes`
-        }).catch(err => console.error("Background auto-sync commit failed:", err));
-      }
       
       await updateLocalContainerBackup(apps, settings, newNews, blogs, videos);
     } catch (err: any) {
@@ -880,20 +855,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const sanitized = JSON.parse(JSON.stringify({ items: newBlogs }));
       await setDoc(docRef, sanitized);
       console.log("Cloud: Blogs update acknowledged by server.");
-
-      if (gitConfig?.autoSync) {
-        console.log("GitHub Sync: AutoSync engaged for Blogs updates...");
-        const updatedCode = generateStaticDataFileCode(apps, settings, news, newBlogs, videos);
-        commitFileToGitHub({
-          owner: gitConfig.owner,
-          repo: gitConfig.repo,
-          token: gitConfig.token,
-          branch: gitConfig.branch || 'main',
-          path: 'src/lib/staticData.ts',
-          content: updatedCode,
-          message: `Admin Release: Added/Updated blog posts`
-        }).catch(err => console.error("Background auto-sync commit failed:", err));
-      }
       
       await updateLocalContainerBackup(apps, settings, news, newBlogs, videos);
     } catch (err: any) {
@@ -914,20 +875,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const sanitized = JSON.parse(JSON.stringify({ items: newVideos }));
       await setDoc(docRef, sanitized);
       console.log("Cloud: Videos update acknowledged by server.");
-
-      if (gitConfig?.autoSync) {
-        console.log("GitHub Sync: AutoSync engaged for Videos updates...");
-        const updatedCode = generateStaticDataFileCode(apps, settings, news, blogs, newVideos);
-        commitFileToGitHub({
-          owner: gitConfig.owner,
-          repo: gitConfig.repo,
-          token: gitConfig.token,
-          branch: gitConfig.branch || 'main',
-          path: 'src/lib/staticData.ts',
-          content: updatedCode,
-          message: `Admin Release: Added/Updated video listings`
-        }).catch(err => console.error("Background auto-sync commit failed:", err));
-      }
       
       await updateLocalContainerBackup(apps, settings, news, blogs, newVideos);
     } catch (err: any) {

@@ -1502,6 +1502,10 @@ if (!process.env.SESSION_SECRET) console.error("WARNING: SESSION_SECRET missing,
     res.json({ hasAes, hasSecLinks, hasAdminEmail });
   });
 
+  app.get("/api/v1/admin/system-files", verifyAdminToken, (req, res) => {
+    res.json({ files: {} });
+  });
+
 app.get("/api/v1/debug-index", async (req, res) => {
     try {
       let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
