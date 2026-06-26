@@ -66,7 +66,15 @@ service cloud.firestore {
     // Restrict sensitive vault maps, links, and git config strictly to authorized administrators
     match /store_data/{docId} {
       allow read: if isValidId(docId) && (
-        (docId != 'sec_git_config' && docId != 'secure_links' && docId != 'sec_vault' && docId != 'sec_public_links') || isAdmin()
+        docId == 'settings' || 
+        docId == 'news' || 
+        docId == 'blogs' || 
+        docId == 'videos' || 
+        docId == 'apps_meta' || 
+        docId == 'connectivity_test' || 
+        docId == 'apps' || 
+        docId.startsWith('apps_chunk_') || 
+        isAdmin()
       );
       allow write: if isAdmin();
     }

@@ -1,7 +1,8 @@
 declare global { var AES_SECRET_GLOBAL: string; }
-if (!process.env.AES_SECRET) { console.error("WARNING: AES_SECRET is missing. Using insecure fallback."); }
-const fallbackAes = process.env.VITE_FIREBASE_PROJECT_ID ? require('crypto').createHash('sha256').update(process.env.VITE_FIREBASE_PROJECT_ID).digest('hex').substring(0, 32) : 'fallback-aes-secret-change-me-01';
-global.AES_SECRET_GLOBAL = process.env.AES_SECRET || fallbackAes;
+if (!process.env.AES_SECRET) {
+  console.warn("WARNING: AES_SECRET is not configured! Enforced fallback to empty. Decryption/encryption will fail securely until AES_SECRET is set in the environment variables.");
+}
+global.AES_SECRET_GLOBAL = process.env.AES_SECRET || '';
 import express from "express";
 import cookieParser from "cookie-parser";
 import path from "path";
@@ -1047,10 +1048,19 @@ if (!process.env.SESSION_SECRET) console.error("WARNING: SESSION_SECRET missing,
 
   // Admin API: Secure URL encryption
   app.post("/api/v1/admin/encrypt", verifyAdminToken, (req, res) => {
+    const ip = getIp(req);
+    if (rateLimit(ip)) {
+      return res.status(429).json({ error: 'Too many requests. Please wait.' });
+    }
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
+    
+    const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
+    if (!AES_SECRET || AES_SECRET.trim() === '') {
+      return res.status(500).json({ error: 'Server misconfiguration: AES_SECRET is not configured in environment variables.' });
+    }
+
     try {
-      const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
       const ciphertext = safeEncrypt(url, AES_SECRET);
       res.json({ encrypted: ciphertext });
     } catch (err) {
@@ -1168,10 +1178,19 @@ if (!process.env.SESSION_SECRET) console.error("WARNING: SESSION_SECRET missing,
   });
 
   app.post("/api/v1/admin/decrypt-url", verifyAdminToken, (req, res) => {
+    const ip = getIp(req);
+    if (rateLimit(ip)) {
+      return res.status(429).json({ error: 'Too many requests. Please wait.' });
+    }
     const { encryptedUrl } = req.body;
     if (!encryptedUrl) return res.status(400).json({ error: 'Missing encryptedUrl' });
+    
+    const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
+    if (!AES_SECRET || AES_SECRET.trim() === '') {
+      return res.status(500).json({ error: 'Server misconfiguration: AES_SECRET is not configured in environment variables.' });
+    }
+
     try {
-      const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
       const dec = safeDecrypt(encryptedUrl, AES_SECRET);
       res.json({ decrypted: dec || 'Failed to decrypt or empty string' });
     } catch(err: any) {
@@ -1181,12 +1200,21 @@ if (!process.env.SESSION_SECRET) console.error("WARNING: SESSION_SECRET missing,
 
   // Admin API: Decrypt secure links payload list
   app.post("/api/v1/admin/decrypt-links", verifyAdminToken, (req, res) => {
+    const ip = getIp(req);
+    if (rateLimit(ip)) {
+      return res.status(429).json({ error: 'Too many requests. Please wait.' });
+    }
     const { encryptedData } = req.body;
     if (!encryptedData) {
       return res.status(400).json({ error: 'Encrypted payload ciphertext is required.' });
     }
+    
+    const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
+    if (!AES_SECRET || AES_SECRET.trim() === '') {
+      return res.status(500).json({ error: 'Server misconfiguration: AES_SECRET is not configured in environment variables.' });
+    }
+
     try {
-      const AES_SECRET = process.env.AES_SECRET || AES_SECRET_GLOBAL;
       const decryptedText = safeDecrypt(encryptedData, AES_SECRET);
       if (!decryptedText) {
         throw new Error("Empty decrypted block.");

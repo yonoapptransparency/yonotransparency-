@@ -2631,9 +2631,11 @@ export default function AdminDashboard() {
         
       const editApp = editingAppId ? appsList.find(a => a.id === editingAppId) : null;
       let encryptedUrlVal = editApp?.more_information_url || '';
+      let plaintextUrl = '';
       const inputUrl = formData.get('more_information_url') as string;
       if (inputUrl !== null && inputUrl !== undefined) {
         const trimmedUrl = inputUrl.trim();
+        plaintextUrl = trimmedUrl;
         if (trimmedUrl === '') {
           encryptedUrlVal = '';
         } else if (!trimmedUrl.startsWith('U2FsdGVkX1')) {
@@ -2660,6 +2662,9 @@ export default function AdminDashboard() {
           }
         } else {
           encryptedUrlVal = trimmedUrl;
+          if (editingAppId) {
+             plaintextUrl = cachedSecureMapRef.current.get(editingAppId) || trimmedUrl;
+          }
         }
       }
       
@@ -2687,7 +2692,7 @@ export default function AdminDashboard() {
         file_size: (formData.get('file_size') as string) || 'Unknown',
         developer: (formData.get('developer') as string) || 'Admin',
         screenshots: [],
-        more_information_url: encryptedUrlVal,
+        more_information_url: plaintextUrl,
         description_html: formData.get('description_html') as string || '<p>A new application.</p>',
         custom_admin_box_heading: formData.get('custom_admin_box_heading') as string,
         custom_admin_box_html: formData.get('custom_admin_box_html') as string,
@@ -2707,8 +2712,8 @@ export default function AdminDashboard() {
         faqs: JSON.parse((formData.get('faqs_json') as string) || '[]')
       };
       
-      if (encryptedUrlVal) {
-          cachedSecureMapRef.current.set(actualAppId, encryptedUrlVal);
+      if (plaintextUrl) {
+          cachedSecureMapRef.current.set(actualAppId, plaintextUrl);
       } else {
           cachedSecureMapRef.current.delete(actualAppId);
       }
