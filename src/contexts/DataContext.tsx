@@ -279,38 +279,50 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (res.ok) {
           const backup = await res.json();
           if (backup) {
+            const isAdminRoute = typeof window !== 'undefined' && (window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin')));
+
             setApps(prev => {
-              if (prev.length === 0 && backup.apps && backup.apps.length > 0) {
-                secureStorage.setItem('rummystore_apps', JSON.stringify(backup.apps));
-                return backup.apps;
+              if (backup.apps && backup.apps.length > 0) {
+                if (!isAdminRoute || prev.length === 0) {
+                  secureStorage.setItem('rummystore_apps', JSON.stringify(backup.apps));
+                  return backup.apps;
+                }
               }
               return prev;
             });
             setSettings(prev => {
-              if ((!prev || !prev.site_title) && backup.settings && backup.settings.site_title) {
-                secureStorage.setItem('rummystore_settings', JSON.stringify(backup.settings));
-                return backup.settings;
+              if (backup.settings && backup.settings.site_title) {
+                if (!isAdminRoute || !prev || !prev.site_title) {
+                  secureStorage.setItem('rummystore_settings', JSON.stringify(backup.settings));
+                  return backup.settings;
+                }
               }
               return prev;
             });
             setNews(prev => {
-              if (prev.length === 0 && backup.news && backup.news.length > 0) {
-                secureStorage.setItem('rummystore_news', JSON.stringify(backup.news));
-                return backup.news;
+              if (backup.news && backup.news.length > 0) {
+                if (!isAdminRoute || prev.length === 0) {
+                  secureStorage.setItem('rummystore_news', JSON.stringify(backup.news));
+                  return backup.news;
+                }
               }
               return prev;
             });
             setBlogs(prev => {
-              if (prev.length === 0 && backup.blogs && backup.blogs.length > 0) {
-                secureStorage.setItem('rummystore_blogs', JSON.stringify(backup.blogs));
-                return backup.blogs;
+              if (backup.blogs && backup.blogs.length > 0) {
+                if (!isAdminRoute || prev.length === 0) {
+                  secureStorage.setItem('rummystore_blogs', JSON.stringify(backup.blogs));
+                  return backup.blogs;
+                }
               }
               return prev;
             });
             setVideos(prev => {
-              if (prev.length === 0 && backup.videos && backup.videos.length > 0) {
-                secureStorage.setItem('rummystore_videos', JSON.stringify(backup.videos));
-                return backup.videos;
+              if (backup.videos && backup.videos.length > 0) {
+                if (!isAdminRoute || prev.length === 0) {
+                  secureStorage.setItem('rummystore_videos', JSON.stringify(backup.videos));
+                  return backup.videos;
+                }
               }
               return prev;
             });

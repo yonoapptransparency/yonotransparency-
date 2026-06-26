@@ -18,7 +18,7 @@ import crypto from "crypto";
 import compression from "compression";
 import fs from "fs";
 import dns from "dns";
-import { injectSeoTags, fetchStoreData, getField } from "./src/seoHelper";
+import { injectSeoTags, fetchStoreData, getField, syncFromFirestore } from "./src/seoHelper";
 import { generateStaticDataFileCode } from "./src/lib/githubSync";
 import CryptoJS from "crypto-js";
 import { GoogleGenAI, Type } from "@google/genai";
@@ -2463,8 +2463,17 @@ ${JSON.stringify(publicContext, null, 2)}`;
 
   app.listen(PORT as number, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
-    // Eagerly populate cache so first user gets instant response
-    fetchStoreData().catch(e => console.log("Silent initial cache warming failed: ", e));
+    // Eagerly sync from Firestore to update filesystem backup files on boot, fallback to standard cache warming
+    syncFromFirestore()
+      .then(data => {
+        if (!data) {
+          return fetchStoreData();
+        }
+      })
+      .catch(e => {
+        console.warn("Eager startup Firestore sync failed, running standard warming:", e);
+        fetchStoreData().catch(() => {});
+      });
   });
 }
 
