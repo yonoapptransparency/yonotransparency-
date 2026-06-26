@@ -191,21 +191,25 @@ export async function syncFromFirestore(): Promise<any> {
       apps = mockApps;
     }
 
-    const publicBackupPath = path.join(process.cwd(), 'src/lib/public_backup.json');
-    fs.writeFileSync(publicBackupPath, JSON.stringify({
-      apps,
-      settings,
-      news,
-      blogs,
-      videos
-    }, null, 2), 'utf8');
-
     try {
-      const { generateStaticDataFileCode } = require('./lib/githubSync');
-      const tsCode = generateStaticDataFileCode(apps, settings, news, blogs, videos);
-      fs.writeFileSync(path.join(process.cwd(), 'src/lib/staticData.ts'), tsCode, 'utf8');
-    } catch (e: any) {
-      console.warn("Could not write staticData.ts fallback (skipping):", e.message);
+      const publicBackupPath = path.join(process.cwd(), 'src/lib/public_backup.json');
+      fs.writeFileSync(publicBackupPath, JSON.stringify({
+        apps,
+        settings,
+        news,
+        blogs,
+        videos
+      }, null, 2), 'utf8');
+
+      try {
+        const { generateStaticDataFileCode } = require('./lib/githubSync');
+        const tsCode = generateStaticDataFileCode(apps, settings, news, blogs, videos);
+        fs.writeFileSync(path.join(process.cwd(), 'src/lib/staticData.ts'), tsCode, 'utf8');
+      } catch (e: any) {
+        console.warn("Could not write staticData.ts fallback (skipping):", e.message);
+      }
+    } catch (fsError: any) {
+      console.warn("[SYNC] Could not write cache files to filesystem (running in read-only environment?):", fsError.message);
     }
 
     console.log(`[SYNC] Synchronization successful. Apps count: ${apps.length}`);

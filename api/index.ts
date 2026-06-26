@@ -782,12 +782,16 @@ if (!process.env.SESSION_SECRET) console.error("WARNING: SESSION_SECRET missing,
       }
       if (!isDbAdmin && user.emailVerified === true) {
         try {
-          const dbCheckRes = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/admins/${user.localId}${config.apiKey ? "?key=" + config.apiKey : ""}`);
+          const dbCheckRes = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/admins/${user.localId}${config.apiKey ? "?key=" + config.apiKey : ""}`, {
+            headers: { Authorization: `Bearer ${idToken}` }
+          });
           if (dbCheckRes.ok) {
             isDbAdmin = true;
           } else {
             // Fallback check by email docId in case uid is not docId
-            const dbCheckResEmail = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/admins/${email}${config.apiKey ? "?key=" + config.apiKey : ""}`);
+            const dbCheckResEmail = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId}/documents/admins/${email}${config.apiKey ? "?key=" + config.apiKey : ""}`, {
+              headers: { Authorization: `Bearer ${idToken}` }
+            });
             if (dbCheckResEmail.ok) {
               isDbAdmin = true;
             } else {

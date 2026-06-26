@@ -815,8 +815,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     log("GitHub Sync: Public static data successfully synced.");
     
     log("Local System: Applying backend static data patch...");
-    await updateLocalContainerBackup(finalApps, targetSettings, targetNews, targetBlogs, targetVideos);
-    log("Local System: Patch applied successfully.");
+    try {
+      await updateLocalContainerBackup(finalApps, targetSettings, targetNews, targetBlogs, targetVideos);
+      log("Local System: Patch applied successfully.");
+    } catch (err: any) {
+      log(`Local System: Patch encountered an error (can be ignored on read-only hosts like Vercel): ${err.message}`);
+    }
 
     log("GitHub Sync: Building AES Encrypted Vault for hidden secure links...");
     try {
