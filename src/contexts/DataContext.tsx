@@ -781,8 +781,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
       if (encryptedData) {
         try {
-          await setDoc(doc(db, 'store_data', 'secure_links'), { encryptedData });
-          
+          const payload = { encryptedData, lastUpdated: new Date().toISOString() };
+          await setDoc(doc(db, 'store_data', 'secure_links'), payload);
+          await setDoc(doc(db, 'store_data', 'sec_vault'), payload);
+          await setDoc(doc(db, 'store_data', 'sec_public_links'), payload);
         } catch (dbErr) {
           // failed
         }
