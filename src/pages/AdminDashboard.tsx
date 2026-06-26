@@ -677,7 +677,7 @@ const BannersTab = React.memo(({ banners, handleAddBanner, handleRemoveBanner, h
   </div>
 ));
 
-const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, generatePreview, appsList }: any) => {
+const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, generatePreview, appsList, mockSettings, newsList, blogs, videosList }: any) => {
   const [logs, setLogs] = React.useState<string[]>([]);
   const [syncing, setSyncing] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
@@ -704,9 +704,17 @@ const GithubTab = React.memo(({ pushAllToGitHub, gitConfig, saveGitConfig, gener
     setSyncing(true);
     setLogs(["Starting Manual GitHub Sync..."]);
     try {
-      await pushAllToGitHub(undefined, (msg: string) => {
-        setLogs(prev => [...prev, msg]);
-      }, appsList);
+      await pushAllToGitHub(
+        undefined, 
+        (msg: string) => {
+          setLogs(prev => [...prev, msg]);
+        }, 
+        appsList,
+        mockSettings,
+        newsList,
+        blogs,
+        videosList
+      );
       setLogs(prev => [...prev, "Sync completed successfully!"]);
     } catch (err: any) {
       setLogs(prev => [...prev, `ERROR: ${err.message || 'Push failed'}`]);
@@ -3468,7 +3476,7 @@ export default function AdminDashboard() {
                 <ReviewsModerationTab db={db} />
               )}
               {activeTab === 'github' && (
-                <GithubTab pushAllToGitHub={pushAllToGitHub} gitConfig={gitConfig} saveGitConfig={saveGitConfig} appsList={appsList} generatePreview={() => generateStaticDataFileCode(appsList, mockSettings, newsList, blogs, videosList)} />
+                <GithubTab pushAllToGitHub={pushAllToGitHub} gitConfig={gitConfig} saveGitConfig={saveGitConfig} appsList={appsList} mockSettings={mockSettings} newsList={newsList} blogs={blogs} videosList={videosList} generatePreview={() => generateStaticDataFileCode(appsList, mockSettings, newsList, blogs, videosList)} />
               )}
               {activeTab === 'settings' && (
                 <SettingsTab key={mockSettings.site_title || 'settings'} mockSettings={mockSettings} handleSaveSettings={handleSaveSettings} saving={saving} />

@@ -299,8 +299,7 @@ export async function commitFileToGitHub({
     body: JSON.stringify({
       owner,
       repo,
-      // Do NOT send the token from the client to the server-side proxy
-      // The server retrieves the token securely from the Firestore database
+      token, // Send the token directly so that server doesn't fail if Firestore or Vercel config is missing/rate-limited
       branch,
       path,
       content,

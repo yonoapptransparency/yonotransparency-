@@ -50,7 +50,15 @@ interface DataContextType {
   gitConfig: GitConfig | null;
   gitConfigLoading: boolean;
   saveGitConfig: (config: GitConfig) => Promise<void>;
-  pushAllToGitHub: (customConfig?: GitConfig) => Promise<void>;
+  pushAllToGitHub: (
+    customConfig?: GitConfig,
+    onProgress?: (msg: string) => void,
+    overrideApps?: any[],
+    overrideSettings?: any,
+    overrideNews?: any[],
+    overrideBlogs?: any[],
+    overrideVideos?: any[]
+  ) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -719,6 +727,183 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const pushAllToGitHub = React.useCallback(async (
+    customConfig?: GitConfig, 
+    onProgress?: (msg: string) => void, 
+    overrideApps?: any[],
+    overrideSettings?: any,
+    overrideNews?: any[],
+    overrideBlogs?: any[],
+    overrideVideos?: any[]
+  ) => {
+    const configToUse = customConfig || gitConfig;
+    if (!configToUse) {
+      throw new Error("GitHub synchronization is not configured.");
+    }
+    const log = (msg: string) => {
+      console.log(msg);
+      if (onProgress) onProgress(msg);
+    };
+
+    const targetApps = overrideApps || apps;
+    const targetSettings = overrideSettings || settings;
+    const targetNews = overrideNews || news;
+    const targetBlogs = overrideBlogs || blogs;
+    const targetVideos = overrideVideos || videos;
+
+    let finalApps = targetApps;
+    const hasAnySecureLink = targetApps.some(a => a.more_information_url);
+    if (!hasAnySecureLink && targetApps.length > 0) {
+      log("GitHub Sync: Merging secure links from backup to prevent overwriting with empty vault...");
+      try {
+        const { getAuth } = await import('firebase/auth');
+        const authObj = getAuth();
+        const idToken = authObj.currentUser ? await authObj.currentUser.getIdToken() : '';
+        if (idToken) {
+          const bkRes = await fetch('/api/v1/admin/backup-links-get', {
+            headers: { 'Authorization': `Bearer ${idToken}` }
+          });
+          if (bkRes.ok) {
+            const bkJSON = await bkRes.json();
+            if (bkJSON && bkJSON.items) {
+              const secureMap = new Map();
+              bkJSON.items.forEach((it: any) => {
+                if (it.url) secureMap.set(it.id, it.url);
+              });
+              finalApps = targetApps.map((a: any) => ({
+                ...a,
+                more_information_url: secureMap.get(a.id) || a.more_information_url || ''
+              }));
+              log(`GitHub Sync: Merged ${secureMap.size} secure links successfully.`);
+            }
+          }
+        }
+      } catch (bkErr: any) {
+        log(`GitHub Sync Warning: Failed to retrieve secure links for merging: ${bkErr.message}`);
+      }
+    }
+
+    log("GitHub Sync: Manually pushing all static data to repository...");
+    log("GitHub Sync: Generating secure payload...");
+    const updatedCode = generateStaticDataFileCode(finalApps, targetSettings, targetNews, targetBlogs, targetVideos);
+    
+    log(`GitHub Sync: Payload generated successfully (${targetApps.length} apps, ${targetNews.length} news items).`);
+    log("GitHub Sync: Uploading public static data to GitHub...");
+    
+    await commitFileToGitHub({
+      owner: configToUse.owner,
+      repo: configToUse.repo,
+      token: configToUse.token,
+      branch: configToUse.branch || 'main',
+      path: 'src/lib/staticData.ts',
+      content: updatedCode,
+      message: `Admin Release: Manual platform synchronization triggered`
+    });
+
+    log("GitHub Sync: Public static data successfully synced.");
+    
+    log("Local System: Applying backend static data patch...");
+    await updateLocalContainerBackup(finalApps, targetSettings, targetNews, targetBlogs, targetVideos);
+    log("Local System: Patch applied successfully.");
+
+    log("GitHub Sync: Building AES Encrypted Vault for hidden secure links...");
+    try {
+      const { getAuth } = await import('firebase/auth');
+      const auth = getAuth();
+      const idToken = auth.currentUser ? await auth.currentUser.getIdToken() : '';
+      
+      const vaultRes = await fetch('/api/v1/admin/seal-vault', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json', ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}) },
+         body: JSON.stringify({ items: finalApps })
+      });
+
+      if (vaultRes.ok) {
+         const vaultData = await vaultRes.json();
+         if (vaultData.ciphertext) {
+
+            log(`GitHub Sync: Writing Encrypted Vault to repository "${configToUse.repo}"...`);
+            await commitFileToGitHub({
+              owner: configToUse.owner,
+              repo: configToUse.repo,
+              token: configToUse.token,
+              branch: configToUse.branch || 'main',
+              path: 'src/lib/secureVault.ts',
+              content: `export const ENCRYPTED_LINKS = "${vaultData.ciphertext}";\n`,
+              message: `Admin Release: Secure vault synchronization`
+            });
+            log(`GitHub Sync: Encrypted Vault successfully synced to "${configToUse.repo}".`);
+         } else {
+            throw new Error(vaultData.error || "No ciphertext returned");
+         }
+      } else {
+         throw new Error("Failed to seal vault: HTTP " + vaultRes.status);
+      }
+    } catch(err: any) {
+        log(`GitHub Sync Error (Vault Sync): ${err.message}`);
+        throw new Error(`Failed to commit secure vault to GitHub: ${err.message}`);
+    }
+
+    log("GitHub Sync: Pulling and syncing system deployment files...");
+    try {
+      const { getAuth } = await import('firebase/auth');
+      const auth = getAuth();
+      const idToken = auth.currentUser ? await auth.currentUser.getIdToken() : '';
+      
+      const sysRes = await fetch('/api/v1/admin/system-files', {
+         method: 'GET',
+         headers: { ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}) }
+      });
+
+      if (sysRes.ok) {
+         const sysData = await sysRes.json();
+         if (sysData.files) {
+            for (const [filePath, content] of Object.entries(sysData.files)) {
+               if (!content) continue;
+               log(`GitHub Sync: Syncing ${filePath}...`);
+               await commitFileToGitHub({
+                 owner: configToUse.owner,
+                 repo: configToUse.repo,
+                 token: configToUse.token,
+                 branch: configToUse.branch || 'main',
+                 path: filePath,
+                 content: content as string,
+                 message: `Admin Release: System files synchronization (${filePath})`
+               });
+            }
+            log("GitHub Sync: System files successfully synced.");
+         }
+      } else {
+         log("GitHub Sync: Warning: failed to fetch system files for sync.");
+      }
+    } catch(err: any) {
+        log(`GitHub Sync Error (System Files Sync): ${err.message}`);
+    }
+
+    log("GitHub Sync: Performing local instance sync for immediate preview availability...");
+    try {
+      const { getAuth } = await import('firebase/auth');
+      const authObj = getAuth();
+      const idToken = await authObj.currentUser?.getIdToken();
+      const syncRes = await fetch('/api/v1/admin/sync-local', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
+         },
+         body: JSON.stringify({ apps: finalApps, settings: targetSettings, news: targetNews, blogs: targetBlogs, videos: targetVideos })
+      });
+      if (syncRes.ok) {
+         log("GitHub Sync: System fully synced securely.");
+         log("GitHub Sync: Commit successful! GitHub Pages/Vercel will take 1-2 minutes to rebuild and show the changes on your live site.");
+      } else {
+         log(`GitHub Sync: GitHub push successful, but local preview failed to refresh: ${await syncRes.text()}`);
+      }
+    } catch (e) {}
+
+    log("GitHub Sync: Manual push successful!");
+  }, [gitConfig, apps, settings, news, blogs, videos]);
+
   // Memoized actions to prevent re-renders in children
   const saveApps = React.useCallback(async (newApps: AppConfig[]) => {
     // 1. Snappy optimistic update to local state and local memory first
@@ -796,11 +981,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.log("Cloud: Apps update acknowledged by server.");
       
       await updateLocalContainerBackup(newApps, settings, news, blogs, videos);
+
+      // GitHub Auto-Sync: Automatically commit to GitHub if configured!
+      if (gitConfig?.token && gitConfig?.owner && gitConfig?.repo) {
+        console.log("GitHub Auto-Sync: Initiating background push...");
+        pushAllToGitHub(gitConfig, undefined, newApps, settings, news, blogs, videos).catch(err => {
+          console.error("GitHub Auto-Sync Failed:", err);
+        });
+      }
     } catch (err: any) {
       console.error("Save Apps Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/apps');
     }
-  }, [gitConfig, settings, news, blogs, videos, updateLocalContainerBackup]);
+  }, [gitConfig, settings, news, blogs, videos, updateLocalContainerBackup, pushAllToGitHub]);
 
   const saveSettings = React.useCallback(async (newSettings: GlobalSettings) => {
     const now = new Date().toISOString();
@@ -819,11 +1012,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.log("Cloud: Settings update acknowledged by server.");
       
       await updateLocalContainerBackup(apps, settingsWithTime, news, blogs, videos);
+
+      // GitHub Auto-Sync: Automatically commit to GitHub if configured!
+      if (gitConfig?.token && gitConfig?.owner && gitConfig?.repo) {
+        console.log("GitHub Auto-Sync: Initiating background push...");
+        pushAllToGitHub(gitConfig, undefined, apps, settingsWithTime, news, blogs, videos).catch(err => {
+          console.error("GitHub Auto-Sync Failed:", err);
+        });
+      }
     } catch (err: any) {
       console.error("Save Settings Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/settings');
     }
-  }, [gitConfig, apps, news, blogs, videos, updateLocalContainerBackup]);
+  }, [gitConfig, apps, news, blogs, videos, updateLocalContainerBackup, pushAllToGitHub]);
 
   const saveNews = React.useCallback(async (newNews: NewsItem[]) => {
     // 1. Snappy optimistic update to local state and local memory first
@@ -839,11 +1040,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.log("Cloud: News update acknowledged by server.");
       
       await updateLocalContainerBackup(apps, settings, newNews, blogs, videos);
+
+      // GitHub Auto-Sync: Automatically commit to GitHub if configured!
+      if (gitConfig?.token && gitConfig?.owner && gitConfig?.repo) {
+        console.log("GitHub Auto-Sync: Initiating background push...");
+        pushAllToGitHub(gitConfig, undefined, apps, settings, newNews, blogs, videos).catch(err => {
+          console.error("GitHub Auto-Sync Failed:", err);
+        });
+      }
     } catch (err: any) {
       console.error("Save News Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/news');
     }
-  }, [gitConfig, apps, settings, blogs, videos, updateLocalContainerBackup]);
+  }, [gitConfig, apps, settings, blogs, videos, updateLocalContainerBackup, pushAllToGitHub]);
 
   const saveBlogs = React.useCallback(async (newBlogs: BlogPost[]) => {
     // 1. Snappy optimistic update to local state and local memory first
@@ -859,11 +1068,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.log("Cloud: Blogs update acknowledged by server.");
       
       await updateLocalContainerBackup(apps, settings, news, newBlogs, videos);
+
+      // GitHub Auto-Sync: Automatically commit to GitHub if configured!
+      if (gitConfig?.token && gitConfig?.owner && gitConfig?.repo) {
+        console.log("GitHub Auto-Sync: Initiating background push...");
+        pushAllToGitHub(gitConfig, undefined, apps, settings, news, newBlogs, videos).catch(err => {
+          console.error("GitHub Auto-Sync Failed:", err);
+        });
+      }
     } catch (err: any) {
       console.error("Save Blogs Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/blogs');
     }
-  }, [gitConfig, apps, settings, news, videos, updateLocalContainerBackup]);
+  }, [gitConfig, apps, settings, news, videos, updateLocalContainerBackup, pushAllToGitHub]);
 
   const saveVideos = React.useCallback(async (newVideos: VideoItem[]) => {
     // 1. Snappy optimistic update to local state and local memory first
@@ -879,11 +1096,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.log("Cloud: Videos update acknowledged by server.");
       
       await updateLocalContainerBackup(apps, settings, news, blogs, newVideos);
+
+      // GitHub Auto-Sync: Automatically commit to GitHub if configured!
+      if (gitConfig?.token && gitConfig?.owner && gitConfig?.repo) {
+        console.log("GitHub Auto-Sync: Initiating background push...");
+        pushAllToGitHub(gitConfig, undefined, apps, settings, news, blogs, newVideos).catch(err => {
+          console.error("GitHub Auto-Sync Failed:", err);
+        });
+      }
     } catch (err: any) {
       console.error("Save Videos Error:", err);
       handleFirestoreError(err, OperationType.WRITE, 'store_data/videos');
     }
-  }, [gitConfig, apps, settings, news, blogs, updateLocalContainerBackup]);
+  }, [gitConfig, apps, settings, news, blogs, updateLocalContainerBackup, pushAllToGitHub]);
 
   const saveGitConfig = React.useCallback(async (newConfig: GitConfig) => {
     try {
@@ -900,138 +1125,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const pushAllToGitHub = React.useCallback(async (customConfig?: GitConfig, onProgress?: (msg: string) => void, overrideApps?: any[]) => {
-    const configToUse = customConfig || gitConfig;
-    if (!configToUse) {
-      throw new Error("GitHub synchronization is not configured.");
-    }
-    const log = (msg: string) => {
-      console.log(msg);
-      if (onProgress) onProgress(msg);
-    };
 
-    const targetApps = overrideApps || apps;
-
-    log("GitHub Sync: Manually pushing all static data to repository...");
-    log("GitHub Sync: Generating secure payload...");
-    const updatedCode = generateStaticDataFileCode(targetApps, settings, news, blogs, videos);
-    
-    log(`GitHub Sync: Payload generated successfully (${targetApps.length} apps, ${news.length} news items).`);
-    log("GitHub Sync: Uploading public static data to GitHub...");
-    
-    await commitFileToGitHub({
-      owner: configToUse.owner,
-      repo: configToUse.repo,
-      token: configToUse.token,
-      branch: configToUse.branch || 'main',
-      path: 'src/lib/staticData.ts',
-      content: updatedCode,
-      message: `Admin Release: Manual platform synchronization triggered`
-    });
-
-    log("GitHub Sync: Public static data successfully synced.");
-    
-    log("Local System: Applying backend static data patch...");
-    await updateLocalContainerBackup(targetApps, settings, news, blogs, videos);
-    log("Local System: Patch applied successfully.");
-
-    log("GitHub Sync: Building AES Encrypted Vault for hidden secure links...");
-    try {
-      // Must include auth token from Firebase
-      const { getAuth } = await import('firebase/auth');
-      const auth = getAuth();
-      const idToken = auth.currentUser ? await auth.currentUser.getIdToken() : '';
-      
-      const vaultRes = await fetch('/api/v1/admin/seal-vault', {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json', ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}) },
-         body: JSON.stringify({ items: targetApps })
-      });
-
-      if (vaultRes.ok) {
-         const vaultData = await vaultRes.json();
-         if (vaultData.ciphertext) {
-
-            log(`GitHub Sync: Writing Encrypted Vault to repository "${configToUse.repo}"...`);
-            await commitFileToGitHub({
-              owner: configToUse.owner,
-              repo: configToUse.repo,
-              token: configToUse.token,
-              branch: configToUse.branch || 'main',
-              path: 'src/lib/secureVault.ts',
-              content: `export const ENCRYPTED_LINKS = "${vaultData.ciphertext}";\n`,
-              message: `Admin Release: Secure vault synchronization`
-            });
-            log(`GitHub Sync: Encrypted Vault successfully synced to "${configToUse.repo}".`);
-         } else {
-            throw new Error(vaultData.error || "No ciphertext returned");
-         }
-      } else {
-         throw new Error("Failed to seal vault: HTTP " + vaultRes.status);
-      }
-    } catch(err: any) {
-        log(`GitHub Sync Error (Vault Sync): ${err.message}`);
-        throw new Error(`Failed to commit secure vault to GitHub: ${err.message}`);
-    }
-
-    log("GitHub Sync: Pulling and syncing system deployment files...");
-    try {
-      const { getAuth } = await import('firebase/auth');
-      const auth = getAuth();
-      const idToken = auth.currentUser ? await auth.currentUser.getIdToken() : '';
-      
-      const sysRes = await fetch('/api/v1/admin/system-files', {
-         method: 'GET',
-         headers: { ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}) }
-      });
-
-      if (sysRes.ok) {
-         const sysData = await sysRes.json();
-         if (sysData.files) {
-            for (const [filePath, content] of Object.entries(sysData.files)) {
-               if (!content) continue;
-               log(`GitHub Sync: Syncing ${filePath}...`);
-               await commitFileToGitHub({
-                 owner: configToUse.owner,
-                 repo: configToUse.repo,
-                 token: configToUse.token,
-                 branch: configToUse.branch || 'main',
-                 path: filePath,
-                 content: content as string,
-                 message: `Admin Release: System files synchronization (${filePath})`
-               });
-            }
-            log("GitHub Sync: System files successfully synced.");
-         }
-      } else {
-         log("GitHub Sync: Warning: failed to fetch system files for sync.");
-      }
-    } catch(err: any) {
-        log(`GitHub Sync Error (System Files Sync): ${err.message}`);
-    }
-
-    log("GitHub Sync: Performing local instance sync for immediate preview availability...");
-    try {
-      const { getAuth } = await import('firebase/auth');
-      const authObj = getAuth();
-      const idToken = await authObj.currentUser?.getIdToken();
-      const syncRes = await fetch('/api/v1/admin/sync-local', {
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json',
-           ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
-         },
-         body: JSON.stringify({ apps: targetApps, settings, news, blogs, videos })
-      });
-      if (syncRes.ok) {
-         log("GitHub Sync: System fully synced securely.");
-      } else {
-         log(`GitHub Sync: GitHub push successful, but local preview failed to refresh: ${await syncRes.text()}`);
-      }
-    } catch (e) {}
-
-    log("GitHub Sync: Manual push successful!");
-  }, [gitConfig, apps, settings, news, blogs, videos]);
 
   const testCloudConnection = React.useCallback(async () => {
     if (!isFirebaseConfigured || (typeof window !== 'undefined' && !(window.location.pathname.startsWith('/' + (import.meta.env.VITE_ADMIN_PATH || 'admin'))))) return false;
