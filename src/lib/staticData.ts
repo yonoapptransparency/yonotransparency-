@@ -1199,27 +1199,29 @@ export const mockApps: AppConfig[] = [
     "id": "2768ohu2a",
     "faqs": [
       {
-        "answer": "Answer: We conduct a Mathematical Validation Audit to monitor how consistently the localized application executes its core logic across different mobile processors. By evaluating floating-point determinism, we ensure that the software calculates game states identically regardless of your specific hardware, preventing mechanical discrepancies between competing nodes.",
-        "question": "How does the registry evaluate Floating-Point Determinism in Maha Games?"
+        "question": "How does the registry evaluate Asynchronous Matrix Permutation in 567 Slots?",
+        "answer": "Answer: We conduct a Variable Generation Audit to monitor how efficiently the localized application calculates its randomized data arrays. By evaluating asynchronous matrix permutation, we establish a technical baseline for how smoothly the engine computes unpredictable logic sequences off the main thread without causing the visual interface to stutter."
       },
       {
-        "question": "What is \"Dynamic Asset Streaming\" within this software architecture?",
-        "answer": "Answer: Dynamic Asset Streaming refers to how the engine loads visual elements (like high-resolution card graphics and UI menus) precisely when they are needed, rather than front-loading everything into RAM at launch. Our diagnostic teardown measures the efficiency of this pipeline. An optimized streaming protocol ensures the application maintains a lightweight memory footprint, preventing thermal throttling on mid-tier devices."
+        "question": "What is \"Cryptographic State Fencing\" within this software architecture?",
+        "answer": "Answer: Cryptographic State Fencing refers to the engine's ability to lock its current mathematical outcome in a secure, isolated section of your device's memory. Our diagnostic teardown measures the strictness of this boundary. An optimized state fence ensures that background applications or OS interruptions cannot corrupt the matrix data before it visually renders on your screen."
       },
       {
-        "question": "How does absolute determinism impact tactical execution?",
-        "answer": "Answer: Without strict determinism, rapid mechanical inputs might be calculated slightly differently by your local CPU compared to the central validation server, resulting in \"ghost\" moves or rejected inputs. By maintaining an absolute deterministic engine, Maha Games guarantees that every localized physical input is mathematically honored with zero processing deviation."
+        "question": "How does asynchronous processing impact hardware thermals?",
+        "answer": "Answer: Offloading complex matrix math from the main UI thread requires sustained multi-core CPU allocation. While highly efficient for preventing screen freezing, aggressive asynchronous processing generates localized thermal load. Our Hardware Snapshot indicates that the 567 Slots engine intelligently scales back background visual particle effects when device temperatures rise, preserving core matrix generation over aesthetic graphics."
       },
       {
-        "answer": "Answer: Yes, the application utilizes Adaptive Cache Buffering to maintain system stability on older hardware architectures. While the core mathematical determinism remains strict, the execution environment automatically downscales the resolution of dynamically streamed assets on legacy mobile processors. This ensures that localized input processing remains uncompromised without overwhelming the storage read-speeds.",
-        "question": "Can entry-level mobile processors handle the Maha Games streaming logic?"
+        "question": "Can entry-level mobile processors handle the 567 Slots permutation logic?",
+        "answer": "Answer: Yes, the application utilizes Dynamic Logic Downscaling to maintain system stability on older hardware architectures. While the core matrix permutation remains mathematically strict, the execution environment automatically increases the algorithmic polling interval on legacy mobile processors. This ensures that localized input processing remains uncompromised without overheating the chip."
       },
       {
-        "question": "Does the Maha Games diagnostic monitor external node communications?",
-        "answer": "Answer: No. RummyApp Online operates strictly as an independent evaluator of Client-Side Software Processing and Ergonomics. We benchmark how the specific software binary utilizes your local hardware resources to calculate its floating-point logic and stream its localized assets. We do not evaluate, monitor, or access secure server-side cryptographic logic, ensuring our metrics remain exclusively focused on localized structural software integrity."
+        "question": "Does the 567 Slots diagnostic monitor external server environments?",
+        "answer": "Answer: No. RummyApp Online operates strictly as an independent evaluator of Client-Side Software Processing and Ergonomics. We benchmark how the specific software binary utilizes your local hardware resources to calculate its matrices and fence its logic states. We do not evaluate, monitor, or access secure server-side cryptographic logic, ensuring our metrics remain exclusively focused on localized structural software integrity."
       }
     ],
-    "rating": 4
+    "rating": 4,
+    "features_html": "",
+    "is_coming_soon": false
   },
   {
     "target_region": "India (Tier 1 & Tier 2 Search Optimization)",
