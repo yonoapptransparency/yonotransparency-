@@ -109,7 +109,7 @@ export default function BlogDetailPage() {
         <meta property="og:description" content={blog.content.substring(0, 160).replace(/<[^>]*>?/gm, '')} />
         <meta property="og:image" content={blog.cover_url} />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={blog.canonical_url || window.location.href} />
+        <meta property="og:url" content={blog.canonical_url || window.location.origin + "/blog/" + encodeURIComponent(blog.slug || blog.id)} />
         <meta property="article:published_time" content={new Date(blog.published_at).toISOString()} />
         <meta property="article:author" content={blog.author} />
 

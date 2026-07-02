@@ -843,7 +843,8 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
   let author = siteTitle || "Platform Administrator";
   let canonicalUrlOverride: string | null = null;
   
-  const possibleAppSlug = urlPath.replace(/^\/app\//, '/').replace(/^\/|\/$/g, '').toLowerCase();
+  const rawPathStr = urlPath.split('?')[0].split('#')[0];
+  const possibleAppSlug = rawPathStr.replace(/^\/app\//, '/').replace(/^\/|\/$/g, '').toLowerCase();
   
   if (apps.some((a: any) => {
       const aSlug = getField(a, 'slug');
@@ -861,8 +862,8 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
       description = cleanSeoDescription(getField(app, 'seo_description')) || (descHtml ? stripHtml(descHtml).substring(0, 160) : '') || description;
       keywords = getField(app, 'seo_keywords') || keywords;
       ogImage = getField(app, 'og_image_url') || getField(app, 'icon_url') || ogImage;
-      const cleanHost = (process.env.PUBLIC_DOMAIN || 'https://www.rummyapp.online').replace(/\/+$/, '');
-      canonicalUrlOverride = getField(app, 'canonical_url') || `${cleanHost}/${getField(app, 'slug')}`;
+      const cleanHostApp = (hostUrl || process.env.PUBLIC_DOMAIN || 'https://www.rummyapp.online').replace(/\/+$/, '');
+      canonicalUrlOverride = getField(app, 'canonical_url') || `${cleanHostApp}/${getField(app, 'slug')}`;
     }
   } else if (urlPath.startsWith('/info/') || urlPath.startsWith('/gateway/')) {
     const prefix = urlPath.startsWith('/info/') ? '/info/' : '/gateway/';
@@ -942,7 +943,7 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
     description = `Meet the brilliant developers behind ${siteTitle}. Discover our team's expertise and passion.`;
   } else {
     // Dynamic mapping for root-level routes
-    const possibleSlug = decodeURIComponent(urlPath.replace(/^\/|\/$/g, '').split('?')[0]);
+    const possibleSlug = decodeURIComponent(urlPath.split('?')[0].split('#')[0].replace(/^\/|\/$/g, ''));
     if (possibleSlug && possibleSlug !== '') {
       const app = apps.find((a: any) => getField(a, 'slug')?.toLowerCase() === possibleSlug.toLowerCase());
       if (app) {
@@ -958,9 +959,10 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
     }
   }
 
-  const fallbackHost = process.env.PUBLIC_DOMAIN || 'https://www.rummyapp.online';
+  const fallbackHost = hostUrl || process.env.PUBLIC_DOMAIN || 'https://www.rummyapp.online';
   const cleanHost = fallbackHost.replace(/\/+$/, '');
-  const cleanPath = urlPath.replace(/^\/api(\/[^/]+)?/i, '') || '/';
+  const cleanPathRaw = urlPath.split('?')[0].split('#')[0];
+  const cleanPath = cleanPathRaw.replace(/^\/api(\/[^/]+)?/i, '') || '/';
   const absoluteUrl = `${cleanHost}${cleanPath}`;
 
   let absoluteOgImage = ogImage;
@@ -1005,7 +1007,7 @@ export async function injectSeoTags(template: string, urlPath: string, hostUrl?:
 
   let schemaOrg: any = null;
   if (!isAdmin) {
-    const isAppSlug = apps.some((a: any) => a.slug?.toLowerCase() === urlPath.replace(/^\/app\//, '/').replace(/^\/|\/$/g, '').toLowerCase());
+    const isAppSlug = apps.some((a: any) => a.slug?.toLowerCase() === urlPath.split('?')[0].split('#')[0].replace(/^\/app\//, '/').replace(/^\/|\/$/g, '').toLowerCase());
     if (isAppSlug || urlPath.startsWith('/gateway/')) {
        schemaOrg = {
          "@context": "https://schema.org",

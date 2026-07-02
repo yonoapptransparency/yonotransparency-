@@ -363,14 +363,14 @@ export default function AppDetails() {
         <meta property="og:title" content={title} />
         <meta property="og:description" content={desc} />
         <meta property="og:image" content={ogImage} />
-        <meta property="og:url" content={app.canonical_url || `https://${window.location.hostname}/${app.slug}`} />
+        <meta property="og:url" content={app.canonical_url || `${window.location.origin}/${app.slug}`} />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={desc} />
         <meta name="twitter:image" content={ogImage} />
 
-        <link rel="canonical" href={app.canonical_url || `https://${window.location.hostname}/${app.slug}`} />
+        <link rel="canonical" href={app.canonical_url || `${window.location.origin}/${app.slug}`} />
         <script type="application/ld+json">
           {JSON.stringify(softwareSchema)}
         </script>
